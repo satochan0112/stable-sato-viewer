@@ -41,7 +41,7 @@ namespace StableSatoViewer
 
             // ボタンイベント登録
             toggleButton.Click += ToggleButton_Click;
-
+            fullScreenButton.Click += FullScreenButton_Click; // 追加
             // TextBoxのキーイベントも登録（←→キーのみ処理）
             this.Loaded += (s, e) =>
             {
@@ -297,9 +297,24 @@ namespace StableSatoViewer
 
         private void ToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            var grid = (Grid)((DockPanel)this.Content).Children[1];
-            var colDefs = grid.ColumnDefinitions;
-            var rightGrid = (Grid)grid.Children[2]; // 右側のGrid
+            // DockPanel内のグリッドを取得
+            var dockPanel = (DockPanel)this.Content;
+            Grid mainGrid = null;
+
+            // DockPanel内のすべての子要素からメインGridを探す
+            foreach (UIElement child in dockPanel.Children)
+            {
+                if (child is Grid g)
+                {
+                    mainGrid = g;
+                    break;
+                }
+            }
+
+            if (mainGrid == null) return;
+
+            var colDefs = mainGrid.ColumnDefinitions;
+            var rightGrid = (Grid)mainGrid.Children[3]; // 右側のGrid（Column=2）
 
             if (rightGrid.Visibility == Visibility.Visible)
             {
@@ -316,6 +331,22 @@ namespace StableSatoViewer
                 colDefs[1].Width = new GridLength(5);   // スプリッターを復活
                 colDefs[2].Width = new GridLength(300); // 右カラムを復活
                 colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+            }
+        }
+
+        private void FullScreenButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.WindowState == WindowState.Maximized && this.WindowStyle == WindowStyle.None)
+            {
+                // 全画面から通常に戻す
+                this.WindowStyle = WindowStyle.SingleBorderWindow;
+                this.WindowState = WindowState.Normal;
+            }
+            else
+            {
+                // 全画面にする
+                this.WindowStyle = WindowStyle.None;
+                this.WindowState = WindowState.Maximized;
             }
         }
     }
