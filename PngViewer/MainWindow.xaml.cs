@@ -51,6 +51,9 @@ namespace StableSatoViewer
                     }
                 }
             };
+
+            // Hook parameters toggle
+            parametersToggleButton.Click += ParametersToggleButton_Click;
         }
 
         private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -345,6 +348,46 @@ namespace StableSatoViewer
                 // 全画面にする
                 this.WindowStyle = WindowStyle.None;
                 this.WindowState = WindowState.Maximized;
+            }
+        }
+
+        private void ParametersToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (parametersTextBox.Visibility == Visibility.Visible)
+            {
+                // switch to grid view
+                parametersTextBox.Visibility = Visibility.Collapsed;
+                parametersGrid.Visibility = Visibility.Visible;
+
+                // update grid from text
+                var lines = parametersTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                var items = new ObservableCollection<SimpleItem>();
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line)) items.Add(new SimpleItem { Value = line });
+                }
+                if (items.Count == 0) items.Add(new SimpleItem { Value = "" });
+                parametersGrid.ItemsSource = items;
+            }
+            else
+            {
+                // switch to raw text view
+                // build raw text from grid items
+                var sb = new StringBuilder();
+                if (parametersGrid.ItemsSource is System.Collections.IEnumerable enumerable)
+                {
+                    foreach (var obj in enumerable)
+                    {
+                        if (obj is SimpleItem si)
+                        {
+                            sb.AppendLine(si.Value ?? "");
+                        }
+                    }
+                }
+
+                parametersTextBox.Text = sb.ToString().TrimEnd('\r','\n');
+                parametersGrid.Visibility = Visibility.Collapsed;
+                parametersTextBox.Visibility = Visibility.Visible;
             }
         }
     }

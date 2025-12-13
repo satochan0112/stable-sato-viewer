@@ -113,42 +113,60 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <TextBlock Text="Prompt" Foreground="#60a0ff" FontWeight="Bold" Padding="10,8,10,5" FontSize="11"/>
-                        <DataGrid Name="parametersGrid" Grid.Row="1" Background="#1e1e1e" Foreground="#e0e0e0"
-                                  BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
-                                  CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
-                                  CanUserSortColumns="False" HeadersVisibility="None"
-                                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040"
-                                  VerticalScrollBarVisibility="Auto">
-                            <DataGrid.Resources>
-                                <Style TargetType="DataGridRow">
-                                    <Setter Property="Background" Value="#1e1e1e"/>
-                                    <Setter Property="Foreground" Value="#e0e0e0"/>
-                                    <Setter Property="MinHeight" Value="25"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#2d2d2d"/>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="Background" Value="#1e1e1e"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Padding" Value="5,3,5,3"/>
-                                    <Setter Property="VerticalAlignment" Value="Stretch"/>
-                                </Style>
-                            </DataGrid.Resources>
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="" Binding="{Binding Value}" IsReadOnly="True" Width="*">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="Padding" Value="5,3,5,3"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <!-- header: Prompt title and toggle button -->
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Prompt" Foreground="#60a0ff" FontWeight="Bold" Padding="10,8,10,5" FontSize="11" VerticalAlignment="Center"/>
+                            <Button x:Name="parametersToggleButton" Grid.Column="1" Content="切り替え" Width="60" Height="24" Margin="0,6,8,6" VerticalAlignment="Center"
+                                    Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0" FontSize="11" Cursor="Hand" />
+                        </Grid>
+
+                        <!-- content area: DataGrid and TextBox (toggle visibility) -->
+                        <Grid Grid.Row="1">
+                            <DataGrid Name="parametersGrid" Background="#1e1e1e" Foreground="#e0e0e0"
+                                      BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
+                                      CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                                      CanUserSortColumns="False" HeadersVisibility="None"
+                                      GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040"
+                                      VerticalScrollBarVisibility="Auto">
+                                <DataGrid.Resources>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="Background" Value="#1e1e1e"/>
+                                        <Setter Property="Foreground" Value="#e0e0e0"/>
+                                        <Setter Property="MinHeight" Value="25"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#2d2d2d"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                    <Style TargetType="DataGridCell">
+                                        <Setter Property="Background" Value="#1e1e1e"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                        <Setter Property="Padding" Value="5,3,5,3"/>
+                                        <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                    </Style>
+                                </DataGrid.Resources>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="" Binding="{Binding Value}" IsReadOnly="True" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                                <Setter Property="Padding" Value="5,3,5,3"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Raw text view for full prompt; hidden by default -->
+                            <TextBox x:Name="parametersTextBox" Visibility="Collapsed" Background="#1e1e1e" Foreground="#e0e0e0"
+                                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                     BorderThickness="0" Padding="6" />
+                        </Grid>
                     </Grid>
                 </Border>
 
