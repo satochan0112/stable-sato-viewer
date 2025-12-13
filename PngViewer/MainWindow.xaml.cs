@@ -4,6 +4,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace StableSatoViewer
@@ -56,6 +57,9 @@ namespace StableSatoViewer
             parametersToggleButton.Click += ParametersToggleButton_Click;
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
+
+            // Hook copy-on-click for parameters grid
+            parametersGrid.PreviewMouseLeftButtonUp += ParametersGrid_PreviewMouseLeftButtonUp;
         }
 
         private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -521,6 +525,42 @@ namespace StableSatoViewer
                 stepsGrid.Visibility = Visibility.Collapsed;
                 stepsTextBox.Visibility = Visibility.Visible;
             }
+        }
+
+        private void ParametersGrid_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // Hit test to find the cell under mouse
+            var dep = (DependencyObject)e.OriginalSource;
+            while (dep != null && !(dep is DataGridCell) && !(dep is DataGridRow))
+            {
+                dep = VisualTreeHelper.GetParent(dep);
+            }
+
+            if (dep is DataGridCell cell)
+            {
+                // get cell text
+                if (cell.Content is TextBlock tb)
+                {
+                    string text = tb.Text;
+                    try
+                    {
+                        Clipboard.SetText(text);
+                        ShowToast("Copied to clipboard!");
+                    }
+                    catch
+                    {
+                        ShowToast("Copy failed");
+                    }
+                }
+            }
+        }
+
+        private async void ShowToast(string message)
+        {
+            toastText.Text = message;
+            toastBorder.Visibility = Visibility.Visible;
+            await System.Threading.Tasks.Task.Delay(1500);
+            toastBorder.Visibility = Visibility.Collapsed;
         }
     }
 

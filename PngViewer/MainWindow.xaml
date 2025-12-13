@@ -82,6 +82,12 @@
                         </ControlTemplate>
                     </ToggleButton.Template>
                 </ToggleButton>
+
+                <!-- Toast notification -->
+                <Border x:Name="toastBorder" Visibility="Collapsed" Canvas.Left="10" Canvas.Top="50"
+                        Background="#333" CornerRadius="4" Padding="8" Opacity="0.95" Panel.ZIndex="200">
+                    <TextBlock x:Name="toastText" Foreground="#ffffff" FontSize="12">Copied to clipboard!</TextBlock>
+                </Border>
             </Canvas>
             <!-- 左側: PNG画像 -->
             <Border Grid.Column="0" Background="#000000">
