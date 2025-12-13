@@ -71,6 +71,22 @@ namespace StableSatoViewer
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
 
+            // Escape -> exit fullscreen if active
+            if (e.Key == Key.Escape)
+            {
+                if (this.WindowState == WindowState.Maximized && this.WindowStyle == WindowStyle.None)
+                {
+                    this.WindowStyle = WindowStyle.SingleBorderWindow;
+                    this.WindowState = WindowState.Normal;
+                    if (fullScreenToggle != null)
+                    {
+                        fullScreenToggle.IsChecked = false;
+                    }
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             if (e.Key == Key.Right)
             {
                 currentIndex = (currentIndex + 1) % pngFiles.Length;
@@ -88,8 +104,34 @@ namespace StableSatoViewer
             var bitmap = new BitmapImage(new Uri(path));
             imageBox.Source = bitmap;
 
+            // ウィンドウタイトルを更新
+            UpdateWindowTitle(path);
+
             // tEXtチャンクを読み取って右側に表示
             ExtractAndDisplayTextChunks(path);
+        }
+
+        private void UpdateWindowTitle(string path)
+        {
+            try
+            {
+                string fileName = System.IO.Path.GetFileName(path);
+                int total = (pngFiles != null) ? pngFiles.Length : 0;
+                int index = (pngFiles != null) ? (Array.IndexOf(pngFiles, path) + 1) : 0;
+                if (total > 0 && index > 0)
+                {
+                    this.Title = $"{fileName} ({index}/{total})";
+                }
+                else
+                {
+                    this.Title = fileName;
+                }
+                this.Title = this.Title + " - StableSato Viewer";
+            }
+            catch
+            {
+                // ignore title update errors
+            }
         }
 
         private void ExtractAndDisplayTextChunks(string filePath)
@@ -258,7 +300,7 @@ namespace StableSatoViewer
                 {
                     isInValue = true;
                 }
-                // カンマで key:value ペアを終了（クォート外のみ）
+                // カンマで key:value ペアを終了（クォート外のみ） 
                 else if (c == ',' && !insideQuotes && isInValue)
                 {
                     string key = currentKey.ToString().Trim();
