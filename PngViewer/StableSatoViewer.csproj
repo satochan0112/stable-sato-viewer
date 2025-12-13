@@ -6,11 +6,19 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\favicons\favicon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Resource Include="Assets\stablesatoviewer.png" />
     <Resource Include="Assets\stablesatoviewer_gs.png" />
+    <Resource Include="Assets\favicons\icon-24x24.png" />
+    <Resource Include="Assets\favicons\icon-32x32.png" />
+    <Resource Include="Assets\favicons\icon-48x48.png" />
+    <Resource Include="Assets\favicons\icon-96x96.png" />
+    <Resource Include="Assets\favicons\icon-256x256.png" />
+    <Resource Include="Assets\favicons\icon-512x512.png" />
+    <Resource Include="Assets\favicons\favicon.ico" />
   </ItemGroup>
 
 </Project>
