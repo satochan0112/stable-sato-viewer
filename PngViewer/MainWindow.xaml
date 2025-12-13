@@ -1,6 +1,6 @@
 ﻿<Window x:Class="StableSatoViewer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"        
         Title="Stable Sato Viewer" Height="600" Width="1000"
         Background="#1e1e1e" Foreground="#ffffff"
         ResizeMode="CanResize">
@@ -20,10 +20,10 @@
 
             <!-- フロート表示ボタン -->
             <Canvas Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="100">
-                <Button Name="toggleButton" Content="tEXt表示/非表示" Width="150" Height="30"
-                    Canvas.Right="160" Canvas.Top="10"
+                <Button Name="toggleButton" Content="&#xE946;" Width="36" Height="36"
+                    Canvas.Right="50" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
                     Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
-                    FontSize="12" Cursor="Hand">
+                    FontSize="16" Cursor="Hand">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">
@@ -49,34 +49,39 @@
                     </Button.Style>
                 </Button>
 
-                <Button Name="fullScreenButton" Content="全画面" Width="150" Height="30"
-                    Canvas.Right="10" Canvas.Top="10"
-                    Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
-                    FontSize="12" Cursor="Hand">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}" 
-                                            BorderBrush="{TemplateBinding BorderBrush}"
-                                            BorderThickness="{TemplateBinding BorderThickness}">
-                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#404040"/>
-                                            </Trigger>
-                                            <Trigger Property="IsPressed" Value="True">
-                                                <Setter Property="Background" Value="#505050"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                <!-- fullScreenButton をこれに置き換える -->
+                <ToggleButton x:Name="fullScreenToggle" Width="36" Height="36" ToolTip="全画面切替"
+              Canvas.Right="10" Canvas.Top="10" Cursor="Hand"
+              Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0">
+                    <ToggleButton.Template>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}">
+                                <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                                    <!-- 最大化アイコン：Segoe MDL2 U+E740 -->
+                                    <TextBlock x:Name="MaxGlyph" FontFamily="Segoe MDL2 Assets" FontSize="16" 
+                                         Text="&#xE740;" Foreground="{TemplateBinding Foreground}" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <!-- 復元アイコン : Segoe MDL2 U+E73F -->
+                                    <TextBlock x:Name="RestoreGlyph" FontFamily="Segoe MDL2 Assets" FontSize="16" 
+                                         Text="&#xE73F;" Foreground="{TemplateBinding Foreground}" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="MaxGlyph" Property="Visibility" Value="Collapsed"/>
+                                    <Setter TargetName="RestoreGlyph" Property="Visibility" Value="Visible"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#404040"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#505050"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </ToggleButton.Template>
+                </ToggleButton>
             </Canvas>
             <!-- 左側: PNG画像 -->
             <Border Grid.Column="0" Background="#000000">

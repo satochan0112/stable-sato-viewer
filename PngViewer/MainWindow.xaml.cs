@@ -1,12 +1,10 @@
-﻿using System;
+﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using System.Collections.ObjectModel;
 
 namespace StableSatoViewer
 {
@@ -41,7 +39,7 @@ namespace StableSatoViewer
 
             // ボタンイベント登録
             toggleButton.Click += ToggleButton_Click;
-            fullScreenButton.Click += FullScreenButton_Click; // 追加
+            fullScreenToggle.Click += FullScreenButton_Click; // 追加
             // TextBoxのキーイベントも登録（←→キーのみ処理）
             this.Loaded += (s, e) =>
             {
