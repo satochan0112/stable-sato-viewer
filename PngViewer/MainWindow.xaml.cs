@@ -570,6 +570,20 @@ namespace StableSatoViewer
             }
         }
 
+        private void PrevImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (pngFiles == null || pngFiles.Length == 0) return;
+            currentIndex = (currentIndex - 1 + pngFiles.Length) % pngFiles.Length;
+            ShowImage(pngFiles[currentIndex]);
+        }
+
+        private void NextImageButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (pngFiles == null || pngFiles.Length == 0) return;
+            currentIndex = (currentIndex + 1) % pngFiles.Length;
+            ShowImage(pngFiles[currentIndex]);
+        }
+
         private async void ShowToast(string message)
         {
             toastText.Text = message;
