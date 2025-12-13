@@ -13,6 +13,7 @@ namespace StableSatoViewer
     {
         private string[] pngFiles;
         private int currentIndex = 0;
+        private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
 
         public MainWindow()
         {
@@ -20,6 +21,9 @@ namespace StableSatoViewer
 
             // 画像領域のクリックをトンネルイベントでフック（領域のどこをクリックしても検出されるように）
             imageBorder.PreviewMouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
+
+            // マウスブラウザボタンや他のマウスボタンを受け取るためにプレビュー MouseDown を購読
+            this.PreviewMouseDown += MainWindow_PreviewMouseDown;
 
             // キーイベント登録
             this.KeyDown += MainWindow_KeyDown;
@@ -53,9 +57,6 @@ namespace StableSatoViewer
             parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
-
-            // マウスブラウザボタンや他のマウスボタンを受け取るためにプレビュー MouseDown を購読
-            this.PreviewMouseDown += MainWindow_PreviewMouseDown;
         }
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -253,8 +254,7 @@ namespace StableSatoViewer
                     if (chunkType == "tEXt")
                     {
                         string text = Encoding.ASCII.GetString(data);
-                        
-                        // キーと値を分離（最初の null バイトで分割）
+
                         int nullIndex = text.IndexOf('\0');
                         if (nullIndex > 0)
                         {
@@ -263,38 +263,30 @@ namespace StableSatoViewer
 
                             if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                             {
-                                // テキストを "Negative prompt:" と "Steps:" で分割
                                 int negPromptIndex = value.IndexOf("Negative prompt:");
                                 int stepsIndex = value.IndexOf("Steps:");
 
                                 if (negPromptIndex >= 0)
                                 {
-                                    // parameters は "Negative prompt:" の前まで
                                     parameters = value.Substring(0, negPromptIndex).Trim();
 
                                     if (stepsIndex >= 0)
                                     {
-                                        // negativePrompt は "Negative prompt:" から "Steps:" の前まで
                                         negativePrompt = value.Substring(negPromptIndex + "Negative prompt:".Length, stepsIndex - negPromptIndex - "Negative prompt:".Length).Trim();
-                                        
-                                        // steps は "Steps:" 以降
                                         steps = value.Substring(stepsIndex + "Steps:".Length).Trim();
                                     }
                                     else
                                     {
-                                        // "Steps:" がない場合
                                         negativePrompt = value.Substring(negPromptIndex + "Negative prompt:".Length).Trim();
                                     }
                                 }
                                 else if (stepsIndex >= 0)
                                 {
-                                    // "Negative prompt:" がなく "Steps:" がある場合
                                     parameters = value.Substring(0, stepsIndex).Trim();
                                     steps = value.Substring(stepsIndex).Trim();
                                 }
                                 else
                                 {
-                                    // 両方ない場合はすべて parameters
                                     parameters = value.Trim();
                                 }
                             }
@@ -302,10 +294,17 @@ namespace StableSatoViewer
                     }
                 }
 
-                // Prompt と Negative Prompt と Infos をグリッド表示
                 DisplayTextAsGrid(parametersGrid, parameters);
                 DisplayTextAsGrid(negativePromptGrid, negativePrompt);
+
                 DisplayStepsAsGrid(steps);
+
+                // モード 1（フロート表示）の場合はフローティングプロンプトも更新
+                if (layoutMode == 1)
+                {
+                    UpdateFloatingPromptContent();
+                }
+
             }
         }
 
@@ -321,7 +320,7 @@ namespace StableSatoViewer
                 foreach (string line in lines)
                 {
                     string trimmedLine = line.Trim();
-                    
+
                     // 空行、カンマのみ、またはカンマとスペースのみの場合はスキップ
                     if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.All(c => c == ',' || char.IsWhiteSpace(c)))
                     {
@@ -444,7 +443,7 @@ namespace StableSatoViewer
             // DockPanel 内のすべての子要素からメイングリッドを探す
             foreach (UIElement child in dockPanel.Children)
             {
-                if (child is Grid g)
+                if (child is Grid g && g.ColumnDefinitions.Count == 3)
                 {
                     mainGrid = g;
                     break;
@@ -454,24 +453,77 @@ namespace StableSatoViewer
             if (mainGrid == null) return;
 
             var colDefs = mainGrid.ColumnDefinitions;
-            var rightGrid = (Grid)mainGrid.Children[3]; // 右側のグリッド（Column=2）
+            
+            // 右側のグリッド（Column=2）を探す
+            Grid rightGrid = null;
+            foreach (UIElement child in mainGrid.Children)
+            {
+                if (child is Grid g && Grid.GetColumn(g) == 2)
+                {
+                    rightGrid = g;
+                    break;
+                }
+            }
 
-            if (rightGrid.Visibility == Visibility.Visible)
+            if (rightGrid == null) return;
+
+            // 3つのモードを順に切り替え
+            layoutMode = (layoutMode + 1) % 3;
+
+            switch (layoutMode)
             {
-                // 非表示にして画像を全幅に
-                rightGrid.Visibility = Visibility.Collapsed;
-                colDefs[1].Width = new GridLength(0);   // スプリッターを消す
-                colDefs[2].Width = new GridLength(0);   // 右カラムを消す
-                colDefs[0].Width = new GridLength(1, GridUnitType.Star); // 左カラムを全幅に
+                case 0:
+                    // モード 0: 通常（左画像+右パネル表示）
+                    rightGrid.Visibility = Visibility.Visible;
+                    imageBorder.Visibility = Visibility.Visible;
+                    floatingPromptBorder.Visibility = Visibility.Collapsed;
+                    colDefs[1].Width = new GridLength(5);
+                    colDefs[2].Width = new GridLength(300);
+                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    break;
+
+                case 1:
+                    // モード 1: フロート（画像最大化 + プロンプトフロート表示）
+                    rightGrid.Visibility = Visibility.Collapsed;
+                    imageBorder.Visibility = Visibility.Visible;
+                    floatingPromptBorder.Visibility = Visibility.Visible;
+                    colDefs[1].Width = new GridLength(0);
+                    colDefs[2].Width = new GridLength(0);
+                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    UpdateFloatingPromptContent();
+                    break;
+
+                case 2:
+                    // モード 2: 非表示（画像のみ、右パネルなし）
+                    rightGrid.Visibility = Visibility.Collapsed;
+                    imageBorder.Visibility = Visibility.Visible;
+                    floatingPromptBorder.Visibility = Visibility.Collapsed;
+                    colDefs[1].Width = new GridLength(0);
+                    colDefs[2].Width = new GridLength(0);
+                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    break;
             }
-            else
+        }
+
+        private void UpdateFloatingPromptContent()
+        {
+            // フローティングプロンプトに現在のパラメータテキストを表示（グリッド形式）
+            var items = new ObservableCollection<SimpleItem>();
+            if (parametersGrid.ItemsSource is System.Collections.IEnumerable enumerable)
             {
-                // 再表示して右カラム復活
-                rightGrid.Visibility = Visibility.Visible;
-                colDefs[1].Width = new GridLength(5);   // スプリッターを復活
-                colDefs[2].Width = new GridLength(300); // 右カラムを復活
-                colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                foreach (var obj in enumerable)
+                {
+                    if (obj is SimpleItem si)
+                    {
+                        items.Add(new SimpleItem { Value = si.Value });
+                    }
+                }
             }
+            if (items.Count == 0)
+            {
+                items.Add(new SimpleItem { Value = "" });
+            }
+            floatingPromptGrid.ItemsSource = items;
         }
 
         private void FullScreenButton_Click(object sender, RoutedEventArgs e)

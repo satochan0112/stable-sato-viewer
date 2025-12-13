@@ -19,6 +19,61 @@
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
 
+            <!-- フローティングプロンプト（モード: 画像最大化時に表示）- 画像上に重ねる -->
+            <Border x:Name="floatingPromptBorder" Grid.Column="0" Visibility="Collapsed" Width="320" Height="420" Background="#80000000" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="8" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,80,20,0" Panel.ZIndex="3500">
+                <DataGrid x:Name="floatingPromptGrid" Background="Transparent" Foreground="#ffffff"
+                          BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
+                          CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                          CanUserSortColumns="False" HeadersVisibility="None"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#ffffff" VerticalScrollBarVisibility="Auto">
+                    <DataGrid.Resources>
+                        <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#ffffff" />
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Foreground" Value="#ffffff"/>
+                            <Setter Property="MinHeight" Value="25"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="5,3,5,3"/>
+                            <Setter Property="VerticalAlignment" Value="Stretch"/>
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="" Binding="{Binding Value}" IsReadOnly="True" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                    <Setter Property="Padding" Value="5,3,5,3"/>
+                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                    <Setter Property="Effect">
+                                        <Setter.Value>
+                                            <DropShadowEffect Color="#000000" BlurRadius="3" ShadowDepth="2" Opacity="0.8"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
             <!-- フロート表示ボタン -->
             <!-- 右上のフローティングコントロール（画像領域を覆わないよう領域を限定） -->
             <Canvas Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" Height="56" Margin="0,10,10,0">
