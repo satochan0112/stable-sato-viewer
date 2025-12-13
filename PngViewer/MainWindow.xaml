@@ -20,7 +20,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- フロート表示ボタン -->
-            <!-- top-right floating controls; limit area so they don't cover image region -->
+            <!-- 右上のフローティングコントロール（画像領域を覆わないよう領域を限定） -->
             <Canvas Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="120" Height="56" Margin="0,10,10,0">
                 <Button Name="toggleButton" Content="&#xE946;" Width="36" Height="36"
                     Canvas.Left="10" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
@@ -85,7 +85,7 @@
                     </ToggleButton.Template>
                 </ToggleButton>
 
-                <!-- Toast notification -->
+                <!-- トースト通知 -->
                 <Border x:Name="toastBorder" Visibility="Collapsed" Canvas.Left="10" Canvas.Top="50"
                         Background="#333" CornerRadius="4" Padding="8" Opacity="0.95" Panel.ZIndex="200">
                     <TextBlock x:Name="toastText" Foreground="#ffffff" FontSize="12">Copied to clipboard!</TextBlock>
@@ -94,16 +94,16 @@
             <!-- 左側: PNG画像 -->
             <Border x:Name="imageBorder" Grid.Column="0" Background="#000000" Cursor="Hand">
                 <Grid>
-                    <!-- fixed-size grayscale background image (300x300) centered, non-interactive -->
+                    <!-- 固定サイズ（300x300）のグレースケール背景画像、中央表示でクリックを透過 -->
                     <Image Source="pack://application:,,,/StableSatoViewer;component/Assets/stablesatoviewer_gs.png"
                            Width="300" Height="300" Stretch="Uniform"
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            IsHitTestVisible="False" Opacity="1"/>
 
-                    <!-- actual displayed image (on top) -->
+                    <!-- 表示される実際の画像（上に重なる） -->
                     <Image Name="imageBox" Stretch="Uniform" />
 
-                    <!-- Bottom-center image navigation buttons (overlay inside image area) -->
+                    <!-- 画像領域内の下中央ナビゲーションボタン（オーバーレイ） -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,16" Panel.ZIndex="2000" IsHitTestVisible="True" Visibility="Visible">
                         <Button x:Name="prevImageButton" Width="44" Height="44" Margin="6,0" FontFamily="Segoe MDL2 Assets" FontSize="18" Content="&#xE76B;"
                                 Background="#AA2d2d2d" Foreground="#ffffff" BorderThickness="0" Cursor="Hand" Click="PrevImageButton_Click" Panel.ZIndex="2001" Visibility="Visible"/>
@@ -138,7 +138,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <!-- header: Prompt title and toggle button -->
+                        <!-- ヘッダー: Prompt タイトルとトグルボタン -->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
@@ -150,7 +150,7 @@
                                     FontSize="11" Cursor="Hand" />
                         </Grid>
 
-                        <!-- content area: DataGrid and TextBox (toggle visibility) -->
+                        <!-- コンテンツ領域: DataGrid と TextBox（表示切替） -->
                         <Grid Grid.Row="1">
                             <DataGrid Name="parametersGrid" Background="#1e1e1e" Foreground="#e0e0e0"
                                       BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
@@ -215,7 +215,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <!-- header: Negative Prompt title and toggle button -->
+                        <!-- ヘッダー: Negative Prompt タイトルとトグルボタン -->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
@@ -226,7 +226,7 @@
                                     Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0" FontFamily="Segoe MDL2 Assets" FontSize="11" Cursor="Hand" />
                         </Grid>
 
-                        <!-- content area: DataGrid and TextBox (toggle visibility) -->
+                        <!-- コンテンツ領域: DataGrid と TextBox（表示切替） -->
                         <Grid Grid.Row="1">
                             <DataGrid Name="negativePromptGrid" Background="#1e1e1e" Foreground="#e0e0e0"
                                       BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
@@ -291,7 +291,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <!-- header: Infos title and toggle button -->
+                        <!-- ヘッダー: Infos タイトルとトグルボタン -->
                         <Grid Grid.Row="0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition />
@@ -302,7 +302,7 @@
                                     Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0" FontFamily="Segoe MDL2 Assets" FontSize="11" Cursor="Hand" />
                         </Grid>
 
-                        <!-- content area: steps DataGrid and raw TextBox -->
+                        <!-- コンテンツ領域: steps DataGrid と生の TextBox -->
                         <Grid Grid.Row="1">
                             <DataGrid Name="stepsGrid" Background="#1e1e1e" Foreground="#e0e0e0"
                                       BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
@@ -382,9 +382,6 @@
                     </Grid>
                 </Border>
             </Grid>
-
-            <!-- Bottom-center image navigation buttons -->
-            <!-- navigation buttons moved inside image area -->
         </Grid>
 
     </DockPanel>

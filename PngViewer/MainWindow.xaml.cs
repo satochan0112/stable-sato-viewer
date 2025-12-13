@@ -18,7 +18,7 @@ namespace StableSatoViewer
         {
             InitializeComponent();
 
-            // Hook image area click to open files when empty using tunneling event so clicks anywhere in the area are caught
+            // 画像領域のクリックをトンネルイベントでフック（領域のどこをクリックしても検出されるように）
             imageBorder.PreviewMouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
 
             // キーイベント登録
@@ -26,8 +26,9 @@ namespace StableSatoViewer
 
             // ボタンイベント登録
             toggleButton.Click += ToggleButton_Click;
-            fullScreenToggle.Click += FullScreenButton_Click; // 追加
-            // TextBoxのキーイベントも登録（←→キーのみ処理）
+            fullScreenToggle.Click += FullScreenButton_Click;
+
+            // TextBox のキーイベント登録（左右キーのみ処理）
             this.Loaded += (s, e) =>
             {
                 foreach (var child in LogicalTreeHelper.GetChildren(this))
@@ -39,12 +40,12 @@ namespace StableSatoViewer
                 }
             };
 
-            // Hook parameters toggle
+            // parameters トグルのイベント登録
             parametersToggleButton.Click += ParametersToggleButton_Click;
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
 
-            // Hook copy-on-click and arrow-key forwarding for all three grids
+            // クリックでコピー＆矢印キー転送の処理を各グリッドに登録
             parametersGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
             negativePromptGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
             stepsGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
@@ -56,7 +57,7 @@ namespace StableSatoViewer
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // If no image loaded yet, open file selection
+            // 画像が読み込まれていなければファイル選択ダイアログを開く
             if (pngFiles == null || pngFiles.Length == 0 || imageBox.Source == null)
             {
                 OpenAndLoadImagesFromDialog();
@@ -94,7 +95,7 @@ namespace StableSatoViewer
 
         private void DataGrid_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // Hit test to find the cell under mouse
+            // マウスの下にあるセルをヒットテストで探す
             var dep = (DependencyObject)e.OriginalSource;
             while (dep != null && !(dep is DataGridCell) && !(dep is DataGridRow))
             {
@@ -103,7 +104,7 @@ namespace StableSatoViewer
 
             if (dep is DataGridCell cell)
             {
-                // get cell text
+                // セルのテキストを取得
                 if (cell.Content is TextBlock tb)
                 {
                     string text = tb.Text;
@@ -133,7 +134,7 @@ namespace StableSatoViewer
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
 
-            // Escape -> exit fullscreen if active
+            // Escape キーで全画面を解除
             if (e.Key == Key.Escape)
             {
                 if (this.WindowState == WindowState.Maximized && this.WindowStyle == WindowStyle.None)
@@ -169,7 +170,7 @@ namespace StableSatoViewer
             // ウィンドウタイトルを更新
             UpdateWindowTitle(path);
 
-            // tEXtチャンクを読み取って右側に表示
+            // tEXt チャンクを読み取って表示
             ExtractAndDisplayTextChunks(path);
         }
 
@@ -192,7 +193,7 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ignore title update errors
+                // タイトル更新エラーを無視
             }
         }
 
@@ -201,7 +202,7 @@ namespace StableSatoViewer
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var br = new BinaryReader(fs))
             {
-                // PNGシグネチャをスキップ
+                // PNG シグネチャをスキップ
                 byte[] signature = br.ReadBytes(8);
 
                 string parameters = "";
@@ -213,13 +214,13 @@ namespace StableSatoViewer
                     int length = ReadInt32BigEndian(br.ReadBytes(4));
                     string chunkType = Encoding.ASCII.GetString(br.ReadBytes(4));
                     byte[] data = br.ReadBytes(length);
-                    br.ReadBytes(4); // CRCをスキップ
+                    br.ReadBytes(4); // CRC をスキップ
 
                     if (chunkType == "tEXt")
                     {
                         string text = Encoding.ASCII.GetString(data);
                         
-                        // キーと値を分離（最初のnullバイトで分割）
+                        // キーと値を分離（最初の null バイトで分割）
                         int nullIndex = text.IndexOf('\0');
                         if (nullIndex > 0)
                         {
@@ -234,15 +235,15 @@ namespace StableSatoViewer
 
                                 if (negPromptIndex >= 0)
                                 {
-                                    // parametersは "Negative prompt:" の前まで
+                                    // parameters は "Negative prompt:" の前まで
                                     parameters = value.Substring(0, negPromptIndex).Trim();
 
                                     if (stepsIndex >= 0)
                                     {
-                                        // negativePromptは "Negative prompt:" から "Steps:" の前まで
+                                        // negativePrompt は "Negative prompt:" から "Steps:" の前まで
                                         negativePrompt = value.Substring(negPromptIndex + "Negative prompt:".Length, stepsIndex - negPromptIndex - "Negative prompt:".Length).Trim();
                                         
-                                        // stepsは "Steps:" 以降
+                                        // steps は "Steps:" 以降
                                         steps = value.Substring(stepsIndex + "Steps:".Length).Trim();
                                     }
                                     else
@@ -255,11 +256,11 @@ namespace StableSatoViewer
                                 {
                                     // "Negative prompt:" がなく "Steps:" がある場合
                                     parameters = value.Substring(0, stepsIndex).Trim();
-                                    steps = value.Substring(stepsIndex).Trim(); // "Steps:" を含める
+                                    steps = value.Substring(stepsIndex).Trim();
                                 }
                                 else
                                 {
-                                    // 両方ない場合はすべてparameters
+                                    // 両方ない場合はすべて parameters
                                     parameters = value.Trim();
                                 }
                             }
@@ -267,11 +268,9 @@ namespace StableSatoViewer
                     }
                 }
 
-                // Prompt と Negative Prompt をグリッド表示
+                // Prompt と Negative Prompt と Infos をグリッド表示
                 DisplayTextAsGrid(parametersGrid, parameters);
                 DisplayTextAsGrid(negativePromptGrid, negativePrompt);
-                
-                // Infos をグリッド表示
                 DisplayStepsAsGrid(steps);
             }
         }
@@ -362,7 +361,7 @@ namespace StableSatoViewer
                 {
                     isInValue = true;
                 }
-                // カンマで key:value ペアを終了（クォート外のみ） 
+                // カンマで key:value ペアを終了（クォート外のみ）
                 else if (c == ',' && !insideQuotes && isInValue)
                 {
                     string key = currentKey.ToString().Trim();
@@ -404,11 +403,11 @@ namespace StableSatoViewer
 
         private void ToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            // DockPanel内のグリッドを取得
+            // DockPanel 内のグリッドを取得
             var dockPanel = (DockPanel)this.Content;
             Grid mainGrid = null;
 
-            // DockPanel内のすべての子要素からメインGridを探す
+            // DockPanel 内のすべての子要素からメイングリッドを探す
             foreach (UIElement child in dockPanel.Children)
             {
                 if (child is Grid g)
@@ -421,7 +420,7 @@ namespace StableSatoViewer
             if (mainGrid == null) return;
 
             var colDefs = mainGrid.ColumnDefinitions;
-            var rightGrid = (Grid)mainGrid.Children[3]; // 右側のGrid（Column=2）
+            var rightGrid = (Grid)mainGrid.Children[3]; // 右側のグリッド（Column=2）
 
             if (rightGrid.Visibility == Visibility.Visible)
             {
@@ -461,11 +460,11 @@ namespace StableSatoViewer
         {
             if (parametersTextBox.Visibility == Visibility.Visible)
             {
-                // switch to grid view
+                // グリッド表示に切り替え
                 parametersTextBox.Visibility = Visibility.Collapsed;
                 parametersGrid.Visibility = Visibility.Visible;
 
-                // update grid from text
+                // テキストからグリッドを更新
                 var lines = parametersTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
                 var items = new ObservableCollection<SimpleItem>();
                 foreach (var line in lines)
@@ -477,8 +476,8 @@ namespace StableSatoViewer
             }
             else
             {
-                // switch to raw text view
-                // build raw text from grid items
+                // 生テキスト表示に切り替え
+                // グリッドアイテムから生テキストを構築
                 var sb = new StringBuilder();
                 if (parametersGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
@@ -501,11 +500,11 @@ namespace StableSatoViewer
         {
             if (negativePromptTextBox.Visibility == Visibility.Visible)
             {
-                // switch to grid view
+                // グリッド表示に切り替え
                 negativePromptTextBox.Visibility = Visibility.Collapsed;
                 negativePromptGrid.Visibility = Visibility.Visible;
 
-                // update grid from text
+                // テキストからグリッドを更新
                 var lines = negativePromptTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
                 var items = new ObservableCollection<SimpleItem>();
                 foreach (var line in lines)
@@ -517,7 +516,7 @@ namespace StableSatoViewer
             }
             else
             {
-                // switch to raw text view
+                // 生テキスト表示に切り替え
                 var sb = new StringBuilder();
                 if (negativePromptGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
@@ -540,11 +539,11 @@ namespace StableSatoViewer
         {
             if (stepsTextBox.Visibility == Visibility.Visible)
             {
-                // switch to grid view
+                // グリッド表示に切り替え
                 stepsTextBox.Visibility = Visibility.Collapsed;
                 stepsGrid.Visibility = Visibility.Visible;
 
-                // update grid from text - parse key:value lines
+                // テキストからグリッドを更新 - key:value ラインを解析
                 var lines = stepsTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
                 var items = new ObservableCollection<StepsItem>();
                 foreach (var line in lines)
@@ -566,7 +565,7 @@ namespace StableSatoViewer
             }
             else
             {
-                // switch to raw text view
+                // 生テキスト表示に切り替え
                 var sb = new StringBuilder();
                 if (stepsGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
