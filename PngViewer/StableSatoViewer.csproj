@@ -8,4 +8,9 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\stablesatoviewer.png" />
+    <Resource Include="Assets\stablesatoviewer_gs.png" />
+  </ItemGroup>
+
 </Project>

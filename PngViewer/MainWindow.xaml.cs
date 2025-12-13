@@ -18,8 +18,8 @@ namespace StableSatoViewer
         {
             InitializeComponent();
 
-            // Hook image area click to open files when empty
-            imageBorder.MouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
+            // Hook image area click to open files when empty using tunneling event so clicks anywhere in the area are caught
+            imageBorder.PreviewMouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
 
             // キーイベント登録
             this.KeyDown += MainWindow_KeyDown;
@@ -188,7 +188,7 @@ namespace StableSatoViewer
                 {
                     this.Title = fileName;
                 }
-                this.Title = this.Title + " - StableSato Viewer";
+                this.Title = this.Title + " - StableSatoViewer";
             }
             catch
             {
