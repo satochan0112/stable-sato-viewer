@@ -58,8 +58,51 @@ namespace StableSatoViewer
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
 
-            // Hook copy-on-click for parameters grid
-            parametersGrid.PreviewMouseLeftButtonUp += ParametersGrid_PreviewMouseLeftButtonUp;
+            // Hook copy-on-click and arrow-key forwarding for all three grids
+            parametersGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+            negativePromptGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+            stepsGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+
+            parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+            negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+            stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+        }
+
+        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Left || e.Key == Key.Right)
+            {
+                MainWindow_KeyDown(this, e);
+                e.Handled = true;
+            }
+        }
+
+        private void DataGrid_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // Hit test to find the cell under mouse
+            var dep = (DependencyObject)e.OriginalSource;
+            while (dep != null && !(dep is DataGridCell) && !(dep is DataGridRow))
+            {
+                dep = VisualTreeHelper.GetParent(dep);
+            }
+
+            if (dep is DataGridCell cell)
+            {
+                // get cell text
+                if (cell.Content is TextBlock tb)
+                {
+                    string text = tb.Text;
+                    try
+                    {
+                        Clipboard.SetText(text);
+                        ShowToast("Copied to clipboard!");
+                    }
+                    catch
+                    {
+                        ShowToast("Copy failed");
+                    }
+                }
+            }
         }
 
         private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -524,34 +567,6 @@ namespace StableSatoViewer
                 stepsTextBox.Text = sb.ToString().TrimEnd('\r','\n');
                 stepsGrid.Visibility = Visibility.Collapsed;
                 stepsTextBox.Visibility = Visibility.Visible;
-            }
-        }
-
-        private void ParametersGrid_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            // Hit test to find the cell under mouse
-            var dep = (DependencyObject)e.OriginalSource;
-            while (dep != null && !(dep is DataGridCell) && !(dep is DataGridRow))
-            {
-                dep = VisualTreeHelper.GetParent(dep);
-            }
-
-            if (dep is DataGridCell cell)
-            {
-                // get cell text
-                if (cell.Content is TextBlock tb)
-                {
-                    string text = tb.Text;
-                    try
-                    {
-                        Clipboard.SetText(text);
-                        ShowToast("Copied to clipboard!");
-                    }
-                    catch
-                    {
-                        ShowToast("Copy failed");
-                    }
-                }
             }
         }
 

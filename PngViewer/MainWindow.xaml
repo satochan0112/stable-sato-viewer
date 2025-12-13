@@ -140,6 +140,7 @@
                                       GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040"
                                       VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Resources>
+                                    <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#e0e0e0" />
                                     <Style TargetType="DataGridRow">
                                         <Setter Property="Background" Value="#1e1e1e"/>
                                         <Setter Property="Foreground" Value="#e0e0e0"/>
@@ -148,6 +149,10 @@
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter Property="Background" Value="#2d2d2d"/>
                                             </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#404040"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
+                                            </Trigger>
                                         </Style.Triggers>
                                     </Style>
                                     <Style TargetType="DataGridCell">
@@ -155,6 +160,12 @@
                                         <Setter Property="BorderThickness" Value="0"/>
                                         <Setter Property="Padding" Value="5,3,5,3"/>
                                         <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#404040"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
+                                            </Trigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGrid.Resources>
                                 <DataGrid.Columns>
@@ -163,6 +174,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextWrapping" Value="Wrap"/>
                                                 <Setter Property="Padding" Value="5,3,5,3"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -204,6 +216,7 @@
                                       GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040"
                                       VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Resources>
+                                    <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#e0e0e0" />
                                     <Style TargetType="DataGridRow">
                                         <Setter Property="Background" Value="#1e1e1e"/>
                                         <Setter Property="Foreground" Value="#e0e0e0"/>
@@ -212,6 +225,10 @@
                                             <Trigger Property="IsMouseOver" Value="True">
                                                 <Setter Property="Background" Value="#2d2d2d"/>
                                             </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#404040"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
+                                            </Trigger>
                                         </Style.Triggers>
                                     </Style>
                                     <Style TargetType="DataGridCell">
@@ -219,6 +236,12 @@
                                         <Setter Property="BorderThickness" Value="0"/>
                                         <Setter Property="Padding" Value="5,3,5,3"/>
                                         <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#404040"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
+                                            </Trigger>
+                                        </Style.Triggers>
                                     </Style>
                                 </DataGrid.Resources>
                                 <DataGrid.Columns>
@@ -227,6 +250,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextWrapping" Value="Wrap"/>
                                                 <Setter Property="Padding" Value="5,3,5,3"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -268,6 +292,7 @@
                                       GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040"
                                       VerticalScrollBarVisibility="Auto">
                                 <DataGrid.Resources>
+                                    <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#e0e0e0" />
                                     <Style TargetType="DataGridRow">
                                         <Setter Property="Background" Value="#1e1e1e"/>
                                         <Setter Property="Foreground" Value="#e0e0e0"/>
@@ -278,6 +303,7 @@
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
                                                 <Setter Property="Background" Value="#404040"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
                                             </Trigger>
                                         </Style.Triggers>
                                     </Style>
@@ -303,6 +329,7 @@
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Padding" Value="5,3,5,3"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -321,6 +348,7 @@
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="TextWrapping" Value="Wrap"/>
                                                 <Setter Property="Padding" Value="5,3,5,3"/>
+                                                <Setter Property="Foreground" Value="#e0e0e0"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
