@@ -54,6 +54,8 @@ namespace StableSatoViewer
 
             // Hook parameters toggle
             parametersToggleButton.Click += ParametersToggleButton_Click;
+            negativeToggleButton.Click += NegativeToggleButton_Click;
+            stepsToggleButton.Click += StepsToggleButton_Click;
         }
 
         private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -388,6 +390,94 @@ namespace StableSatoViewer
                 parametersTextBox.Text = sb.ToString().TrimEnd('\r','\n');
                 parametersGrid.Visibility = Visibility.Collapsed;
                 parametersTextBox.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void NegativeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (negativePromptTextBox.Visibility == Visibility.Visible)
+            {
+                // switch to grid view
+                negativePromptTextBox.Visibility = Visibility.Collapsed;
+                negativePromptGrid.Visibility = Visibility.Visible;
+
+                // update grid from text
+                var lines = negativePromptTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                var items = new ObservableCollection<SimpleItem>();
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line)) items.Add(new SimpleItem { Value = line });
+                }
+                if (items.Count == 0) items.Add(new SimpleItem { Value = "" });
+                negativePromptGrid.ItemsSource = items;
+            }
+            else
+            {
+                // switch to raw text view
+                var sb = new StringBuilder();
+                if (negativePromptGrid.ItemsSource is System.Collections.IEnumerable enumerable)
+                {
+                    foreach (var obj in enumerable)
+                    {
+                        if (obj is SimpleItem si)
+                        {
+                            sb.AppendLine(si.Value ?? "");
+                        }
+                    }
+                }
+
+                negativePromptTextBox.Text = sb.ToString().TrimEnd('\r','\n');
+                negativePromptGrid.Visibility = Visibility.Collapsed;
+                negativePromptTextBox.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void StepsToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (stepsTextBox.Visibility == Visibility.Visible)
+            {
+                // switch to grid view
+                stepsTextBox.Visibility = Visibility.Collapsed;
+                stepsGrid.Visibility = Visibility.Visible;
+
+                // update grid from text - parse key:value lines
+                var lines = stepsTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                var items = new ObservableCollection<StepsItem>();
+                foreach (var line in lines)
+                {
+                    var idx = line.IndexOf(':');
+                    if (idx > 0)
+                    {
+                        var key = line.Substring(0, idx).Trim();
+                        var value = line.Substring(idx + 1).Trim();
+                        items.Add(new StepsItem { Key = key, Value = value });
+                    }
+                    else
+                    {
+                        items.Add(new StepsItem { Key = line.Trim(), Value = "" });
+                    }
+                }
+                if (items.Count == 0) items.Add(new StepsItem { Key = "(なし)", Value = "" });
+                stepsGrid.ItemsSource = items;
+            }
+            else
+            {
+                // switch to raw text view
+                var sb = new StringBuilder();
+                if (stepsGrid.ItemsSource is System.Collections.IEnumerable enumerable)
+                {
+                    foreach (var obj in enumerable)
+                    {
+                        if (obj is StepsItem si)
+                        {
+                            sb.AppendLine($"{si.Key}: {si.Value}");
+                        }
+                    }
+                }
+
+                stepsTextBox.Text = sb.ToString().TrimEnd('\r','\n');
+                stepsGrid.Visibility = Visibility.Collapsed;
+                stepsTextBox.Visibility = Visibility.Visible;
             }
         }
     }
