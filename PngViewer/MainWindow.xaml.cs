@@ -53,6 +53,9 @@ namespace StableSatoViewer
             parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+
+            // マウスブラウザボタンや他のマウスボタンを受け取るためにプレビュー MouseDown を購読
+            this.PreviewMouseDown += MainWindow_PreviewMouseDown;
         }
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -150,15 +153,46 @@ namespace StableSatoViewer
                 }
             }
 
-            if (e.Key == Key.Right)
+            // 矢印キー（または Alt+矢印）での移動を許可
+            var key = e.Key;
+            // Alt 修飾付きで届く場合は SystemKey に入ることがあるため両方確認
+            if (key == Key.System)
+            {
+                key = e.SystemKey;
+            }
+
+            if (key == Key.Right)
             {
                 currentIndex = (currentIndex + 1) % pngFiles.Length;
                 ShowImage(pngFiles[currentIndex]);
+                e.Handled = true;
             }
-            else if (e.Key == Key.Left)
+            else if (key == Key.Left)
             {
                 currentIndex = (currentIndex - 1 + pngFiles.Length) % pngFiles.Length;
                 ShowImage(pngFiles[currentIndex]);
+                e.Handled = true;
+            }
+        }
+
+        private void MainWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // マウスのブラウザ戻る／進むボタンで画像を切り替え
+            if (pngFiles == null || pngFiles.Length == 0) return;
+
+            if (e.ChangedButton == MouseButton.XButton1)
+            {
+                // 通常 XButton1 は「戻る」
+                currentIndex = (currentIndex - 1 + pngFiles.Length) % pngFiles.Length;
+                ShowImage(pngFiles[currentIndex]);
+                e.Handled = true;
+            }
+            else if (e.ChangedButton == MouseButton.XButton2)
+            {
+                // 通常 XButton2 は「進む」
+                currentIndex = (currentIndex + 1) % pngFiles.Length;
+                ShowImage(pngFiles[currentIndex]);
+                e.Handled = true;
             }
         }
 
