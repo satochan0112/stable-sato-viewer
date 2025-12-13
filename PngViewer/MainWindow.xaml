@@ -90,7 +90,7 @@
                 </Border>
             </Canvas>
             <!-- 左側: PNG画像 -->
-            <Border Grid.Column="0" Background="#000000">
+            <Border x:Name="imageBorder" Grid.Column="0" Background="#000000" Cursor="Hand">
                 <Image Name="imageBox" Stretch="Uniform" />
             </Border>
 

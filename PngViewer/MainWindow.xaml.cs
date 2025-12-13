@@ -18,22 +18,8 @@ namespace StableSatoViewer
         {
             InitializeComponent();
 
-            // 最初に開くファイルを選択
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "PNG Files (*.png)|*.png"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                string dir = System.IO.Path.GetDirectoryName(dialog.FileName);
-                pngFiles = Directory.GetFiles(dir, "*.png")
-                                    .OrderBy(f => f) // 名前順に並べる
-                                    .ToArray();
-
-                currentIndex = Array.IndexOf(pngFiles, dialog.FileName);
-                ShowImage(pngFiles[currentIndex]);
-            }
+            // Hook image area click to open files when empty
+            imageBorder.MouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
 
             // キーイベント登録
             this.KeyDown += MainWindow_KeyDown;
@@ -66,6 +52,35 @@ namespace StableSatoViewer
             parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+        }
+
+        private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            // If no image loaded yet, open file selection
+            if (pngFiles == null || pngFiles.Length == 0 || imageBox.Source == null)
+            {
+                OpenAndLoadImagesFromDialog();
+            }
+        }
+
+        private void OpenAndLoadImagesFromDialog()
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "PNG Files (*.png)|*.png"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                string dir = System.IO.Path.GetDirectoryName(dialog.FileName);
+                pngFiles = Directory.GetFiles(dir, "*.png")
+                                    .OrderBy(f => f) // 名前順に並べる
+                                    .ToArray();
+
+                currentIndex = Array.IndexOf(pngFiles, dialog.FileName);
+                if (currentIndex < 0) currentIndex = 0;
+                ShowImage(pngFiles[currentIndex]);
+            }
         }
 
         private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
