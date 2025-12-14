@@ -691,6 +691,11 @@ namespace StableSatoViewer
             await System.Threading.Tasks.Task.Delay(1500);
             toastBorder.Visibility = Visibility.Collapsed;
         }
+
+        private void OpenFilesButton_Click(object sender, RoutedEventArgs e)
+        {
+            OpenAndLoadImagesFromDialog();
+        }
     }
 
     public class StepsItem
