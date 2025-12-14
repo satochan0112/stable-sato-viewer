@@ -19,9 +19,9 @@ namespace StableSatoViewer
         public MainWindow()
         {
             InitializeComponent();
-            // load persisted bookmark
+            // 保存されたブックマークを読み込む
             LoadBookmark();
-            // reflect bookmark state in UI
+            // UI にブックマークの状態を反映
             UpdateBookmarkIndicator();
 
             // 画像領域のクリックをトンネルイベントでフック（領域のどこをクリックしても検出されるように）
@@ -141,7 +141,7 @@ namespace StableSatoViewer
 
         private void OpenBookmarkButton_Click(object sender, RoutedEventArgs e)
         {
-            // If an image is currently open, save/replace bookmark with current image path
+            // 画像が開いている場合、現在の画像パスをブックマークとして保存／上書きする
             if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
             {
                 string current = bm.UriSource.LocalPath;
@@ -152,7 +152,7 @@ namespace StableSatoViewer
                 return;
             }
 
-            // No image open: try to open bookmarked image
+            // 画像が開かれていない場合：保存済みのブックマーク画像を開こうとする
             if (string.IsNullOrEmpty(bookmarkPath))
             {
                 ShowToast("No bookmark");
@@ -161,7 +161,7 @@ namespace StableSatoViewer
 
             if (File.Exists(bookmarkPath))
             {
-                // Load that image and set up pngFiles to that directory
+                // 指定された画像を読み込み、そのディレクトリ内の PNG を pngFiles にセットする
                 string dir = System.IO.Path.GetDirectoryName(bookmarkPath);
                 pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                 currentIndex = Array.IndexOf(pngFiles, bookmarkPath);
@@ -185,7 +185,7 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ignore save errors
+                // 保存エラーは無視
             }
         }
 
@@ -202,7 +202,7 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ignore load errors
+                // 読み込みエラーは無視
             }
         }
 
@@ -212,7 +212,7 @@ namespace StableSatoViewer
             {
                 if (bookmarkButton == null) return;
 
-                // determine current image path
+                // 現在表示中の画像パスを取得
                 string current = null;
                 if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                 {
@@ -221,14 +221,14 @@ namespace StableSatoViewer
 
                 if (!string.IsNullOrEmpty(current) && !string.IsNullOrEmpty(bookmarkPath) && string.Equals(current, bookmarkPath, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    // highlighted state
+                    // ハイライト状態（現在の画像がブックマークされている）
                     bookmarkButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#60a0ff");
                     bookmarkButton.Foreground = System.Windows.Media.Brushes.White;
                     bookmarkButton.ToolTip = "Bookmarked (current)";
                 }
                 else
                 {
-                    // normal state
+                    // 通常状態
                     bookmarkButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#2d2d2d");
                     bookmarkButton.Foreground = System.Windows.Media.Brushes.White;
                     bookmarkButton.ToolTip = string.IsNullOrEmpty(bookmarkPath) ? "No bookmark" : "Open bookmarked image";
@@ -236,7 +236,7 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ignore
+                // エラーは無視
             }
         }
 
@@ -314,7 +314,7 @@ namespace StableSatoViewer
             // tEXt チャンクを読み取って表示
             ExtractAndDisplayTextChunks(path);
 
-            // Update bookmark indicator when image changes
+            // 画像が切り替わったときに栞アイコンを更新
             UpdateBookmarkIndicator();
         }
 
