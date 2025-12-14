@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Linq;
 
 namespace StableSatoViewer
 {
@@ -29,6 +30,33 @@ namespace StableSatoViewer
             // 読み込んだお気に入りに基づき UI を更新
             LoadFavorites();
             UpdateFavoritesIndicator();
+
+            // もしコマンドライン引数で画像ファイルが渡されていたら最初に表示する
+            try
+            {
+                var args = Environment.GetCommandLineArgs();
+                if (args != null && args.Length > 1)
+                {
+                    string first = args[1];
+                    if (!string.IsNullOrEmpty(first) && File.Exists(first))
+                    {
+                        var ext = Path.GetExtension(first);
+                        if (!string.IsNullOrEmpty(ext) && ext.Equals(".png", StringComparison.OrdinalIgnoreCase))
+                        {
+                            string dir = Path.GetDirectoryName(first);
+                            pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                            currentIndex = Array.IndexOf(pngFiles, first);
+                            if (currentIndex < 0) currentIndex = 0;
+                            // ShowImage will update UI elements; it's safe after InitializeComponent
+                            ShowImage(pngFiles[currentIndex]);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 引数読み込みエラーは無視して通常起動
+            }
 
             // 画像領域のクリックをトンネルイベントでフック（領域のどこをクリックしても検出されるように）
             imageBorder.PreviewMouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
