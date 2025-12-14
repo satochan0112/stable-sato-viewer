@@ -15,6 +15,9 @@ namespace StableSatoViewer
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private string bookmarkPath = null;
+        private List<string> favorites = new List<string>();
+
+        private string favoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
         public MainWindow()
         {
@@ -23,6 +26,9 @@ namespace StableSatoViewer
             LoadBookmark();
             // UI にブックマークの状態を反映
             UpdateBookmarkIndicator();
+            // 読み込んだお気に入りに基づき UI を更新
+            LoadFavorites();
+            UpdateFavoritesIndicator();
 
             // 画像領域のクリックをトンネルイベントでフック（領域のどこをクリックしても検出されるように）
             imageBorder.PreviewMouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
@@ -316,6 +322,8 @@ namespace StableSatoViewer
 
             // 画像が切り替わったときに栞アイコンを更新
             UpdateBookmarkIndicator();
+            // Update favorites indicator when image changes
+            UpdateFavoritesIndicator();
         }
 
         private void UpdateWindowTitle(string path)
@@ -804,6 +812,134 @@ namespace StableSatoViewer
         private void OpenFilesButton_Click(object sender, RoutedEventArgs e)
         {
             OpenAndLoadImagesFromDialog();
+        }
+
+        private void FavoritesButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Load favorites
+            LoadFavorites();
+            favoritesListBox.ItemsSource = null;
+            favoritesListBox.ItemsSource = favorites;
+            favoritesPopup.IsOpen = true;
+        }
+
+        private void AddFavoriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
+            {
+                var path = bm.UriSource.LocalPath;
+                if (!favorites.Contains(path))
+                {
+                    favorites.Add(path);
+                    SaveFavorites();
+                    favoritesListBox.ItemsSource = null;
+                    favoritesListBox.ItemsSource = favorites;
+                    ShowToast("Added to favorites");
+                    UpdateFavoritesIndicator();
+                }
+                else
+                {
+                    ShowToast("Already in favorites");
+                }
+            }
+            else
+            {
+                ShowToast("No image open");
+            }
+        }
+
+        private void RemoveAllFavoritesButton_Click(object sender, RoutedEventArgs e)
+        {
+            favorites.Clear();
+            SaveFavorites();
+            favoritesListBox.ItemsSource = null;
+            ShowToast("All favorites removed");
+            UpdateFavoritesIndicator();
+        }
+
+        private void EditFavoritesButton_Click(object sender, RoutedEventArgs e)
+        {
+            // simple edit: open folder
+            var dir = Path.GetDirectoryName(favoritesFilePath);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{favoritesFilePath}\"") { UseShellExecute = true });
+        }
+
+        private void FavoritesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (favoritesListBox.SelectedItem is string path)
+            {
+                if (File.Exists(path))
+                {
+                    string dir = Path.GetDirectoryName(path);
+                    pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                    currentIndex = Array.IndexOf(pngFiles, path);
+                    if (currentIndex < 0) currentIndex = 0;
+                    ShowImage(pngFiles[currentIndex]);
+                    favoritesPopup.IsOpen = false;
+                }
+                else
+                {
+                    ShowToast("Favorite image not found");
+                }
+            }
+        }
+
+        private void SaveFavorites()
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(favoritesFilePath);
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                File.WriteAllLines(favoritesFilePath, favorites, Encoding.UTF8);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void LoadFavorites()
+        {
+            try
+            {
+                if (File.Exists(favoritesFilePath))
+                {
+                    favorites = File.ReadAllLines(favoritesFilePath, Encoding.UTF8).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+                }
+                else
+                {
+                    favorites = new List<string>();
+                }
+            }
+            catch
+            {
+                favorites = new List<string>();
+            }
+        }
+
+        private void UpdateFavoritesIndicator()
+        {
+            try
+            {
+                if (favoritesButton == null) return;
+                if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
+                {
+                    if (favorites.Contains(bm.UriSource.LocalPath))
+                    {
+                        favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#60a0ff");
+                        favoritesButton.Foreground = System.Windows.Media.Brushes.White;
+                        favoritesButton.ToolTip = "Favorited";
+                        return;
+                    }
+                }
+                favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#2d2d2d");
+                favoritesButton.Foreground = System.Windows.Media.Brushes.White;
+                favoritesButton.ToolTip = "Favorites";
+            }
+            catch
+            {
+            }
         }
     }
 
