@@ -76,15 +76,20 @@
 
             <!-- フロート表示ボタン -->
             <!-- 右上のフローティングコントロール（画像領域を覆わないよう領域を限定） -->
-            <Canvas Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="140" Height="56" Margin="0,10,10,0">
+            <Canvas Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="185" Height="56" Margin="0,10,10,0">
                 <!-- 画像選択を再表示するボタン（トップバーの左） -->
-                <Button x:Name="openFilesTopButton" Content="&#xE8A5;" Width="36" Height="36"
+                <Button x:Name="bookmarkButton" Content="&#xE718;" Width="36" Height="36"
                         Canvas.Left="10" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
                         Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
-                        FontSize="16" Cursor="Hand" Click="OpenFilesButton_Click" ToolTip="画像を選択" />
+                        FontSize="16" Cursor="Hand" Click="OpenBookmarkButton_Click" ToolTip="Bookmark" />
+
+                <Button x:Name="openFilesTopButton" Content="&#xE8A5;" Width="36" Height="36"
+                        Canvas.Left="56" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
+                        Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
+                        FontSize="16" Cursor="Hand" Click="OpenFilesButton_Click" ToolTip="Open images" />
 
                 <Button Name="toggleButton" Content="&#xE946;" Width="36" Height="36"
-                    Canvas.Left="56" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
+                    Canvas.Left="102" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
                     Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
                     FontSize="16" Cursor="Hand">
                     <Button.Style>
@@ -114,7 +119,7 @@
 
                 <!-- fullScreenButton をこれに置き換える -->
                 <ToggleButton x:Name="fullScreenToggle" Width="36" Height="36" ToolTip="全画面切替"
-              Canvas.Left="102" Canvas.Top="10" Cursor="Hand"
+              Canvas.Left="148" Canvas.Top="10" Cursor="Hand"
                 Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0">
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
