@@ -969,6 +969,53 @@ namespace StableSatoViewer
             {
             }
         }
+
+        private void ImageBorder_PreviewDragOver(object sender, DragEventArgs e)
+        {
+            // PNG ファイルのみ許可
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files != null && files.Length > 0 && Path.GetExtension(files[0])?.Equals(".png", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    e.Effects = DragDropEffects.Copy;
+                }
+                else
+                {
+                    e.Effects = DragDropEffects.None;
+                }
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        private void ImageBorder_Drop(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
+            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (files == null || files.Length == 0) return;
+
+            // 最初のファイルが PNG なら読み込む
+            var first = files[0];
+            if (!File.Exists(first)) return;
+            if (!string.Equals(Path.GetExtension(first), ".png", StringComparison.OrdinalIgnoreCase)) return;
+
+            try
+            {
+                string dir = Path.GetDirectoryName(first);
+                pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                currentIndex = Array.IndexOf(pngFiles, first);
+                if (currentIndex < 0) currentIndex = 0;
+                ShowImage(pngFiles[currentIndex]);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
     }
 
     public class StepsItem

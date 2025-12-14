@@ -130,7 +130,7 @@
                 </Border>
             </Canvas>
             <!-- 左側: PNG画像 -->
-            <Border x:Name="imageBorder" Grid.Column="0" Background="#000000" Cursor="Hand">
+            <Border x:Name="imageBorder" Grid.Column="0" Background="#000000" Cursor="Hand" AllowDrop="True" PreviewDragOver="ImageBorder_PreviewDragOver" Drop="ImageBorder_Drop">
                 <Grid>
                     <!-- 固定サイズ（300x300）のグレースケール背景画像、中央表示でクリックを透過 -->
                     <Image Source="pack://application:,,,/StableSatoViewer;component/Assets/stablesatoviewer_gs.png"
