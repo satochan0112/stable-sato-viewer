@@ -1176,8 +1176,6 @@ namespace StableSatoViewer
             try
             {
                 var allPng = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
-                var filter = new FilterDialog { Owner = this };
-                // reuse last used filter by showing dialog? For now, just load all
                 var matched = new List<string>(allPng);
                 if (matched.Count == 0) { ShowToast("No images"); return; }
                 pngFiles = matched.ToArray();
