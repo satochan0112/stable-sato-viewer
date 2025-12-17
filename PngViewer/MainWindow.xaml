@@ -11,16 +11,20 @@
         <!-- メイン領域を左右に分割 -->
         <Grid Background="#1e1e1e">
             <Grid.ColumnDefinitions>
+                <!-- 左端: フォルダツリー -->
+                <ColumnDefinition Width="260" />
+                <!-- ツリーと画像のスプリッター -->
+                <ColumnDefinition Width="8" />
                 <!-- 左側: 画像表示領域 -->
                 <ColumnDefinition Width="*" />
-                <!-- グリッドスプリッター用 -->
+                <!-- 画像と右パネルのスプリッター -->
                 <ColumnDefinition Width="5" />
                 <!-- 右側: テキスト表示領域 -->
                 <ColumnDefinition Width="300" />
             </Grid.ColumnDefinitions>
 
             <!-- フローティングプロンプト（モード: 画像最大化時に表示）- 画像上に重ねる -->
-            <Border x:Name="floatingPromptBorder" Grid.Column="0" Visibility="Collapsed" Width="320" Height="420" Background="#80000000" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="8" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,80,20,0" Panel.ZIndex="3500">
+            <Border x:Name="floatingPromptBorder" Grid.Column="2" Visibility="Collapsed" Width="320" Height="420" Background="#80000000" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4" Padding="8" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,80,20,0" Panel.ZIndex="3500">
                 <DataGrid x:Name="floatingPromptGrid" Background="Transparent" Foreground="#ffffff"
                           BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
                           CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
@@ -76,7 +80,7 @@
 
             <!-- フロート表示ボタン -->
             <!-- 右上のフローティングコントロール（画像領域を覆わないよう領域を限定） -->
-            <Canvas Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="213" Height="56" Margin="0,10,10,0">
+            <Canvas Grid.Column="2" Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="213" Height="56" Margin="0,10,10,0">
                 <!-- お気に入りボタン（★） -->
                 <Button x:Name="favoritesButton" Content="&#xE734;" Width="36" Height="36"
                         Canvas.Left="10" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
@@ -94,6 +98,12 @@
                         Canvas.Left="122" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
                         Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
                         FontSize="16" Cursor="Hand" />
+
+                <!-- フォルダツリー表示切替 -->
+                <Button x:Name="treeToggleButton" Content="&#xE8B8;" Width="36" Height="36"
+                        Canvas.Left="90" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
+                        Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
+                        FontSize="16" Cursor="Hand" ToolTip="Toggle folders" />
 
                 <!-- fullScreenButton -->
                 <ToggleButton x:Name="fullScreenToggle" Width="36" Height="36" ToolTip="全画面切替"
@@ -130,7 +140,7 @@
                 </Border>
             </Canvas>
             <!-- 左側: PNG画像 -->
-            <Border x:Name="imageBorder" Grid.Column="0" Background="#000000" Cursor="Hand" AllowDrop="True" PreviewDragOver="ImageBorder_PreviewDragOver" Drop="ImageBorder_Drop">
+            <Border x:Name="imageBorder" Grid.Column="2" Background="#000000" Cursor="Hand" AllowDrop="True" PreviewDragOver="ImageBorder_PreviewDragOver" Drop="ImageBorder_Drop">
                 <Grid>
                     <!-- 固定サイズ（300x300）のグレースケール背景画像、中央表示でクリックを透過 -->
                     <Image Source="pack://application:,,,/StableSatoViewer;component/Assets/stablesatoviewer_gs.png"
@@ -173,14 +183,14 @@
              </Border>
 
             <!-- カラム間の幅をドラッグで変更できるようにする -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"
-                          Background="#404040" Cursor="SizeWE" Focusable="False"
-                          IsTabStop="False"
-                          KeyboardNavigation.IsTabStop="False"/>
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch"
+                           VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"
+                           Background="#404040" Cursor="SizeWE" Focusable="False"
+                           IsTabStop="False"
+                           KeyboardNavigation.IsTabStop="False"/>
 
             <!-- 右側: tEXt表示エリア -->
-            <Grid Grid.Column="2" Background="#2d2d2d">
+            <Grid Grid.Column="4" Background="#2d2d2d">
                 <Grid.RowDefinitions>
                     <!-- Prompt -->
                     <RowDefinition Height="*" />
@@ -441,8 +451,25 @@
                     </Grid>
                 </Border>
             </Grid>
-        </Grid>
 
-        
-     </DockPanel>
+            <!-- 左端: フォルダツリー -->
+            <Border x:Name="treeBorder" Grid.Column="0" Grid.Row="0" Background="#1e1e1e" BorderBrush="#2d2d2d" BorderThickness="0,0,1,0">
+                <TreeView x:Name="folderTreeView" Background="#1e1e1e" Foreground="#e0e0e0" BorderThickness="0" SelectedItemChanged="FolderTreeView_SelectedItemChanged">
+                    <!-- ItemContainerStyle to ensure readable text -->
+                    <TreeView.ItemContainerStyle>
+                        <Style TargetType="TreeViewItem">
+                            <Setter Property="Foreground" Value="#e0e0e0" />
+                            <Setter Property="FontSize" Value="12" />
+                        </Style>
+                    </TreeView.ItemContainerStyle>
+                </TreeView>
+            </Border>
+
+            <!-- スプリッター: ツリーと画像の間 -->
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext"
+                          Background="#404040" Cursor="SizeWE" Focusable="False"
+                          IsTabStop="False" KeyboardNavigation.IsTabStop="False"/>
+        </Grid>
+    </DockPanel>
 </Window>

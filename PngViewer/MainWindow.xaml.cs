@@ -76,6 +76,7 @@ namespace StableSatoViewer
 
             // ボタンイベント登録
             toggleButton.Click += ToggleButton_Click;
+            treeToggleButton.Click += TreeToggleButton_Click;
             fullScreenToggle.Click += FullScreenButton_Click;
 
             // TextBox のキーイベント登録（左右キーのみ処理）
@@ -95,14 +96,18 @@ namespace StableSatoViewer
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
 
-            // クリックでコピー＆矢印キー転送の処理を各グリッドに登録
-            parametersGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
-            negativePromptGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
-            stepsGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
-
-            parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
-            negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
-            stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+            // Build folder tree and restore last folder
+            try
+            {
+                BuildFolderTree();
+                var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
+                if (File.Exists(last))
+                {
+                    var lf = File.ReadAllText(last, Encoding.UTF8).Trim();
+                    if (Directory.Exists(lf)) SelectFolderInTree(lf);
+                }
+            }
+            catch { }
         }
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -674,7 +679,7 @@ namespace StableSatoViewer
             // DockPanel 内のすべての子要素からメイングリッドを探す
             foreach (UIElement child in dockPanel.Children)
             {
-                if (child is Grid g && g.ColumnDefinitions.Count == 3)
+                if (child is Grid g && g.ColumnDefinitions.Count >= 5)
                 {
                     mainGrid = g;
                     break;
@@ -689,7 +694,7 @@ namespace StableSatoViewer
             Grid rightGrid = null;
             foreach (UIElement child in mainGrid.Children)
             {
-                if (child is Grid g && Grid.GetColumn(g) == 2)
+                if (child is Grid g && Grid.GetColumn(g) == 4)
                 {
                     rightGrid = g;
                     break;
@@ -708,9 +713,10 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Visible;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
-                    colDefs[1].Width = new GridLength(5);
-                    colDefs[2].Width = new GridLength(300);
-                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    // restore image/right splitter and right column
+                    colDefs[3].Width = new GridLength(5);
+                    colDefs[4].Width = new GridLength(300);
+                    colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     break;
 
                 case 1:
@@ -718,9 +724,9 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Collapsed;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Visible;
-                    colDefs[1].Width = new GridLength(0);
-                    colDefs[2].Width = new GridLength(0);
-                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    colDefs[3].Width = new GridLength(0);
+                    colDefs[4].Width = new GridLength(0);
+                    colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     UpdateFloatingPromptContent();
                     break;
 
@@ -729,9 +735,9 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Collapsed;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
-                    colDefs[1].Width = new GridLength(0);
-                    colDefs[2].Width = new GridLength(0);
-                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    colDefs[3].Width = new GridLength(0);
+                    colDefs[4].Width = new GridLength(0);
+                    colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     break;
             }
         }
@@ -1101,6 +1107,147 @@ namespace StableSatoViewer
             {
                 // ignore
             }
+        }
+
+        private void BuildFolderTree()
+        {
+            folderTreeView.Items.Clear();
+            try
+            {
+                foreach (var d in DriveInfo.GetDrives().Where(d => d.IsReady))
+                {
+                    var ti = new TreeViewItem { Header = d.Name, Tag = d.RootDirectory.FullName };
+                    ti.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                    ti.Items.Add(null);
+                    ti.Expanded += Folder_Expanded;
+                    folderTreeView.Items.Add(ti);
+                }
+            }
+            catch { }
+        }
+
+        private void Folder_Expanded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TreeViewItem ti)
+            {
+                if (ti.Items.Count == 1 && ti.Items[0] == null)
+                {
+                    ti.Items.Clear();
+                    try
+                    {
+                        var path = ti.Tag as string;
+                        foreach (var sub in Directory.GetDirectories(path))
+                        {
+                            var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
+                            child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                            child.Items.Add(null);
+                            child.Expanded += Folder_Expanded;
+                            ti.Items.Add(child);
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private void FolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (folderTreeView.SelectedItem is TreeViewItem t && t.Tag is string p)
+            {
+                SaveLastFolder(p);
+                LoadImagesFromFolderWithFilter(p);
+            }
+        }
+
+        private void SaveLastFolder(string dir)
+        {
+            try
+            {
+                var fn = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
+                if (!Directory.Exists(fn)) Directory.CreateDirectory(fn);
+                File.WriteAllText(Path.Combine(fn, "lastfolder.txt"), dir, Encoding.UTF8);
+            }
+            catch { }
+        }
+
+        private void SelectFolderInTree(string path)
+        {
+            foreach (TreeViewItem t in folderTreeView.Items)
+            {
+                if (SelectFolderRecursive(t, path)) return;
+            }
+        }
+
+        private bool SelectFolderRecursive(TreeViewItem t, string path)
+        {
+            try
+            {
+                if (t.Tag as string == path)
+                {
+                    t.IsSelected = true;
+                    t.BringIntoView();
+                    return true;
+                }
+                foreach (var child in t.Items.OfType<TreeViewItem>())
+                {
+                    if (SelectFolderRecursive(child, path)) return true;
+                }
+            }
+            catch { }
+            return false;
+        }
+
+        private void LoadImagesFromFolderWithFilter(string dir)
+        {
+            try
+            {
+                var allPng = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                var filter = new FilterDialog { Owner = this };
+                // reuse last used filter by showing dialog? For now, just load all
+                var matched = new List<string>(allPng);
+                if (matched.Count == 0) { ShowToast("No images"); return; }
+                pngFiles = matched.ToArray();
+                currentIndex = 0;
+                ShowImage(pngFiles[currentIndex]);
+            }
+            catch { }
+        }
+        private void TreeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // find main grid under DockPanel
+                var dockPanel = (DockPanel)this.Content;
+                Grid mainGrid = null;
+                foreach (UIElement child in dockPanel.Children)
+                {
+                    if (child is Grid g && g.ColumnDefinitions.Count >= 5)
+                    {
+                        mainGrid = g;
+                        break;
+                    }
+                }
+                if (mainGrid == null) return;
+
+                var colDefs = mainGrid.ColumnDefinitions;
+
+                if (treeBorder == null) return;
+
+                if (treeBorder.Visibility == Visibility.Visible)
+                {
+                    // hide
+                    treeBorder.Visibility = Visibility.Collapsed;
+                    colDefs[0].Width = new GridLength(0);
+                    colDefs[1].Width = new GridLength(0);
+                }
+                else
+                {
+                    treeBorder.Visibility = Visibility.Visible;
+                    colDefs[0].Width = new GridLength(260);
+                    colDefs[1].Width = new GridLength(8);
+                }
+            }
+            catch { }
         }
     }
 
