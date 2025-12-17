@@ -481,25 +481,48 @@
                                   Background="#404040" Cursor="SizeNS" Focusable="False" IsTabStop="False" ShowsPreview="True"/>
 
                     <Border Grid.Row="2" BorderThickness="1,0,0,0" BorderBrush="#2d2d2d" Background="#171717" MinHeight="80">
-                        <ListBox x:Name="folderFilesListBox" Background="#171717" Foreground="#e0e0e0" BorderThickness="0" MouseDoubleClick="FolderFilesListBox_MouseDoubleClick" SelectionChanged="FolderFilesListBox_SelectionChanged" MinHeight="60">
-                            <ListBox.ItemContainerStyle>
-                                <Style TargetType="ListBoxItem">
-                                    <Setter Property="Padding" Value="6,4" />
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="Foreground" Value="#e0e0e0" />
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="Background" Value="#2d2d2d" />
-                                        </Trigger>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="Background" Value="#60a0ff" />
-                                            <Setter Property="Foreground" Value="White" />
-                                            <Setter Property="FontWeight" Value="Bold" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </ListBox.ItemContainerStyle>
-                        </ListBox>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- フィルター入力欄 -->
+                            <Border Grid.Row="0" BorderBrush="#404040" BorderThickness="0,0,0,1" Background="#1e1e1e" Padding="6">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="filterTextBox" Grid.Column="0" Background="#2d2d2d" Foreground="#e0e0e0"
+                                             BorderThickness="1" BorderBrush="#404040" Padding="4" VerticalAlignment="Center" />
+                                    <Button x:Name="filterButton" Grid.Column="1" Content="Filter" Background="#404040" Foreground="#ffffff"
+                                            BorderThickness="0" Margin="4,0,0,0" Padding="8,4" Cursor="Hand" Click="FilterButton_Click" />
+                                </Grid>
+                            </Border>
+
+                            <!-- ファイルリスト -->
+                            <ListBox x:Name="folderFilesListBox" Grid.Row="1" Background="#171717" Foreground="#e0e0e0" BorderThickness="0" 
+                                     MouseDoubleClick="FolderFilesListBox_MouseDoubleClick" SelectionChanged="FolderFilesListBox_SelectionChanged">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="6,4" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="Foreground" Value="#e0e0e0" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#2d2d2d" />
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#60a0ff" />
+                                                <Setter Property="Foreground" Value="White" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Grid>
                     </Border>
                 </Grid>
             </Border>

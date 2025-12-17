@@ -24,6 +24,7 @@ namespace StableSatoViewer
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private string bookmarkPath = null;
         private List<string> favorites = new List<string>();
+        private string[] allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
 
         private string favoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
@@ -1203,8 +1204,11 @@ namespace StableSatoViewer
                 try
                 {
                     var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
+                    allPngFilesInFolder = files; // すべてのファイルを保存
+                    pngFiles = files;
                     folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
                     folderFilesListBox.Tag = p; // store current folder
+                    if (filterTextBox != null) filterTextBox.Clear(); // フィルターをクリア
                 }
                 catch { folderFilesListBox.ItemsSource = null; folderFilesListBox.Tag = null; }
             }
@@ -1372,6 +1376,112 @@ namespace StableSatoViewer
             catch
             {
                 // ignore
+            }
+        }
+
+        private void FilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (filterTextBox == null) return;
+                
+                string filterText = filterTextBox.Text.Trim().ToLower();
+                
+                if (string.IsNullOrEmpty(filterText))
+                {
+                    // フィルターなし：すべてのファイルを表示
+                    if (allPngFilesInFolder != null)
+                    {
+                        pngFiles = allPngFilesInFolder;
+                        var names = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                        folderFilesListBox.ItemsSource = names;
+                        ShowToast("Filter cleared");
+                    }
+                    return;
+                }
+
+                // フィルター処理：PNG メタデータでフィルター
+                if (allPngFilesInFolder == null || allPngFilesInFolder.Length == 0)
+                {
+                    ShowToast("No files to filter");
+                    return;
+                }
+
+                var filtered = new List<string>();
+
+                foreach (var f in allPngFilesInFolder)
+                {
+                    try
+                    {
+                        using var fs = new FileStream(f, FileMode.Open, FileAccess.Read);
+                        using var br = new BinaryReader(fs);
+
+                        // skip PNG signature
+                        br.ReadBytes(8);
+
+                        bool found = false;
+                        while (fs.Position + 8 < fs.Length && !found)
+                        {
+                            var lenBytes = br.ReadBytes(4);
+                            if (lenBytes.Length < 4) break;
+                            int length = ReadInt32BigEndian(lenBytes);
+                            var typeBytes = br.ReadBytes(4);
+                            if (typeBytes.Length < 4) break;
+                            string chunkType = Encoding.ASCII.GetString(typeBytes);
+                            var data = br.ReadBytes(length);
+                            br.ReadBytes(4); // CRC
+
+                            if (chunkType == "tEXt")
+                            {
+                                string text = Encoding.ASCII.GetString(data);
+                                int nullIndex = text.IndexOf('\0');
+                                if (nullIndex >= 0)
+                                {
+                                    string key = text.Substring(0, nullIndex);
+                                    string value = text.Substring(nullIndex + 1).ToLower();
+                                    
+                                    if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        // Search only the parameters text up to 'Negative prompt:'
+                                        string paramText = value;
+                                        int negIndex = value.IndexOf("negative prompt:");
+                                        if (negIndex >= 0)
+                                        {
+                                            paramText = value.Substring(0, negIndex);
+                                        }
+                                        
+                                        if (paramText.Contains(filterText))
+                                        {
+                                            filtered.Add(f);
+                                            found = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // ignore read errors
+                    }
+                }
+
+                if (filtered.Count == 0)
+                {
+                    ShowToast($"No files match '{filterText}'");
+                    return;
+                }
+
+                pngFiles = filtered.OrderBy(f => f).ToArray();
+                var fileNames = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                folderFilesListBox.ItemsSource = fileNames;
+                folderFilesListBox.SelectedIndex = 0;
+                
+                ShowToast($"Found {filtered.Count} file(s)");
+            }
+            catch (Exception ex)
+            {
+                ShowToast($"Filter error: {ex.Message}");
             }
         }
     }
