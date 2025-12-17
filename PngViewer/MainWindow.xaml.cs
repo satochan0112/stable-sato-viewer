@@ -459,7 +459,8 @@ namespace StableSatoViewer
                         // 現在のfolderFilesListBoxのディレクトリと異なる場合のみ更新
                         if (folderFilesListBox.Tag as string != dir)
                         {
-                            var files = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                            // フィルター状態が無い場合のみファイルリストを再取得
+                            var files = pngFiles;
                             var names = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
                             folderFilesListBox.ItemsSource = names;
                             folderFilesListBox.Tag = dir;
@@ -1205,10 +1206,15 @@ namespace StableSatoViewer
                 {
                     var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
                     allPngFilesInFolder = files; // すべてのファイルを保存
-                    pngFiles = files;
+                    pngFiles = files; // フィルターをリセット
                     folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
                     folderFilesListBox.Tag = p; // store current folder
                     if (filterTextBox != null) filterTextBox.Clear(); // フィルターをクリア
+                    if (pngFiles.Length > 0)
+                    {
+                        currentIndex = 0;
+                        ShowImage(pngFiles[0]);
+                    }
                 }
                 catch { folderFilesListBox.ItemsSource = null; folderFilesListBox.Tag = null; }
             }
@@ -1359,7 +1365,7 @@ namespace StableSatoViewer
                         // Show selected image and update pngFiles/currentIndex so navigation works
                         var bitmap = new BitmapImage(new Uri(full));
                         imageBox.Source = bitmap;
-                        pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(x => x).ToArray();
+                        // pngFiles は既にフィルター状態を持っているので、そのまま使用
                         currentIndex = Array.IndexOf(pngFiles, full);
                         if (currentIndex < 0) currentIndex = 0;
 
@@ -1395,6 +1401,12 @@ namespace StableSatoViewer
                         pngFiles = allPngFilesInFolder;
                         var names = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
                         folderFilesListBox.ItemsSource = names;
+                        folderFilesListBox.SelectedIndex = 0;
+                        if (pngFiles.Length > 0)
+                        {
+                            currentIndex = 0;
+                            ShowImage(pngFiles[0]);
+                        }
                         ShowToast("Filter cleared");
                     }
                     return;
@@ -1477,6 +1489,10 @@ namespace StableSatoViewer
                 var fileNames = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
                 folderFilesListBox.ItemsSource = fileNames;
                 folderFilesListBox.SelectedIndex = 0;
+                
+                // フィルター後、最初の画像を表示
+                currentIndex = 0;
+                ShowImage(pngFiles[0]);
                 
                 ShowToast($"Found {filtered.Count} file(s)");
             }
