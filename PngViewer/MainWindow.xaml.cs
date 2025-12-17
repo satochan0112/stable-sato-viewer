@@ -1400,7 +1400,7 @@ namespace StableSatoViewer
                     return;
                 }
 
-                // フィルター処理：PNG メタデータでフィルター
+                // フィルター処理：ファイル一覧に表示されているファイルのみをフィルター対象とする
                 if (allPngFilesInFolder == null || allPngFilesInFolder.Length == 0)
                 {
                     ShowToast("No files to filter");
@@ -1450,6 +1450,7 @@ namespace StableSatoViewer
                                             paramText = value.Substring(0, negIndex);
                                         }
                                         
+                                        // フィルターテキストが含まれているかチェック
                                         if (paramText.Contains(filterText))
                                         {
                                             filtered.Add(f);
