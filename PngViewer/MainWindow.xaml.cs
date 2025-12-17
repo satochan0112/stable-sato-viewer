@@ -39,6 +39,19 @@ namespace StableSatoViewer
             LoadFavorites();
             UpdateFavoritesIndicator();
 
+            // Build folder tree and restore last folder
+            try
+            {
+                BuildFolderTree();
+                var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
+                if (File.Exists(last))
+                {
+                    var lf = File.ReadAllText(last, Encoding.UTF8).Trim();
+                    if (Directory.Exists(lf)) SelectFolderInTree(lf);
+                }
+            }
+            catch { }
+
             // もしコマンドライン引数で画像ファイルが渡されていたら最初に表示する
             try
             {
@@ -57,6 +70,8 @@ namespace StableSatoViewer
                             if (currentIndex < 0) currentIndex = 0;
                             // ShowImage will update UI elements; it's safe after InitializeComponent
                             ShowImage(pngFiles[currentIndex]);
+                            // フォルダツリーでもこのフォルダを選択
+                            SelectFolderInTree(dir);
                         }
                     }
                 }
@@ -99,19 +114,6 @@ namespace StableSatoViewer
 
             // ファイルリストのキーイベント登録
             folderFilesListBox.PreviewKeyDown += FolderFilesListBox_PreviewKeyDown;
-
-            // Build folder tree and restore last folder
-            try
-            {
-                BuildFolderTree();
-                var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
-                if (File.Exists(last))
-                {
-                    var lf = File.ReadAllText(last, Encoding.UTF8).Trim();
-                    if (Directory.Exists(lf)) SelectFolderInTree(lf);
-                }
-            }
-            catch { }
         }
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -194,6 +196,8 @@ namespace StableSatoViewer
                 currentIndex = Array.IndexOf(pngFiles, bookmarkPath);
                 if (currentIndex < 0) currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
+                // フォルダツリーでもこのフォルダを選択
+                SelectFolderInTree(dir);
             }
             else
             {
@@ -935,6 +939,8 @@ namespace StableSatoViewer
                     if (currentIndex < 0) currentIndex = 0;
                     ShowImage(pngFiles[currentIndex]);
                     favoritesPopup.IsOpen = false;
+                    // フォルダツリーでもこのフォルダを選択
+                    SelectFolderInTree(dir);
                 }
                 else
                 {
@@ -1040,6 +1046,8 @@ namespace StableSatoViewer
                 currentIndex = Array.IndexOf(pngFiles, first);
                 if (currentIndex < 0) currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
+                // フォルダツリーでもこのフォルダを選択
+                SelectFolderInTree(dir);
             }
             catch
             {
@@ -1146,29 +1154,89 @@ namespace StableSatoViewer
 
         private void SelectFolderInTree(string path)
         {
-            foreach (TreeViewItem t in folderTreeView.Items)
-            {
-                if (SelectFolderRecursive(t, path)) return;
-            }
-        }
-
-        private bool SelectFolderRecursive(TreeViewItem t, string path)
-        {
             try
             {
-                if (t.Tag as string == path)
+                // パスを正規化
+                path = System.IO.Path.GetFullPath(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+
+                // ドライブを探す
+                string drive = System.IO.Path.GetPathRoot(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                
+                TreeViewItem driveNode = null;
+                foreach (TreeViewItem t in folderTreeView.Items)
                 {
-                    t.IsSelected = true;
-                    t.BringIntoView();
-                    return true;
+                    string nodeTag = t.Tag as string;
+                    if (!string.IsNullOrEmpty(nodeTag))
+                    {
+                        string nodeRoot = System.IO.Path.GetPathRoot(nodeTag).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                        if (nodeRoot.Equals(drive, StringComparison.OrdinalIgnoreCase))
+                        {
+                            driveNode = t;
+                            break;
+                        }
+                    }
                 }
-                foreach (var child in t.Items.OfType<TreeViewItem>())
+
+                if (driveNode == null) return;
+
+                // ドライブノードを展開
+                driveNode.IsExpanded = true;
+
+                // パスの各部分を分割
+                string[] pathParts = path.Substring(drive.Length).Trim(System.IO.Path.DirectorySeparatorChar).Split(System.IO.Path.DirectorySeparatorChar);
+
+                // ツリーを辿りながら各ノードを展開
+                TreeViewItem currentNode = driveNode;
+                string currentPath = drive;
+
+                foreach (var part in pathParts)
                 {
-                    if (SelectFolderRecursive(child, path)) return true;
+                    if (string.IsNullOrEmpty(part)) continue;
+
+                    currentPath = System.IO.Path.Combine(currentPath, part);
+
+                    // 子ノードを展開
+                    if (currentNode.Items.Count == 1 && currentNode.Items[0] == null)
+                    {
+                        currentNode.Items.Clear();
+                        try
+                        {
+                            var pathTag = currentNode.Tag as string;
+                            foreach (var sub in Directory.GetDirectories(pathTag))
+                            {
+                                var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
+                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                                child.Items.Add(null);
+                                child.Expanded += Folder_Expanded;
+                                currentNode.Items.Add(child);
+                            }
+                        }
+                        catch { }
+                    }
+
+                    // 次のノードを探す
+                    TreeViewItem nextNode = null;
+                    foreach (TreeViewItem child in currentNode.Items.OfType<TreeViewItem>())
+                    {
+                        string childPath = (child.Tag as string) ?? "";
+                        if (childPath.Equals(currentPath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            nextNode = child;
+                            break;
+                        }
+                    }
+
+                    if (nextNode == null) break;
+
+                    currentNode = nextNode;
+                    currentNode.IsExpanded = true;
                 }
+
+                // 最終ノードを選択
+                currentNode.IsSelected = true;
+                currentNode.BringIntoView();
             }
             catch { }
-            return false;
         }
 
         private void LoadImagesFromFolderWithFilter(string dir)
