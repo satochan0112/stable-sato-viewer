@@ -1156,6 +1156,34 @@ namespace StableSatoViewer
             {
                 SaveLastFolder(p);
                 LoadImagesFromFolderWithFilter(p);
+                // populate file list
+                try
+                {
+                    var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
+                    folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    folderFilesListBox.Tag = p; // store current folder
+                }
+                catch { folderFilesListBox.ItemsSource = null; folderFilesListBox.Tag = null; }
+            }
+        }
+
+        private void FolderFilesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (folderFilesListBox.SelectedItem is string name && folderFilesListBox.Tag is string dir)
+            {
+                var full = System.IO.Path.Combine(dir, name);
+                if (File.Exists(full))
+                {
+                    // set pngFiles to files in dir and show selected
+                    try
+                    {
+                        pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(x => x).ToArray();
+                        currentIndex = Array.IndexOf(pngFiles, full);
+                        if (currentIndex < 0) currentIndex = 0;
+                        ShowImage(pngFiles[currentIndex]);
+                    }
+                    catch { }
+                }
             }
         }
 

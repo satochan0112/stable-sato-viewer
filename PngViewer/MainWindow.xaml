@@ -452,17 +452,28 @@
                 </Border>
             </Grid>
 
-            <!-- 左端: フォルダツリー -->
+            <!-- 左端: フォルダツリー + ファイル一覧 -->
             <Border x:Name="treeBorder" Grid.Column="0" Grid.Row="0" Background="#1e1e1e" BorderBrush="#2d2d2d" BorderThickness="0,0,1,0">
-                <TreeView x:Name="folderTreeView" Background="#1e1e1e" Foreground="#e0e0e0" BorderThickness="0" SelectedItemChanged="FolderTreeView_SelectedItemChanged">
-                    <!-- ItemContainerStyle to ensure readable text -->
-                    <TreeView.ItemContainerStyle>
-                        <Style TargetType="TreeViewItem">
-                            <Setter Property="Foreground" Value="#e0e0e0" />
-                            <Setter Property="FontSize" Value="12" />
-                        </Style>
-                    </TreeView.ItemContainerStyle>
-                </TreeView>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TreeView x:Name="folderTreeView" Grid.Row="0" Background="#1e1e1e" Foreground="#e0e0e0" BorderThickness="0" SelectedItemChanged="FolderTreeView_SelectedItemChanged">
+                        <!-- ItemContainerStyle to ensure readable text -->
+                        <TreeView.ItemContainerStyle>
+                            <Style TargetType="TreeViewItem">
+                                <Setter Property="Foreground" Value="#e0e0e0" />
+                                <Setter Property="FontSize" Value="12" />
+                            </Style>
+                        </TreeView.ItemContainerStyle>
+                    </TreeView>
+
+                    <Border Grid.Row="1" BorderThickness="1,0,0,0" BorderBrush="#2d2d2d" Background="#171717">
+                        <ListBox x:Name="folderFilesListBox" Background="#171717" Foreground="#e0e0e0" BorderThickness="0" MouseDoubleClick="FolderFilesListBox_MouseDoubleClick"/>
+                    </Border>
+                </Grid>
             </Border>
 
             <!-- スプリッター: ツリーと画像の間 -->
