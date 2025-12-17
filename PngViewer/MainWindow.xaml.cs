@@ -8,6 +8,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Linq;
 using System.Diagnostics;
+using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WpfDataGrid = System.Windows.Controls.DataGrid;
+using WpfDataGridCell = System.Windows.Controls.DataGridCell;
+using WpfDataGridRow = System.Windows.Controls.DataGridRow;
+using WpfTextBox = System.Windows.Controls.TextBox;
+using WpfDragEventArgs = System.Windows.DragEventArgs;
 
 namespace StableSatoViewer
 {
@@ -77,7 +83,7 @@ namespace StableSatoViewer
             {
                 foreach (var child in LogicalTreeHelper.GetChildren(this))
                 {
-                    if (child is TextBox textBox)
+                    if (child is WpfTextBox textBox)
                     {
                         textBox.PreviewKeyDown += TextBox_PreviewKeyDown;
                     }
@@ -114,21 +120,17 @@ namespace StableSatoViewer
             var filterDialog = new FilterDialog { Owner = this };
             if (filterDialog.ShowDialog() != true) return;
 
-            // Let user pick any file in the folder (OpenFileDialog)
-            var dlg = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "PNG Files (*.png)|*.png|All files (*.*)|*.*",
-                Multiselect = false
-            };
+            // Let user pick a folder instead of a file
+            using var folderDlg = new System.Windows.Forms.FolderBrowserDialog();
+            folderDlg.Description = "Select folder containing PNG images";
+            folderDlg.UseDescriptionForTitle = true;
+            if (folderDlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 
-            if (dlg.ShowDialog() != true) return;
+            var dir = folderDlg.SelectedPath;
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return;
 
-            var selectedFile = dlg.FileName;
             try
             {
-                string dir = Path.GetDirectoryName(selectedFile);
-                if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return;
-
                 var allPng = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                 var promptFilter = filterDialog.PromptContains;
 
@@ -178,7 +180,6 @@ namespace StableSatoViewer
                                             {
                                                 paramText = value.Substring(0, negIndex).Trim();
                                             }
-                                            Debug.WriteLine(paramText);
                                             if (paramText.IndexOf(promptFilter, StringComparison.OrdinalIgnoreCase) >= 0)
                                             {
                                                 matched.Add(f);
@@ -203,8 +204,7 @@ namespace StableSatoViewer
                 }
 
                 pngFiles = matched.ToArray();
-                currentIndex = Array.IndexOf(pngFiles, selectedFile);
-                if (currentIndex < 0) currentIndex = 0;
+                currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
             }
             catch
@@ -213,7 +213,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void DataGrid_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
             {
@@ -226,12 +226,12 @@ namespace StableSatoViewer
         {
             // マウスの下にあるセルをヒットテストで探す
             var dep = (DependencyObject)e.OriginalSource;
-            while (dep != null && !(dep is DataGridCell) && !(dep is DataGridRow))
+            while (dep != null && !(dep is WpfDataGridCell) && !(dep is WpfDataGridRow))
             {
                 dep = VisualTreeHelper.GetParent(dep);
             }
 
-            if (dep is DataGridCell cell)
+            if (dep is WpfDataGridCell cell)
             {
                 // セルのテキストを取得
                 if (cell.Content is TextBlock tb)
@@ -239,7 +239,7 @@ namespace StableSatoViewer
                     string text = tb.Text;
                     try
                     {
-                        Clipboard.SetText(text);
+                        System.Windows.Clipboard.SetText(text);
                         ShowToast("Copied to clipboard!");
                     }
                     catch
@@ -250,7 +250,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TextBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
             {
@@ -360,7 +360,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        private void MainWindow_KeyDown(object sender, WpfKeyEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
 
@@ -539,7 +539,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void DisplayTextAsGrid(DataGrid grid, string text)
+        private void DisplayTextAsGrid(WpfDataGrid grid, string text)
         {
             var items = new ObservableCollection<SimpleItem>();
 
@@ -1056,32 +1056,32 @@ namespace StableSatoViewer
             }
         }
 
-        private void ImageBorder_PreviewDragOver(object sender, DragEventArgs e)
+        private void ImageBorder_PreviewDragOver(object sender, WpfDragEventArgs e)
         {
             // PNG ファイルのみ許可
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
             {
-                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
                 if (files != null && files.Length > 0 && Path.GetExtension(files[0])?.Equals(".png", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    e.Effects = DragDropEffects.Copy;
+                    e.Effects = System.Windows.DragDropEffects.Copy;
                 }
                 else
                 {
-                    e.Effects = DragDropEffects.None;
+                    e.Effects = System.Windows.DragDropEffects.None;
                 }
             }
             else
             {
-                e.Effects = DragDropEffects.None;
+                e.Effects = System.Windows.DragDropEffects.None;
             }
             e.Handled = true;
         }
 
-        private void ImageBorder_Drop(object sender, DragEventArgs e)
+        private void ImageBorder_Drop(object sender, WpfDragEventArgs e)
         {
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) return;
+            var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
             if (files == null || files.Length == 0) return;
 
             // 最初のファイルが PNG なら読み込む
