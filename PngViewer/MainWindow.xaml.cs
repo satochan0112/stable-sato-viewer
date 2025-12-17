@@ -117,109 +117,7 @@ namespace StableSatoViewer
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             // 画像が読み込まれていなければファイル選択ダイアログを開く
-            if (pngFiles == null || pngFiles.Length == 0 || imageBox.Source == null)
-            {
-                OpenAndLoadImagesFromDialog();
-            }
-        }
-
-        private void OpenAndLoadImagesFromDialog()
-        {
-            // Show prompt filter dialog
-            var filterDialog = new FilterDialog { Owner = this };
-            if (filterDialog.ShowDialog() != true) return;
-
-            // Let user pick a folder instead of a file
-            using var folderDlg = new System.Windows.Forms.FolderBrowserDialog();
-            folderDlg.Description = "Select folder containing PNG images";
-            folderDlg.UseDescriptionForTitle = true;
-            if (folderDlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
-
-            var dir = folderDlg.SelectedPath;
-            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return;
-
-            try
-            {
-                var allPng = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
-                var promptFilter = filterDialog.PromptContains;
-
-                var matched = new List<string>();
-
-                if (string.IsNullOrEmpty(promptFilter))
-                {
-                    matched.AddRange(allPng);
-                }
-                else
-                {
-                    foreach (var f in allPng)
-                    {
-                        try
-                        {
-                            using var fs = new FileStream(f, FileMode.Open, FileAccess.Read);
-                            using var br = new BinaryReader(fs);
-
-                            // skip PNG signature
-                            br.ReadBytes(8);
-
-                            while (fs.Position + 8 < fs.Length)
-                            {
-                                var lenBytes = br.ReadBytes(4);
-                                if (lenBytes.Length < 4) break;
-                                int length = ReadInt32BigEndian(lenBytes);
-                                var typeBytes = br.ReadBytes(4);
-                                if (typeBytes.Length < 4) break;
-                                string chunkType = Encoding.ASCII.GetString(typeBytes);
-                                var data = br.ReadBytes(length);
-                                br.ReadBytes(4); // CRC
-
-                                if (chunkType == "tEXt")
-                                {
-                                    string text = Encoding.ASCII.GetString(data);
-                                    int nullIndex = text.IndexOf('\0');
-                                    if (nullIndex >= 0)
-                                    {
-                                        string key = text.Substring(0, nullIndex);
-                                        string value = text.Substring(nullIndex + 1);
-                                        if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
-                                        {
-                                            // Search only the parameters text up to 'Negative prompt:'
-                                            string paramText = value;
-                                            int negIndex = value.IndexOf("Negative prompt:", StringComparison.OrdinalIgnoreCase);
-                                            if (negIndex >= 0)
-                                            {
-                                                paramText = value.Substring(0, negIndex).Trim();
-                                            }
-                                            if (paramText.IndexOf(promptFilter, StringComparison.OrdinalIgnoreCase) >= 0)
-                                            {
-                                                matched.Add(f);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // ignore read errors
-                        }
-                    }
-                }
-
-                if (matched.Count == 0)
-                {
-                    ShowToast("No images match the filter");
-                    return;
-                }
-
-                pngFiles = matched.ToArray();
-                currentIndex = 0;
-                ShowImage(pngFiles[currentIndex]);
-            }
-            catch
-            {
-                // ignore
-            }
+            // 廃止: OSのフォルダー選択ダイアログは使用しません
         }
 
         private void DataGrid_PreviewKeyDown(object sender, WpfKeyEventArgs e)
@@ -972,11 +870,6 @@ namespace StableSatoViewer
             toastBorder.Visibility = Visibility.Visible;
             await System.Threading.Tasks.Task.Delay(1500);
             toastBorder.Visibility = Visibility.Collapsed;
-        }
-
-        private void OpenFilesButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenAndLoadImagesFromDialog();
         }
 
         private void FavoritesButton_Click(object sender, RoutedEventArgs e)

@@ -158,8 +158,7 @@
                     <!-- 画像領域内の下中央ナビゲーションボタン（オーバーレイ） -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,16" Panel.ZIndex="2000" IsHitTestVisible="True" Visibility="Visible">
                         <!-- File open button moved here, left of prevImageButton -->
-                        <Button x:Name="openFilesButton" Width="44" Height="44" Margin="6,0" FontFamily="Segoe MDL2 Assets" FontSize="18" Content="&#xEC50;"
-                                Background="#AA2d2d2d" Foreground="#ffffff" BorderThickness="0" Cursor="Hand" Click="OpenFilesButton_Click" Panel.ZIndex="2001" Visibility="Visible"/>
+                        <!-- 廃止: OSのフォルダー選択ダイアログは使用しないため削除 -->
                         <Button x:Name="prevImageButton" Width="44" Height="44" Margin="6,0" FontFamily="Segoe MDL2 Assets" FontSize="18" Content="&#xE76B;"
                                 Background="#AA2d2d2d" Foreground="#ffffff" BorderThickness="0" Cursor="Hand" Click="PrevImageButton_Click" Panel.ZIndex="2001" Visibility="Visible"/>
                         <Button x:Name="nextImageButton" Width="44" Height="44" Margin="6,0" FontFamily="Segoe MDL2 Assets" FontSize="18" Content="&#xE76C;"
