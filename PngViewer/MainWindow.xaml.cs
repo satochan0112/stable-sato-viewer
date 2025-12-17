@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Linq;
+using System.Diagnostics;
 
 namespace StableSatoViewer
 {
@@ -109,21 +110,106 @@ namespace StableSatoViewer
 
         private void OpenAndLoadImagesFromDialog()
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            // Show prompt filter dialog
+            var filterDialog = new FilterDialog { Owner = this };
+            if (filterDialog.ShowDialog() != true) return;
+
+            // Let user pick any file in the folder (OpenFileDialog)
+            var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "PNG Files (*.png)|*.png"
+                Filter = "PNG Files (*.png)|*.png|All files (*.*)|*.*",
+                Multiselect = false
             };
 
-            if (dialog.ShowDialog() == true)
-            {
-                string dir = System.IO.Path.GetDirectoryName(dialog.FileName);
-                pngFiles = Directory.GetFiles(dir, "*.png")
-                                    .OrderBy(f => f) // 名前順に並べる
-                                    .ToArray();
+            if (dlg.ShowDialog() != true) return;
 
-                currentIndex = Array.IndexOf(pngFiles, dialog.FileName);
+            var selectedFile = dlg.FileName;
+            try
+            {
+                string dir = Path.GetDirectoryName(selectedFile);
+                if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return;
+
+                var allPng = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                var promptFilter = filterDialog.PromptContains;
+
+                var matched = new List<string>();
+
+                if (string.IsNullOrEmpty(promptFilter))
+                {
+                    matched.AddRange(allPng);
+                }
+                else
+                {
+                    foreach (var f in allPng)
+                    {
+                        try
+                        {
+                            using var fs = new FileStream(f, FileMode.Open, FileAccess.Read);
+                            using var br = new BinaryReader(fs);
+
+                            // skip PNG signature
+                            br.ReadBytes(8);
+
+                            while (fs.Position + 8 < fs.Length)
+                            {
+                                var lenBytes = br.ReadBytes(4);
+                                if (lenBytes.Length < 4) break;
+                                int length = ReadInt32BigEndian(lenBytes);
+                                var typeBytes = br.ReadBytes(4);
+                                if (typeBytes.Length < 4) break;
+                                string chunkType = Encoding.ASCII.GetString(typeBytes);
+                                var data = br.ReadBytes(length);
+                                br.ReadBytes(4); // CRC
+
+                                if (chunkType == "tEXt")
+                                {
+                                    string text = Encoding.ASCII.GetString(data);
+                                    int nullIndex = text.IndexOf('\0');
+                                    if (nullIndex >= 0)
+                                    {
+                                        string key = text.Substring(0, nullIndex);
+                                        string value = text.Substring(nullIndex + 1);
+                                        if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            // Search only the parameters text up to 'Negative prompt:'
+                                            string paramText = value;
+                                            int negIndex = value.IndexOf("Negative prompt:", StringComparison.OrdinalIgnoreCase);
+                                            if (negIndex >= 0)
+                                            {
+                                                paramText = value.Substring(0, negIndex).Trim();
+                                            }
+                                            Debug.WriteLine(paramText);
+                                            if (paramText.IndexOf(promptFilter, StringComparison.OrdinalIgnoreCase) >= 0)
+                                            {
+                                                matched.Add(f);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // ignore read errors
+                        }
+                    }
+                }
+
+                if (matched.Count == 0)
+                {
+                    ShowToast("No images match the filter");
+                    return;
+                }
+
+                pngFiles = matched.ToArray();
+                currentIndex = Array.IndexOf(pngFiles, selectedFile);
                 if (currentIndex < 0) currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
+            }
+            catch
+            {
+                // ignore
             }
         }
 
