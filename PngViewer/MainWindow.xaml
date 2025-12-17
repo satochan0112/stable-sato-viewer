@@ -477,7 +477,25 @@
                                   Background="#404040" Cursor="SizeNS" Focusable="False" IsTabStop="False" ShowsPreview="True"/>
 
                     <Border Grid.Row="2" BorderThickness="1,0,0,0" BorderBrush="#2d2d2d" Background="#171717" MinHeight="80">
-                        <ListBox x:Name="folderFilesListBox" Background="#171717" Foreground="#e0e0e0" BorderThickness="0" MouseDoubleClick="FolderFilesListBox_MouseDoubleClick" MinHeight="60"/>
+                        <ListBox x:Name="folderFilesListBox" Background="#171717" Foreground="#e0e0e0" BorderThickness="0" MouseDoubleClick="FolderFilesListBox_MouseDoubleClick" SelectionChanged="FolderFilesListBox_SelectionChanged" MinHeight="60">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="6,4" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="Foreground" Value="#e0e0e0" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#2d2d2d" />
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="Background" Value="#60a0ff" />
+                                            <Setter Property="Foreground" Value="White" />
+                                            <Setter Property="FontWeight" Value="Bold" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
                     </Border>
                 </Grid>
             </Border>

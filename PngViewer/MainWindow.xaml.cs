@@ -96,6 +96,9 @@ namespace StableSatoViewer
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
 
+            // ファイルリストのキーイベント登録
+            folderFilesListBox.PreviewKeyDown += FolderFilesListBox_PreviewKeyDown;
+
             // Build folder tree and restore last folder
             try
             {
@@ -443,6 +446,46 @@ namespace StableSatoViewer
             UpdateBookmarkIndicator();
             // Update favorites indicator when image changes
             UpdateFavoritesIndicator();
+
+            // 左パネルのファイル一覧を現在の画像のディレクトリで表示し、選択状態を反映する
+            try
+            {
+                if (folderFilesListBox != null && pngFiles != null)
+                {
+                    var dir = System.IO.Path.GetDirectoryName(path);
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                    {
+                        // 現在のfolderFilesListBoxのディレクトリと異なる場合のみ更新
+                        if (folderFilesListBox.Tag as string != dir)
+                        {
+                            var files = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                            var names = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                            folderFilesListBox.ItemsSource = names;
+                            folderFilesListBox.Tag = dir;
+                        }
+
+                        // 現在の画像に対応するインデックスを取得して選択
+                        int idx = Array.IndexOf(pngFiles, path);
+                        if (idx >= 0)
+                        {
+                            folderFilesListBox.SelectedIndex = idx;
+                            var item = folderFilesListBox.SelectedItem;
+                            if (item != null)
+                            {
+                                folderFilesListBox.ScrollIntoView(item);
+                            }
+                        }
+                        else
+                        {
+                            folderFilesListBox.SelectedIndex = -1;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 無視
+            }
         }
 
         private void UpdateWindowTitle(string path)
@@ -1276,6 +1319,60 @@ namespace StableSatoViewer
                 }
             }
             catch { }
+        }
+
+        private void FolderFilesListBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
+        {
+            // ファイルリストにフォーカスがある時、左右キーで画像切り替え
+            if (e.Key == Key.Left || e.Key == Key.Right)
+            {
+                if (pngFiles == null || pngFiles.Length == 0) return;
+
+                if (e.Key == Key.Right)
+                {
+                    currentIndex = (currentIndex + 1) % pngFiles.Length;
+                    ShowImage(pngFiles[currentIndex]);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Left)
+                {
+                    currentIndex = (currentIndex - 1 + pngFiles.Length) % pngFiles.Length;
+                    ShowImage(pngFiles[currentIndex]);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void FolderFilesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                if (folderFilesListBox.SelectedItem is string name && folderFilesListBox.Tag is string dir)
+                {
+                    var full = System.IO.Path.Combine(dir, name);
+                    if (File.Exists(full))
+                    {
+                        // Show selected image and update pngFiles/currentIndex so navigation works
+                        var bitmap = new BitmapImage(new Uri(full));
+                        imageBox.Source = bitmap;
+                        pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(x => x).ToArray();
+                        currentIndex = Array.IndexOf(pngFiles, full);
+                        if (currentIndex < 0) currentIndex = 0;
+
+                        // Update title and text chunks
+                        UpdateWindowTitle(full);
+                        ExtractAndDisplayTextChunks(full);
+
+                        // Update bookmark and favorites indicators
+                        UpdateBookmarkIndicator();
+                        UpdateFavoritesIndicator();
+                    }
+                }
+            }
+            catch
+            {
+                // ignore
+            }
         }
     }
 
