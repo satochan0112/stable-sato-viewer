@@ -1522,13 +1522,43 @@ namespace StableSatoViewer
 
                 if (allPngFilesInFolder != null)
                 {
-                    pngFiles = allPngFilesInFolder;
-                    folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                    folderFilesListBox.SelectedIndex = 0;
-                    if (pngFiles.Length > 0)
+                    // Remember currently displayed image (if any)
+                    string currentImagePath = null;
+                    if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                     {
-                        currentIndex = 0;
-                        ShowImage(pngFiles[0]);
+                        currentImagePath = bm.UriSource.LocalPath;
+                    }
+
+                    // Restore full file list
+                    pngFiles = allPngFilesInFolder;
+                    var names = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    folderFilesListBox.ItemsSource = names;
+
+                    // If the currently displayed image is in the restored list, keep it selected
+                    if (!string.IsNullOrEmpty(currentImagePath))
+                    {
+                        int idx = Array.IndexOf(pngFiles, currentImagePath);
+                        if (idx >= 0)
+                        {
+                            currentIndex = idx;
+                            folderFilesListBox.SelectedIndex = idx;
+                            folderFilesListBox.ScrollIntoView(folderFilesListBox.SelectedItem);
+                            // ensure UI reflects any parsed text/chunks for the same image
+                            ShowImage(pngFiles[currentIndex]);
+                        }
+                        else
+                        {
+                            // Currently displayed image is not part of this folder's files.
+                            // Do not switch the displayed image to the folder's first image.
+                            // Just leave currentIndex as 0 so navigation won't crash later.
+                            currentIndex = 0;
+                            folderFilesListBox.SelectedIndex = -1;
+                        }
+                    }
+                    else
+                    {
+                        // No image currently displayed: do not force-show first image
+                        folderFilesListBox.SelectedIndex = -1;
                     }
                 }
                 ShowToast("Filter cleared");
