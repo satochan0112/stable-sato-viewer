@@ -1490,6 +1490,29 @@ namespace StableSatoViewer
                 ShowToast($"Filter error: {ex.Message}");
             }
         }
+
+        private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (filterTextBox == null) return;
+                filterTextBox.Clear();
+
+                if (allPngFilesInFolder != null)
+                {
+                    pngFiles = allPngFilesInFolder;
+                    folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    folderFilesListBox.SelectedIndex = 0;
+                    if (pngFiles.Length > 0)
+                    {
+                        currentIndex = 0;
+                        ShowImage(pngFiles[0]);
+                    }
+                }
+                ShowToast("Filter cleared");
+            }
+            catch { }
+        }
     }
 
     public class StepsItem
