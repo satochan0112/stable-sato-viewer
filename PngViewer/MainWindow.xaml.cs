@@ -1535,6 +1535,28 @@ namespace StableSatoViewer
             }
             catch { }
         }
+
+        private void OpenInExplorerButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
+                {
+                    string imagePath = bm.UriSource.LocalPath;
+                    // エクスプローラーでファイルを選択状態で開く
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{imagePath}\"") { UseShellExecute = true });
+                    ShowToast("Opened in Explorer");
+                }
+                else
+                {
+                    ShowToast("No image open");
+                }
+            }
+            catch
+            {
+                ShowToast("Failed to open Explorer");
+            }
+        }
     }
 
     public class StepsItem
