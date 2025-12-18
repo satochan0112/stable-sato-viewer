@@ -358,6 +358,28 @@ namespace StableSatoViewer
             var bitmap = new BitmapImage(new Uri(path));
             imageBox.Source = bitmap;
 
+            // 背景アイコンを非表示
+            if (bitmap != null)
+            {
+                // imageBorder内のGridの子要素から背景画像を探す
+                try
+                {
+                    Grid innerGrid = imageBorder.Child as Grid;
+                    if (innerGrid != null)
+                    {
+                        foreach (var child in innerGrid.Children)
+                        {
+                            if (child is System.Windows.Controls.Image img && img.Name != "imageBox")
+                            {
+                                img.Opacity = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
             // ウィンドウタイトルを更新
             UpdateWindowTitle(path);
 
