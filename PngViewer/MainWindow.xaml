@@ -496,10 +496,10 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBox x:Name="filterTextBox" Grid.Column="0" Background="#2d2d2d" Foreground="#e0e0e0"
                                              BorderThickness="1" BorderBrush="#404040" Padding="4" VerticalAlignment="Center" />
-                                    <Button x:Name="filterButton" Grid.Column="1" Content="Filter" Background="#404040" Foreground="#ffffff"
-                                            BorderThickness="0" Margin="4,0,0,0" Padding="8,4" Cursor="Hand" Click="FilterButton_Click" />
-                                    <Button x:Name="clearFilterButton" Grid.Column="2" Content="Clear" Background="#606060" Foreground="#ffffff"
-                                            BorderThickness="0" Margin="4,0,0,0" Padding="8,4" Cursor="Hand" Click="ClearFilterButton_Click" />
+                                    <Button x:Name="filterButton" Grid.Column="1" Content="&#xE71C;" Background="#404040" Foreground="#ffffff"
+                                            BorderThickness="0" Margin="4,0,0,0" Padding="8,4" FontFamily="Segoe MDL2 Assets" FontSize="11" Cursor="Hand" Click="FilterButton_Click" />
+                                    <Button x:Name="clearFilterButton" Grid.Column="2" Content="&#xE894;" Background="#404040" Foreground="#ffffff"
+                                            BorderThickness="0" Margin="4,0,0,0" Padding="8,4" FontFamily="Segoe MDL2 Assets" FontSize="11"  Cursor="Hand" Click="ClearFilterButton_Click" />
                                 </Grid>
                             </Border>
 
