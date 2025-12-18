@@ -7,6 +7,13 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Linq;
+using System.Diagnostics;
+using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WpfDataGrid = System.Windows.Controls.DataGrid;
+using WpfDataGridCell = System.Windows.Controls.DataGridCell;
+using WpfDataGridRow = System.Windows.Controls.DataGridRow;
+using WpfTextBox = System.Windows.Controls.TextBox;
+using WpfDragEventArgs = System.Windows.DragEventArgs;
 
 namespace StableSatoViewer
 {
@@ -17,6 +24,7 @@ namespace StableSatoViewer
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private string bookmarkPath = null;
         private List<string> favorites = new List<string>();
+        private string[] allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
 
         private string favoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
@@ -30,6 +38,19 @@ namespace StableSatoViewer
             // 読み込んだお気に入りに基づき UI を更新
             LoadFavorites();
             UpdateFavoritesIndicator();
+
+            // Build folder tree and restore last folder
+            try
+            {
+                BuildFolderTree();
+                var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
+                if (File.Exists(last))
+                {
+                    var lf = File.ReadAllText(last, Encoding.UTF8).Trim();
+                    if (Directory.Exists(lf)) SelectFolderInTree(lf);
+                }
+            }
+            catch { }
 
             // もしコマンドライン引数で画像ファイルが渡されていたら最初に表示する
             try
@@ -49,6 +70,8 @@ namespace StableSatoViewer
                             if (currentIndex < 0) currentIndex = 0;
                             // ShowImage will update UI elements; it's safe after InitializeComponent
                             ShowImage(pngFiles[currentIndex]);
+                            // フォルダツリーでもこのフォルダを選択
+                            SelectFolderInTree(dir);
                         }
                     }
                 }
@@ -69,6 +92,7 @@ namespace StableSatoViewer
 
             // ボタンイベント登録
             toggleButton.Click += ToggleButton_Click;
+            treeToggleButton.Click += TreeToggleButton_Click;
             fullScreenToggle.Click += FullScreenButton_Click;
 
             // TextBox のキーイベント登録（左右キーのみ処理）
@@ -76,7 +100,7 @@ namespace StableSatoViewer
             {
                 foreach (var child in LogicalTreeHelper.GetChildren(this))
                 {
-                    if (child is TextBox textBox)
+                    if (child is WpfTextBox textBox)
                     {
                         textBox.PreviewKeyDown += TextBox_PreviewKeyDown;
                     }
@@ -88,46 +112,36 @@ namespace StableSatoViewer
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
 
-            // クリックでコピー＆矢印キー転送の処理を各グリッドに登録
-            parametersGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
-            negativePromptGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
-            stepsGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+            // ファイルリストのキーイベント登録
+            folderFilesListBox.PreviewKeyDown += FolderFilesListBox_PreviewKeyDown;
 
-            parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
-            negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
-            stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+            // フィルター入力で Enter 押下時にフィルターを実行
+            if (filterTextBox != null)
+            {
+                filterTextBox.KeyDown += FilterTextBox_KeyDown;
+            }
+        }
+
+        private void FilterTextBox_KeyDown(object sender, WpfKeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                try
+                {
+                    FilterButton_Click(filterButton, new RoutedEventArgs());
+                }
+                catch { }
+                e.Handled = true;
+            }
         }
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             // 画像が読み込まれていなければファイル選択ダイアログを開く
-            if (pngFiles == null || pngFiles.Length == 0 || imageBox.Source == null)
-            {
-                OpenAndLoadImagesFromDialog();
-            }
+            // 廃止: OSのフォルダー選択ダイアログは使用しません
         }
 
-        private void OpenAndLoadImagesFromDialog()
-        {
-            var dialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "PNG Files (*.png)|*.png"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                string dir = System.IO.Path.GetDirectoryName(dialog.FileName);
-                pngFiles = Directory.GetFiles(dir, "*.png")
-                                    .OrderBy(f => f) // 名前順に並べる
-                                    .ToArray();
-
-                currentIndex = Array.IndexOf(pngFiles, dialog.FileName);
-                if (currentIndex < 0) currentIndex = 0;
-                ShowImage(pngFiles[currentIndex]);
-            }
-        }
-
-        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void DataGrid_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
             {
@@ -140,12 +154,12 @@ namespace StableSatoViewer
         {
             // マウスの下にあるセルをヒットテストで探す
             var dep = (DependencyObject)e.OriginalSource;
-            while (dep != null && !(dep is DataGridCell) && !(dep is DataGridRow))
+            while (dep != null && !(dep is WpfDataGridCell) && !(dep is WpfDataGridRow))
             {
                 dep = VisualTreeHelper.GetParent(dep);
             }
 
-            if (dep is DataGridCell cell)
+            if (dep is WpfDataGridCell cell)
             {
                 // セルのテキストを取得
                 if (cell.Content is TextBlock tb)
@@ -153,7 +167,7 @@ namespace StableSatoViewer
                     string text = tb.Text;
                     try
                     {
-                        Clipboard.SetText(text);
+                        System.Windows.Clipboard.SetText(text);
                         ShowToast("Copied to clipboard!");
                     }
                     catch
@@ -164,7 +178,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void TextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void TextBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
             {
@@ -201,6 +215,8 @@ namespace StableSatoViewer
                 currentIndex = Array.IndexOf(pngFiles, bookmarkPath);
                 if (currentIndex < 0) currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
+                // フォルダツリーでもこのフォルダを選択
+                SelectFolderInTree(dir);
             }
             else
             {
@@ -274,7 +290,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void MainWindow_KeyDown(object sender, KeyEventArgs e)
+        private void MainWindow_KeyDown(object sender, WpfKeyEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
 
@@ -352,6 +368,47 @@ namespace StableSatoViewer
             UpdateBookmarkIndicator();
             // Update favorites indicator when image changes
             UpdateFavoritesIndicator();
+
+            // 左パネルのファイル一覧を現在の画像のディレクトリで表示し、選択状態を反映する
+            try
+            {
+                if (folderFilesListBox != null && pngFiles != null)
+                {
+                    var dir = System.IO.Path.GetDirectoryName(path);
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                    {
+                        // 現在のfolderFilesListBoxのディレクトリと異なる場合のみ更新
+                        if (folderFilesListBox.Tag as string != dir)
+                        {
+                            // フィルター状態が無い場合のみファイルリストを再取得
+                            var files = pngFiles;
+                            var names = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                            folderFilesListBox.ItemsSource = names;
+                            folderFilesListBox.Tag = dir;
+                        }
+
+                        // 現在の画像に対応するインデックスを取得して選択
+                        int idx = Array.IndexOf(pngFiles, path);
+                        if (idx >= 0)
+                        {
+                            folderFilesListBox.SelectedIndex = idx;
+                            var item = folderFilesListBox.SelectedItem;
+                            if (item != null)
+                            {
+                                folderFilesListBox.ScrollIntoView(item);
+                            }
+                        }
+                        else
+                        {
+                            folderFilesListBox.SelectedIndex = -1;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 無視
+            }
         }
 
         private void UpdateWindowTitle(string path)
@@ -453,7 +510,7 @@ namespace StableSatoViewer
             }
         }
 
-        private void DisplayTextAsGrid(DataGrid grid, string text)
+        private void DisplayTextAsGrid(WpfDataGrid grid, string text)
         {
             var items = new ObservableCollection<SimpleItem>();
 
@@ -588,7 +645,7 @@ namespace StableSatoViewer
             // DockPanel 内のすべての子要素からメイングリッドを探す
             foreach (UIElement child in dockPanel.Children)
             {
-                if (child is Grid g && g.ColumnDefinitions.Count == 3)
+                if (child is Grid g && g.ColumnDefinitions.Count >= 5)
                 {
                     mainGrid = g;
                     break;
@@ -603,7 +660,7 @@ namespace StableSatoViewer
             Grid rightGrid = null;
             foreach (UIElement child in mainGrid.Children)
             {
-                if (child is Grid g && Grid.GetColumn(g) == 2)
+                if (child is Grid g && Grid.GetColumn(g) == 4)
                 {
                     rightGrid = g;
                     break;
@@ -622,9 +679,10 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Visible;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
-                    colDefs[1].Width = new GridLength(5);
-                    colDefs[2].Width = new GridLength(300);
-                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    // restore image/right splitter and right column
+                    colDefs[3].Width = new GridLength(5);
+                    colDefs[4].Width = new GridLength(300);
+                    colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     break;
 
                 case 1:
@@ -632,9 +690,9 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Collapsed;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Visible;
-                    colDefs[1].Width = new GridLength(0);
-                    colDefs[2].Width = new GridLength(0);
-                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    colDefs[3].Width = new GridLength(0);
+                    colDefs[4].Width = new GridLength(0);
+                    colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     UpdateFloatingPromptContent();
                     break;
 
@@ -643,9 +701,9 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Collapsed;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
-                    colDefs[1].Width = new GridLength(0);
-                    colDefs[2].Width = new GridLength(0);
-                    colDefs[0].Width = new GridLength(1, GridUnitType.Star);
+                    colDefs[3].Width = new GridLength(0);
+                    colDefs[4].Width = new GridLength(0);
+                    colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     break;
             }
         }
@@ -837,11 +895,6 @@ namespace StableSatoViewer
             toastBorder.Visibility = Visibility.Collapsed;
         }
 
-        private void OpenFilesButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenAndLoadImagesFromDialog();
-        }
-
         private void FavoritesButton_Click(object sender, RoutedEventArgs e)
         {
             // Load favorites
@@ -905,6 +958,8 @@ namespace StableSatoViewer
                     if (currentIndex < 0) currentIndex = 0;
                     ShowImage(pngFiles[currentIndex]);
                     favoritesPopup.IsOpen = false;
+                    // フォルダツリーでもこのフォルダを選択
+                    SelectFolderInTree(dir);
                 }
                 else
                 {
@@ -970,32 +1025,32 @@ namespace StableSatoViewer
             }
         }
 
-        private void ImageBorder_PreviewDragOver(object sender, DragEventArgs e)
+        private void ImageBorder_PreviewDragOver(object sender, WpfDragEventArgs e)
         {
             // PNG ファイルのみ許可
-            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
             {
-                var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
                 if (files != null && files.Length > 0 && Path.GetExtension(files[0])?.Equals(".png", StringComparison.OrdinalIgnoreCase) == true)
                 {
-                    e.Effects = DragDropEffects.Copy;
+                    e.Effects = System.Windows.DragDropEffects.Copy;
                 }
                 else
                 {
-                    e.Effects = DragDropEffects.None;
+                    e.Effects = System.Windows.DragDropEffects.None;
                 }
             }
             else
             {
-                e.Effects = DragDropEffects.None;
+                e.Effects = System.Windows.DragDropEffects.None;
             }
             e.Handled = true;
         }
 
-        private void ImageBorder_Drop(object sender, DragEventArgs e)
+        private void ImageBorder_Drop(object sender, WpfDragEventArgs e)
         {
-            if (!e.Data.GetDataPresent(DataFormats.FileDrop)) return;
-            var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+            if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) return;
+            var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
             if (files == null || files.Length == 0) return;
 
             // 最初のファイルが PNG なら読み込む
@@ -1010,11 +1065,453 @@ namespace StableSatoViewer
                 currentIndex = Array.IndexOf(pngFiles, first);
                 if (currentIndex < 0) currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
+                // フォルダツリーでもこのフォルダを選択
+                SelectFolderInTree(dir);
             }
             catch
             {
                 // ignore
             }
+        }
+
+        private void BuildFolderTree()
+        {
+            folderTreeView.Items.Clear();
+            try
+            {
+                foreach (var d in DriveInfo.GetDrives().Where(d => d.IsReady))
+                {
+                    var ti = new TreeViewItem { Header = d.Name, Tag = d.RootDirectory.FullName };
+                    ti.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                    ti.Items.Add(null);
+                    ti.Expanded += Folder_Expanded;
+                    folderTreeView.Items.Add(ti);
+                }
+            }
+            catch { }
+        }
+
+        private void Folder_Expanded(object sender, RoutedEventArgs e)
+        {
+            if (sender is TreeViewItem ti)
+            {
+                if (ti.Items.Count == 1 && ti.Items[0] == null)
+                {
+                    ti.Items.Clear();
+                    try
+                    {
+                        var path = ti.Tag as string;
+                        foreach (var sub in Directory.GetDirectories(path))
+                        {
+                            var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
+                            child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                            child.Items.Add(null);
+                            child.Expanded += Folder_Expanded;
+                            ti.Items.Add(child);
+                        }
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private void FolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (folderTreeView.SelectedItem is TreeViewItem t && t.Tag is string p)
+            {
+                SaveLastFolder(p);
+                LoadImagesFromFolderWithFilter(p);
+                // populate file list
+                try
+                {
+                    var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
+                    allPngFilesInFolder = files; // すべてのファイルを保存
+
+                    // If a filter is active, apply it to the new folder; otherwise show all
+                    if (filterTextBox != null && !string.IsNullOrWhiteSpace(filterTextBox.Text))
+                    {
+                        // FilterButton_Click relies on allPngFilesInFolder being set
+                        folderFilesListBox.Tag = p; // store current folder
+                        FilterButton_Click(filterButton, new RoutedEventArgs());
+                    }
+                    else
+                    {
+                        pngFiles = files; // フィルターをリセット
+                        folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                        folderFilesListBox.Tag = p; // store current folder
+                        // do not clear filterTextBox - preserve user's input
+                        if (pngFiles.Length > 0)
+                        {
+                            currentIndex = 0;
+                            ShowImage(pngFiles[0]);
+                        }
+                    }
+                }
+                catch { folderFilesListBox.ItemsSource = null; folderFilesListBox.Tag = null; }
+            }
+        }
+
+        private void FolderFilesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (folderFilesListBox.SelectedItem is string name && folderFilesListBox.Tag is string dir)
+            {
+                var full = System.IO.Path.Combine(dir, name);
+                if (File.Exists(full))
+                {
+                    // set pngFiles to files in dir and show selected
+                    try
+                    {
+                        pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(x => x).ToArray();
+                        currentIndex = Array.IndexOf(pngFiles, full);
+                        if (currentIndex < 0) currentIndex = 0;
+                        ShowImage(pngFiles[currentIndex]);
+                    }
+                    catch { }
+                }
+            }
+        }
+
+        private void SaveLastFolder(string dir)
+        {
+            try
+            {
+                var fn = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
+                if (!Directory.Exists(fn)) Directory.CreateDirectory(fn);
+                File.WriteAllText(Path.Combine(fn, "lastfolder.txt"), dir, Encoding.UTF8);
+            }
+            catch { }
+        }
+
+        private void SelectFolderInTree(string path)
+        {
+            try
+            {
+                // パスを正規化
+                path = System.IO.Path.GetFullPath(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+
+                // ドライブを探す
+                string drive = System.IO.Path.GetPathRoot(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                
+                TreeViewItem driveNode = null;
+                foreach (TreeViewItem t in folderTreeView.Items)
+                {
+                    string nodeTag = t.Tag as string;
+                    if (!string.IsNullOrEmpty(nodeTag))
+                    {
+                        string nodeRoot = System.IO.Path.GetPathRoot(nodeTag).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                        if (nodeRoot.Equals(drive, StringComparison.OrdinalIgnoreCase))
+                        {
+                            driveNode = t;
+                            break;
+                        }
+                    }
+                }
+
+                if (driveNode == null) return;
+
+                // ドライブノードを展開
+                driveNode.IsExpanded = true;
+
+                // パスの各部分を分割
+                string[] pathParts = path.Substring(drive.Length).Trim(System.IO.Path.DirectorySeparatorChar).Split(System.IO.Path.DirectorySeparatorChar);
+
+                // ツリーを辿りながら各ノードを展開
+                TreeViewItem currentNode = driveNode;
+                string currentPath = drive;
+
+                foreach (var part in pathParts)
+                {
+                    if (string.IsNullOrEmpty(part)) continue;
+
+                    currentPath = System.IO.Path.Combine(currentPath, part);
+
+                    // 子ノードを展開
+                    if (currentNode.Items.Count == 1 && currentNode.Items[0] == null)
+                    {
+                        currentNode.Items.Clear();
+                        try
+                        {
+                            var pathTag = currentNode.Tag as string;
+                            foreach (var sub in Directory.GetDirectories(pathTag))
+                            {
+                                var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
+                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                                child.Items.Add(null);
+                                child.Expanded += Folder_Expanded;
+                                currentNode.Items.Add(child);
+                            }
+                        }
+                        catch { }
+                    }
+
+                    // 次のノードを探す
+                    TreeViewItem nextNode = null;
+                    foreach (TreeViewItem child in currentNode.Items.OfType<TreeViewItem>())
+                    {
+                        string childPath = (child.Tag as string) ?? "";
+                        if (childPath.Equals(currentPath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            nextNode = child;
+                            break;
+                        }
+                    }
+
+                    if (nextNode == null) break;
+
+                    currentNode = nextNode;
+                    currentNode.IsExpanded = true;
+                }
+
+                // 最終ノードを選択
+                currentNode.IsSelected = true;
+                currentNode.BringIntoView();
+            }
+            catch { }
+        }
+
+        private void LoadImagesFromFolderWithFilter(string dir)
+        {
+            try
+            {
+                var allPng = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                var matched = new List<string>(allPng);
+                if (matched.Count == 0) { ShowToast("No images"); return; }
+                pngFiles = matched.ToArray();
+                currentIndex = 0;
+                ShowImage(pngFiles[currentIndex]);
+            }
+            catch { }
+        }
+        private void TreeToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // find main grid under DockPanel
+                var dockPanel = (DockPanel)this.Content;
+                Grid mainGrid = null;
+                foreach (UIElement child in dockPanel.Children)
+                {
+                    if (child is Grid g && g.ColumnDefinitions.Count >= 5)
+                    {
+                        mainGrid = g;
+                        break;
+                    }
+                }
+                if (mainGrid == null) return;
+
+                var colDefs = mainGrid.ColumnDefinitions;
+
+                if (treeBorder == null) return;
+
+                if (treeBorder.Visibility == Visibility.Visible)
+                {
+                    // hide
+                    treeBorder.Visibility = Visibility.Collapsed;
+                    colDefs[0].Width = new GridLength(0);
+                    colDefs[1].Width = new GridLength(0);
+                }
+                else
+                {
+                    treeBorder.Visibility = Visibility.Visible;
+                    colDefs[0].Width = new GridLength(260);
+                    colDefs[1].Width = new GridLength(8);
+                }
+            }
+            catch { }
+        }
+
+        private void FolderFilesListBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
+        {
+            // ファイルリストにフォーカスがある時、左右キーで画像切り替え
+            if (e.Key == Key.Left || e.Key == Key.Right)
+            {
+                if (pngFiles == null || pngFiles.Length == 0) return;
+
+                if (e.Key == Key.Right)
+                {
+                    currentIndex = (currentIndex + 1) % pngFiles.Length;
+                    ShowImage(pngFiles[currentIndex]);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.Left)
+                {
+                    currentIndex = (currentIndex - 1 + pngFiles.Length) % pngFiles.Length;
+                    ShowImage(pngFiles[currentIndex]);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void FolderFilesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                if (folderFilesListBox.SelectedItem is string name && folderFilesListBox.Tag is string dir)
+                {
+                    var full = System.IO.Path.Combine(dir, name);
+                    if (File.Exists(full))
+                    {
+                        // Show selected image and update pngFiles/currentIndex so navigation works
+                        var bitmap = new BitmapImage(new Uri(full));
+                        imageBox.Source = bitmap;
+                        // pngFiles は既にフィルター状態を持っているので、そのまま使用
+                        currentIndex = Array.IndexOf(pngFiles, full);
+                        if (currentIndex < 0) currentIndex = 0;
+
+                        // Update title and text chunks
+                        UpdateWindowTitle(full);
+                        ExtractAndDisplayTextChunks(full);
+
+                        // Update bookmark and favorites indicators
+                        UpdateBookmarkIndicator();
+                        UpdateFavoritesIndicator();
+                    }
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void FilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (filterTextBox == null) return;
+                
+                string filterText = filterTextBox.Text.Trim().ToLower();
+                
+                if (string.IsNullOrEmpty(filterText))
+                {
+                    // フィルターなし：すべてのファイルを表示
+                    if (allPngFilesInFolder != null)
+                    {
+                        pngFiles = allPngFilesInFolder;
+                        var names = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                        folderFilesListBox.ItemsSource = names;
+                        folderFilesListBox.SelectedIndex = 0;
+                        if (pngFiles.Length > 0)
+                        {
+                            currentIndex = 0;
+                            ShowImage(pngFiles[0]);
+                        }
+                        ShowToast("Filter cleared");
+                    }
+                    return;
+                }
+
+                // フィルター処理：ファイル一覧に表示されているファイルのみをフィルター対象とする
+                if (allPngFilesInFolder == null || allPngFilesInFolder.Length == 0)
+                {
+                    ShowToast("No files to filter");
+                    return;
+                }
+
+                var filtered = new List<string>();
+
+                foreach (var f in allPngFilesInFolder)
+                {
+                    try
+                    {
+                        using var fs = new FileStream(f, FileMode.Open, FileAccess.Read);
+                        using var br = new BinaryReader(fs);
+
+                        // skip PNG signature
+                        br.ReadBytes(8);
+
+                        bool found = false;
+                        while (fs.Position + 8 < fs.Length && !found)
+                        {
+                            var lenBytes = br.ReadBytes(4);
+                            if (lenBytes.Length < 4) break;
+                            int length = ReadInt32BigEndian(lenBytes);
+                            var typeBytes = br.ReadBytes(4);
+                            if (typeBytes.Length < 4) break;
+                            string chunkType = Encoding.ASCII.GetString(typeBytes);
+                            var data = br.ReadBytes(length);
+                            br.ReadBytes(4); // CRC
+
+                            if (chunkType == "tEXt")
+                            {
+                                string text = Encoding.ASCII.GetString(data);
+                                int nullIndex = text.IndexOf('\0');
+                                if (nullIndex >= 0)
+                                {
+                                    string key = text.Substring(0, nullIndex);
+                                    string value = text.Substring(nullIndex + 1).ToLower();
+                                    
+                                    if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        // Search only the parameters text up to 'Negative prompt:'
+                                        string paramText = value;
+                                        int negIndex = value.IndexOf("negative prompt:");
+                                        if (negIndex >= 0)
+                                        {
+                                            paramText = value.Substring(0, negIndex);
+                                        }
+                                        
+                                        // フィルターテキストが含まれているかチェック
+                                        if (paramText.Contains(filterText))
+                                        {
+                                            filtered.Add(f);
+                                            found = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // ignore read errors
+                    }
+                }
+
+                if (filtered.Count == 0)
+                {
+                    ShowToast($"No files match '{filterText}'");
+                    return;
+                }
+
+                pngFiles = filtered.OrderBy(f => f).ToArray();
+                var fileNames = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                folderFilesListBox.ItemsSource = fileNames;
+                folderFilesListBox.SelectedIndex = 0;
+                
+                // フィルター後、最初の画像を表示
+                currentIndex = 0;
+                ShowImage(pngFiles[0]);
+                
+                ShowToast($"Found {filtered.Count} file(s)");
+            }
+            catch (Exception ex)
+            {
+                ShowToast($"Filter error: {ex.Message}");
+            }
+        }
+
+        private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (filterTextBox == null) return;
+                filterTextBox.Clear();
+
+                if (allPngFilesInFolder != null)
+                {
+                    pngFiles = allPngFilesInFolder;
+                    folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    folderFilesListBox.SelectedIndex = 0;
+                    if (pngFiles.Length > 0)
+                    {
+                        currentIndex = 0;
+                        ShowImage(pngFiles[0]);
+                    }
+                }
+                ShowToast("Filter cleared");
+            }
+            catch { }
         }
     }
 
