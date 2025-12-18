@@ -1126,14 +1126,25 @@ namespace StableSatoViewer
                 {
                     var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
                     allPngFilesInFolder = files; // すべてのファイルを保存
-                    pngFiles = files; // フィルターをリセット
-                    folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                    folderFilesListBox.Tag = p; // store current folder
-                    if (filterTextBox != null) filterTextBox.Clear(); // フィルターをクリア
-                    if (pngFiles.Length > 0)
+
+                    // If a filter is active, apply it to the new folder; otherwise show all
+                    if (filterTextBox != null && !string.IsNullOrWhiteSpace(filterTextBox.Text))
                     {
-                        currentIndex = 0;
-                        ShowImage(pngFiles[0]);
+                        // FilterButton_Click relies on allPngFilesInFolder being set
+                        folderFilesListBox.Tag = p; // store current folder
+                        FilterButton_Click(filterButton, new RoutedEventArgs());
+                    }
+                    else
+                    {
+                        pngFiles = files; // フィルターをリセット
+                        folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                        folderFilesListBox.Tag = p; // store current folder
+                        // do not clear filterTextBox - preserve user's input
+                        if (pngFiles.Length > 0)
+                        {
+                            currentIndex = 0;
+                            ShowImage(pngFiles[0]);
+                        }
                     }
                 }
                 catch { folderFilesListBox.ItemsSource = null; folderFilesListBox.Tag = null; }
