@@ -114,6 +114,25 @@ namespace StableSatoViewer
 
             // ファイルリストのキーイベント登録
             folderFilesListBox.PreviewKeyDown += FolderFilesListBox_PreviewKeyDown;
+
+            // フィルター入力で Enter 押下時にフィルターを実行
+            if (filterTextBox != null)
+            {
+                filterTextBox.KeyDown += FilterTextBox_KeyDown;
+            }
+        }
+
+        private void FilterTextBox_KeyDown(object sender, WpfKeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                try
+                {
+                    FilterButton_Click(filterButton, new RoutedEventArgs());
+                }
+                catch { }
+                e.Handled = true;
+            }
         }
 
         private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
