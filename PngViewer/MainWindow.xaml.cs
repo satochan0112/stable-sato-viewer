@@ -20,7 +20,6 @@ namespace StableSatoViewer
         private string[] pngFiles;
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
-        private string bookmarkPath = null;
         private List<string> favorites = new List<string>();
         private string[] allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
@@ -30,10 +29,6 @@ namespace StableSatoViewer
         public MainWindow()
         {
             InitializeComponent();
-            // 保存されたブックマークを読み込む
-            LoadBookmark();
-            // UI にブックマークの状態を反映
-            UpdateBookmarkIndicator();
             // 読み込んだお気に入りに基づき UI を更新
             LoadFavorites();
             UpdateFavoritesIndicator();
@@ -208,109 +203,6 @@ namespace StableSatoViewer
             }
         }
 
-        private void OpenBookmarkButton_Click(object sender, RoutedEventArgs e)
-        {
-            // 画像が開いている場合、現在の画像パスをブックマークとして保存／上書きする
-            if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
-            {
-                string current = bm.UriSource.LocalPath;
-                bookmarkPath = current;
-                SaveBookmark();
-                ShowToast("Bookmark saved");
-                UpdateBookmarkIndicator();
-                return;
-            }
-
-            // 画像が開かれていない場合：保存済みのブックマーク画像を開こうとする
-            if (string.IsNullOrEmpty(bookmarkPath))
-            {
-                ShowToast("No bookmark");
-                return;
-            }
-
-            if (File.Exists(bookmarkPath))
-            {
-                // 指定された画像を読み込み、そのディレクトリ内の PNG を pngFiles にセットする
-                string dir = System.IO.Path.GetDirectoryName(bookmarkPath);
-                pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
-                currentIndex = Array.IndexOf(pngFiles, bookmarkPath);
-                if (currentIndex < 0) currentIndex = 0;
-                ShowImage(pngFiles[currentIndex]);
-                // フォルダツリーでもこのフォルダを選択
-                SelectFolderInTree(dir);
-            }
-            else
-            {
-                ShowToast("Saved path image not found");
-            }
-        }
-
-        private void SaveBookmark()
-        {
-            try
-            {
-                var dir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                var file = Path.Combine(dir, "bookmark.txt");
-                File.WriteAllText(file, bookmarkPath ?? string.Empty, Encoding.UTF8);
-            }
-            catch
-            {
-                // 保存エラーは無視
-            }
-        }
-
-        private void LoadBookmark()
-        {
-            try
-            {
-                var file = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "bookmark.txt");
-                if (File.Exists(file))
-                {
-                    var txt = File.ReadAllText(file, Encoding.UTF8).Trim();
-                    if (!string.IsNullOrEmpty(txt)) bookmarkPath = txt;
-                }
-            }
-            catch
-            {
-                // 読み込みエラーは無視
-            }
-        }
-
-        private void UpdateBookmarkIndicator()
-        {
-            try
-            {
-                if (bookmarkButton == null) return;
-
-                // 現在表示中の画像パスを取得
-                string current = null;
-                if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
-                {
-                    current = bm.UriSource.LocalPath;
-                }
-
-                if (!string.IsNullOrEmpty(current) && !string.IsNullOrEmpty(bookmarkPath) && string.Equals(current, bookmarkPath, System.StringComparison.OrdinalIgnoreCase))
-                {
-                    // ハイライト状態（現在の画像がブックマークされている）
-                    bookmarkButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#60a0ff");
-                    bookmarkButton.Foreground = System.Windows.Media.Brushes.White;
-                    bookmarkButton.ToolTip = "Bookmarked (current)";
-                }
-                else
-                {
-                    // 通常状態
-                    bookmarkButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#2d2d2d");
-                    bookmarkButton.Foreground = System.Windows.Media.Brushes.White;
-                    bookmarkButton.ToolTip = string.IsNullOrEmpty(bookmarkPath) ? "No bookmark" : "Open bookmarked image";
-                }
-            }
-            catch
-            {
-                // エラーは無視
-            }
-        }
-
         private void MainWindow_KeyDown(object sender, WpfKeyEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
@@ -410,8 +302,6 @@ namespace StableSatoViewer
             // tEXt チャンクを読み取って表示
             ExtractAndDisplayTextChunks(path);
 
-            // 画像が切り替わったときに栞アイコンを更新
-            UpdateBookmarkIndicator();
             // Update favorites indicator when image changes
             UpdateFavoritesIndicator();
 
@@ -1425,8 +1315,7 @@ namespace StableSatoViewer
                         UpdateWindowTitle(full);
                         ExtractAndDisplayTextChunks(full);
 
-                        // Update bookmark and favorites indicators
-                        UpdateBookmarkIndicator();
+                        // Update favorites indicator
                         UpdateFavoritesIndicator();
                     }
                 }
