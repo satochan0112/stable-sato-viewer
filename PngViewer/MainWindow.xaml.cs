@@ -1418,6 +1418,9 @@ namespace StableSatoViewer
                         currentIndex = Array.IndexOf(pngFiles, full);
                         if (currentIndex < 0) currentIndex = 0;
 
+                        // 最後に表示した画像を保存
+                        SaveLastImage(full);
+
                         // Update title and text chunks
                         UpdateWindowTitle(full);
                         ExtractAndDisplayTextChunks(full);
