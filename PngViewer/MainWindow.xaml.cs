@@ -7,11 +7,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Linq;
-using System.Diagnostics;
 using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
 using WpfDataGrid = System.Windows.Controls.DataGrid;
 using WpfDataGridCell = System.Windows.Controls.DataGridCell;
-using WpfDataGridRow = System.Windows.Controls.DataGridRow;
 using WpfTextBox = System.Windows.Controls.TextBox;
 using WpfDragEventArgs = System.Windows.DragEventArgs;
 
@@ -81,9 +79,6 @@ namespace StableSatoViewer
                 // 引数読み込みエラーは無視して通常起動
             }
 
-            // 画像領域のクリックをトンネルイベントでフック（領域のどこをクリックしても検出されるように）
-            imageBorder.PreviewMouseLeftButtonUp += ImageBox_MouseLeftButtonUp;
-
             // マウスブラウザボタンや他のマウスボタンを受け取るためにプレビュー MouseDown を購読
             this.PreviewMouseDown += MainWindow_PreviewMouseDown;
 
@@ -115,6 +110,16 @@ namespace StableSatoViewer
             // ファイルリストのキーイベント登録
             folderFilesListBox.PreviewKeyDown += FolderFilesListBox_PreviewKeyDown;
 
+            // 右パネルのグリッドクリックでクリップボードにコピー
+            parametersGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+            negativePromptGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+            stepsGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
+
+            // 右パネルのグリッドでも←→キーで画像切り替え
+            parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+            negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+            stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
+
             // フィルター入力で Enter 押下時にフィルターを実行
             if (filterTextBox != null)
             {
@@ -135,12 +140,6 @@ namespace StableSatoViewer
             }
         }
 
-        private void ImageBox_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            // 画像が読み込まれていなければファイル選択ダイアログを開く
-            // 廃止: OSのフォルダー選択ダイアログは使用しません
-        }
-
         private void DataGrid_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
@@ -154,7 +153,7 @@ namespace StableSatoViewer
         {
             // マウスの下にあるセルをヒットテストで探す
             var dep = (DependencyObject)e.OriginalSource;
-            while (dep != null && !(dep is WpfDataGridCell) && !(dep is WpfDataGridRow))
+            while (dep != null && !(dep is WpfDataGridCell))
             {
                 dep = VisualTreeHelper.GetParent(dep);
             }
