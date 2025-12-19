@@ -23,6 +23,7 @@ namespace StableSatoViewer
         private string bookmarkPath = null;
         private List<string> favorites = new List<string>();
         private string[] allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
+        private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
 
         private string favoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
@@ -41,11 +42,32 @@ namespace StableSatoViewer
             try
             {
                 BuildFolderTree();
-                var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
-                if (File.Exists(last))
+                
+                // 前回表示していた画像を復元
+                var lastImage = LoadLastImage();
+                if (!string.IsNullOrEmpty(lastImage) && File.Exists(lastImage))
                 {
-                    var lf = File.ReadAllText(last, Encoding.UTF8).Trim();
-                    if (Directory.Exists(lf)) SelectFolderInTree(lf);
+                    string dir = Path.GetDirectoryName(lastImage);
+                    pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                    allPngFilesInFolder = pngFiles;
+                    currentIndex = Array.IndexOf(pngFiles, lastImage);
+                    if (currentIndex < 0) currentIndex = 0;
+                    ShowImage(pngFiles[currentIndex]);
+                    
+                    // フォルダツリー選択時のイベントを抑制
+                    isInitializing = true;
+                    SelectFolderInTree(dir);
+                    isInitializing = false;
+                }
+                else
+                {
+                    // 前回の画像がない場合は、前回のフォルダを復元
+                    var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
+                    if (File.Exists(last))
+                    {
+                        var lf = File.ReadAllText(last, Encoding.UTF8).Trim();
+                        if (Directory.Exists(lf)) SelectFolderInTree(lf);
+                    }
                 }
             }
             catch { }
@@ -356,6 +378,9 @@ namespace StableSatoViewer
         {
             var bitmap = new BitmapImage(new Uri(path));
             imageBox.Source = bitmap;
+
+            // 最後に表示した画像を保存
+            SaveLastImage(path);
 
             // 背景アイコンを非表示
             if (bitmap != null)
@@ -1138,6 +1163,9 @@ namespace StableSatoViewer
 
         private void FolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            // 初期化中はイベントを無視
+            if (isInitializing) return;
+
             if (folderTreeView.SelectedItem is TreeViewItem t && t.Tag is string p)
             {
                 SaveLastFolder(p);
@@ -1199,6 +1227,17 @@ namespace StableSatoViewer
                 var fn = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
                 if (!Directory.Exists(fn)) Directory.CreateDirectory(fn);
                 File.WriteAllText(Path.Combine(fn, "lastfolder.txt"), dir, Encoding.UTF8);
+            }
+            catch { }
+        }
+
+        private void SaveLastImage(string imagePath)
+        {
+            try
+            {
+                var fn = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
+                if (!Directory.Exists(fn)) Directory.CreateDirectory(fn);
+                File.WriteAllText(Path.Combine(fn, "lastimage.txt"), imagePath, Encoding.UTF8);
             }
             catch { }
         }
@@ -1585,6 +1624,24 @@ namespace StableSatoViewer
             {
                 ShowToast("Failed to open Explorer");
             }
+        }
+
+        private string LoadLastImage()
+        {
+            try
+            {
+                var file = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastimage.txt");
+                if (File.Exists(file))
+                {
+                    var txt = File.ReadAllText(file, Encoding.UTF8).Trim();
+                    if (!string.IsNullOrEmpty(txt) && File.Exists(txt))
+                    {
+                        return txt;
+                    }
+                }
+            }
+            catch { }
+            return null;
         }
     }
 
