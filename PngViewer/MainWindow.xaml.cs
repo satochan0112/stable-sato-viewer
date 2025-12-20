@@ -23,6 +23,7 @@ namespace StableSatoViewer
         private List<string> favorites = new List<string>();
         private string[] allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
+        private string windowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
 
         private string favoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
@@ -32,6 +33,9 @@ namespace StableSatoViewer
             // 読み込んだお気に入りに基づき UI を更新
             LoadFavorites();
             UpdateFavoritesIndicator();
+
+            // ウィンドウの状態を復元
+            RestoreWindowState();
 
             // Build folder tree and restore last folder
             try
@@ -142,6 +146,9 @@ namespace StableSatoViewer
             {
                 filterTextBox.KeyDown += FilterTextBox_KeyDown;
             }
+
+            // ウィンドウクローズ時に状態を保存
+            this.Closing += (s, e) => SaveWindowState();
         }
 
         private void FilterTextBox_KeyDown(object sender, WpfKeyEventArgs e)
@@ -574,6 +581,13 @@ namespace StableSatoViewer
 
         private void ToggleButton_Click(object sender, RoutedEventArgs e)
         {
+            // 3つのモードを順に切り替え
+            layoutMode = (layoutMode + 1) % 3;
+            ApplyLayoutMode();
+        }
+
+        private void ApplyLayoutMode()
+        {
             // DockPanel 内のグリッドを取得
             var dockPanel = (DockPanel)this.Content;
             Grid mainGrid = null;
@@ -604,9 +618,6 @@ namespace StableSatoViewer
             }
 
             if (rightGrid == null) return;
-
-            // 3つのモードを順に切り替え
-            layoutMode = (layoutMode + 1) % 3;
 
             switch (layoutMode)
             {
@@ -1535,6 +1546,133 @@ namespace StableSatoViewer
             catch { }
             return null;
         }
+
+        private void SaveWindowState()
+        {
+            try
+            {
+                var state = new WindowStateData
+                {
+                    WindowWidth = this.Width,
+                    WindowHeight = this.Height,
+                    WindowLeft = this.Left,
+                    WindowTop = this.Top,
+                    IsMaximized = this.WindowState == WindowState.Maximized,
+                    IsFullScreen = this.WindowStyle == WindowStyle.None,
+                    LayoutMode = layoutMode,
+                    TreeVisible = treeBorder?.Visibility == Visibility.Visible,
+                    RightPanelVisible = true,
+                    ParametersVisible = parametersGrid?.Visibility == Visibility.Visible,
+                    NegativePromptVisible = negativePromptGrid?.Visibility == Visibility.Visible,
+                    StepsVisible = stepsGrid?.Visibility == Visibility.Visible
+                };
+
+                // グリッドの列幅を取得
+                if (this.Content is DockPanel dockPanel)
+                {
+                    var grid = dockPanel.Children.OfType<Grid>().FirstOrDefault();
+                    if (grid != null && grid.ColumnDefinitions.Count >= 5)
+                    {
+                        state.TreeColumnWidth = grid.ColumnDefinitions[0].Width.Value;
+                        state.RightPanelColumnWidth = grid.ColumnDefinitions[4].Width.Value;
+                        state.RightPanelVisible = grid.ColumnDefinitions[4].Width.Value > 0;
+                    }
+                }
+
+                // ツリーの高さを取得
+                if (treeBorder != null && treeBorder.Child is Grid treeGrid && treeGrid.RowDefinitions.Count >= 3)
+                {
+                    state.TreeHeight = treeGrid.RowDefinitions[0].ActualHeight;
+                }
+
+                var dir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+                var json = System.Text.Json.JsonSerializer.Serialize(state, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(windowStateFilePath, json, Encoding.UTF8);
+            }
+            catch { }
+        }
+
+        private void RestoreWindowState()
+        {
+            try
+            {
+                if (!File.Exists(windowStateFilePath)) return;
+
+                var json = File.ReadAllText(windowStateFilePath, Encoding.UTF8);
+                var state = System.Text.Json.JsonSerializer.Deserialize<WindowStateData>(json);
+
+                if (state != null)
+                {
+                    // ウィンドウサイズと位置を復元
+                    this.Width = state.WindowWidth;
+                    this.Height = state.WindowHeight;
+                    this.Left = state.WindowLeft;
+                    this.Top = state.WindowTop;
+
+                    // 全画面状態を復元
+                    if (state.IsFullScreen)
+                    {
+                        this.WindowStyle = WindowStyle.None;
+                        this.WindowState = WindowState.Maximized;
+                        if (fullScreenToggle != null)
+                            fullScreenToggle.IsChecked = true;
+                    }
+                    else if (state.IsMaximized)
+                    {
+                        this.WindowState = WindowState.Maximized;
+                    }
+
+                    // この段階では、レイアウトが確定していないため、
+                    // Loaded イベント後に列幅やレイアウトモードを設定する
+                    this.Loaded += (s, e) =>
+                    {
+                        // グリッドの列幅を復元
+                        if (this.Content is DockPanel dockPanel)
+                        {
+                            var grid = dockPanel.Children.OfType<Grid>().FirstOrDefault();
+                            if (grid != null && grid.ColumnDefinitions.Count >= 5)
+                            {
+                                grid.ColumnDefinitions[0].Width = new GridLength(state.TreeColumnWidth);
+                                grid.ColumnDefinitions[4].Width = new GridLength(state.RightPanelColumnWidth);
+                            }
+                        }
+
+                        // ツリーの高さを復元
+                        if (treeBorder != null && treeBorder.Child is Grid treeGrid && treeGrid.RowDefinitions.Count >= 3 && !double.IsNaN(state.TreeHeight))
+                        {
+                            treeGrid.RowDefinitions[0].Height = new GridLength(state.TreeHeight);
+                        }
+
+                        // ツリーの表示状態を復元
+                        if (treeBorder != null)
+                            treeBorder.Visibility = state.TreeVisible ? Visibility.Visible : Visibility.Collapsed;
+
+                        // LayoutMode を復元してUIを更新
+                        layoutMode = state.LayoutMode;
+                        ApplyLayoutMode();
+
+                        // 起動時は常にグリッド表示にする
+                        if (parametersGrid != null)
+                            parametersGrid.Visibility = Visibility.Visible;
+                        if (parametersTextBox != null)
+                            parametersTextBox.Visibility = Visibility.Collapsed;
+                        
+                        if (negativePromptGrid != null)
+                            negativePromptGrid.Visibility = Visibility.Visible;
+                        if (negativePromptTextBox != null)
+                            negativePromptTextBox.Visibility = Visibility.Collapsed;
+                        
+                        if (stepsGrid != null)
+                            stepsGrid.Visibility = Visibility.Visible;
+                        if (stepsTextBox != null)
+                            stepsTextBox.Visibility = Visibility.Collapsed;
+                    };
+                }
+            }
+            catch { }
+        }
     }
 
     public class StepsItem
@@ -1546,5 +1684,24 @@ namespace StableSatoViewer
     public class SimpleItem
     {
         public string Value { get; set; }
+    }
+
+    public class WindowStateData
+    {
+        public double WindowWidth { get; set; }
+        public double WindowHeight { get; set; }
+        public double WindowLeft { get; set; }
+        public double WindowTop { get; set; }
+        public bool IsMaximized { get; set; }
+        public bool IsFullScreen { get; set; }
+        public int LayoutMode { get; set; }
+        public bool TreeVisible { get; set; }
+        public bool RightPanelVisible { get; set; }
+        public bool ParametersVisible { get; set; }
+        public bool NegativePromptVisible { get; set; }
+        public bool StepsVisible { get; set; }
+        public double TreeColumnWidth { get; set; }
+        public double RightPanelColumnWidth { get; set; }
+        public double TreeHeight { get; set; }
     }
 }
