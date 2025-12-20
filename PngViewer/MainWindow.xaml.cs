@@ -539,7 +539,7 @@ namespace StableSatoViewer
                 {
                     isInValue = true;
                 }
-                // カンマで key:value ペアを終了（クォート外のみ）
+                // カンマで key:value ペアを終了（クォート外のみ） 
                 else if (c == ',' && !insideQuotes && isInValue)
                 {
                     string key = currentKey.ToString().Trim();
@@ -1605,13 +1605,7 @@ namespace StableSatoViewer
 
                 if (state != null)
                 {
-                    // ウィンドウサイズと位置を復元
-                    this.Width = state.WindowWidth;
-                    this.Height = state.WindowHeight;
-                    this.Left = state.WindowLeft;
-                    this.Top = state.WindowTop;
-
-                    // 全画面状態を復元
+                    // 全画面状態を復元（サイズ・位置の前に設定）
                     if (state.IsFullScreen)
                     {
                         this.WindowStyle = WindowStyle.None;
@@ -1619,9 +1613,18 @@ namespace StableSatoViewer
                         if (fullScreenToggle != null)
                             fullScreenToggle.IsChecked = true;
                     }
-                    else if (state.IsMaximized)
+                    else
                     {
-                        this.WindowState = WindowState.Maximized;
+                        // 通常モード：ウィンドウサイズと位置を復元
+                        this.Width = state.WindowWidth;
+                        this.Height = state.WindowHeight;
+                        this.Left = state.WindowLeft;
+                        this.Top = state.WindowTop;
+
+                        if (state.IsMaximized)
+                        {
+                            this.WindowState = WindowState.Maximized;
+                        }
                     }
 
                     // この段階では、レイアウトが確定していないため、
