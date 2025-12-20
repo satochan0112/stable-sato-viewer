@@ -255,20 +255,12 @@ namespace StableSatoViewer
                             int idx = Array.IndexOf(subDirs, currentDir);
                             if (idx >= 0 && idx < subDirs.Length - 1)
                             {
-                                var files = Directory.GetFiles(subDirs[idx + 1], "*.png").OrderBy(x => x).ToArray();
-                                if (files.Length > 0)
-                                {
-                                    pngFiles = files;
-                                    folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                                    folderFilesListBox.Tag = subDirs[idx + 1];
-                                    currentIndex = 0;
-                                    ShowImage(pngFiles[currentIndex]);
-                                    isInitializing = true;
-                                    SelectFolderInTree(subDirs[idx + 1]);
-                                    isInitializing = false;
-                                    e.Handled = true;
-                                    return;
-                                }
+                                isInitializing = true;
+                                SelectFolderInTree(subDirs[idx + 1]);
+                                isInitializing = false;
+                                ApplyFilterToNewFolder(subDirs[idx + 1]);
+                                e.Handled = true;
+                                return;
                             }
                         }
                     }
@@ -299,20 +291,12 @@ namespace StableSatoViewer
                             int idx = Array.IndexOf(subDirs, currentDir);
                             if (idx > 0)
                             {
-                                var files = Directory.GetFiles(subDirs[idx - 1], "*.png").OrderBy(x => x).ToArray();
-                                if (files.Length > 0)
-                                {
-                                    pngFiles = files;
-                                    folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                                    folderFilesListBox.Tag = subDirs[idx - 1];
-                                    currentIndex = files.Length - 1;
-                                    ShowImage(pngFiles[currentIndex]);
-                                    isInitializing = true;
-                                    SelectFolderInTree(subDirs[idx - 1]);
-                                    isInitializing = false;
-                                    e.Handled = true;
-                                    return;
-                                }
+                                isInitializing = true;
+                                SelectFolderInTree(subDirs[idx - 1]);
+                                isInitializing = false;
+                                ApplyFilterToNewFolder(subDirs[idx - 1]);
+                                e.Handled = true;
+                                return;
                             }
                         }
                     }
@@ -668,7 +652,7 @@ namespace StableSatoViewer
             var dockPanel = (DockPanel)this.Content;
             Grid mainGrid = null;
 
-            // DockPanel 内のすべての子要素からメイングリッドを探す
+            // DockPanel 内のすべての子要素からメイングリットを探す
             foreach (UIElement child in dockPanel.Children)
             {
                 if (child is Grid g && g.ColumnDefinitions.Count >= 5)
@@ -914,19 +898,11 @@ namespace StableSatoViewer
                         int idx = Array.IndexOf(subDirs, currentDir);
                         if (idx > 0)
                         {
-                            var files = Directory.GetFiles(subDirs[idx - 1], "*.png").OrderBy(x => x).ToArray();
-                            if (files.Length > 0)
-                            {
-                                pngFiles = files;
-                                folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                                folderFilesListBox.Tag = subDirs[idx - 1];
-                                currentIndex = files.Length - 1;
-                                ShowImage(pngFiles[currentIndex]);
-                                isInitializing = true;
-                                SelectFolderInTree(subDirs[idx - 1]);
-                                isInitializing = false;
-                                return;
-                            }
+                            isInitializing = true;
+                            SelectFolderInTree(subDirs[idx - 1]);
+                            isInitializing = false;
+                            ApplyFilterToNewFolder(subDirs[idx - 1]);
+                            return;
                         }
                     }
                 }
@@ -958,19 +934,11 @@ namespace StableSatoViewer
                         int idx = Array.IndexOf(subDirs, currentDir);
                         if (idx >= 0 && idx < subDirs.Length - 1)
                         {
-                            var files = Directory.GetFiles(subDirs[idx + 1], "*.png").OrderBy(x => x).ToArray();
-                            if (files.Length > 0)
-                            {
-                                pngFiles = files;
-                                folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                                folderFilesListBox.Tag = subDirs[idx + 1];
-                                currentIndex = 0;
-                                ShowImage(pngFiles[currentIndex]);
-                                isInitializing = true;
-                                SelectFolderInTree(subDirs[idx + 1]);
-                                isInitializing = false;
-                                return;
-                            }
+                            isInitializing = true;
+                            SelectFolderInTree(subDirs[idx + 1]);
+                            isInitializing = false;
+                            ApplyFilterToNewFolder(subDirs[idx + 1]);
+                            return;
                         }
                     }
                 }
@@ -1393,6 +1361,33 @@ namespace StableSatoViewer
             }
             catch { }
         }
+
+        private void ApplyFilterToNewFolder(string newFolderPath)
+        {
+            try
+            {
+                var files = Directory.GetFiles(newFolderPath, "*.png").OrderBy(x => x).ToArray();
+                allPngFilesInFolder = files;
+                folderFilesListBox.Tag = newFolderPath;
+
+                if (filterTextBox != null && !string.IsNullOrWhiteSpace(filterTextBox.Text))
+                {
+                    FilterButton_Click(filterButton, new RoutedEventArgs());
+                }
+                else
+                {
+                    pngFiles = files;
+                    folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    if (pngFiles.Length > 0)
+                    {
+                        currentIndex = 0;
+                        ShowImage(pngFiles[currentIndex]);
+                    }
+                }
+            }
+            catch { }
+        }
+
         private void TreeToggleButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1456,18 +1451,10 @@ namespace StableSatoViewer
                                 int idx = Array.IndexOf(subDirs, currentDir);
                                 if (idx >= 0 && idx < subDirs.Length - 1)
                                 {
-                                    var files = Directory.GetFiles(subDirs[idx + 1], "*.png").OrderBy(x => x).ToArray();
-                                    if (files.Length > 0)
-                                    {
-                                        pngFiles = files;
-                                        folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                                        folderFilesListBox.Tag = subDirs[idx + 1];
-                                        currentIndex = 0;
-                                        ShowImage(pngFiles[currentIndex]);
-                                        isInitializing = true;
-                                        SelectFolderInTree(subDirs[idx + 1]);
-                                        isInitializing = false;
-                                    }
+                                    isInitializing = true;
+                                    SelectFolderInTree(subDirs[idx + 1]);
+                                    isInitializing = false;
+                                    ApplyFilterToNewFolder(subDirs[idx + 1]);
                                 }
                             }
                         }
@@ -1493,18 +1480,10 @@ namespace StableSatoViewer
                                 int idx = Array.IndexOf(subDirs, currentDir);
                                 if (idx > 0)
                                 {
-                                    var files = Directory.GetFiles(subDirs[idx - 1], "*.png").OrderBy(x => x).ToArray();
-                                    if (files.Length > 0)
-                                    {
-                                        pngFiles = files;
-                                        folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                                        folderFilesListBox.Tag = subDirs[idx - 1];
-                                        currentIndex = files.Length - 1;
-                                        ShowImage(pngFiles[currentIndex]);
-                                        isInitializing = true;
-                                        SelectFolderInTree(subDirs[idx - 1]);
-                                        isInitializing = false;
-                                    }
+                                    isInitializing = true;
+                                    SelectFolderInTree(subDirs[idx - 1]);
+                                    isInitializing = false;
+                                    ApplyFilterToNewFolder(subDirs[idx - 1]);
                                 }
                             }
                         }
