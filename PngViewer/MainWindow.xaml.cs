@@ -294,6 +294,15 @@ namespace StableSatoViewer
                                 isInitializing = true;
                                 SelectFolderInTree(subDirs[idx - 1]);
                                 isInitializing = false;
+                                // フィルター適用後、最後のファイルを表示するためにコールバックを使用
+                                this.Dispatcher.InvokeAsync(() =>
+                                {
+                                    if (pngFiles != null && pngFiles.Length > 0)
+                                    {
+                                        currentIndex = pngFiles.Length - 1;
+                                        ShowImage(pngFiles[currentIndex]);
+                                    }
+                                });
                                 ApplyFilterToNewFolder(subDirs[idx - 1]);
                                 e.Handled = true;
                                 return;
@@ -901,6 +910,15 @@ namespace StableSatoViewer
                             isInitializing = true;
                             SelectFolderInTree(subDirs[idx - 1]);
                             isInitializing = false;
+                            // フィルター適用後、最後のファイルを表示するためにコールバックを使用
+                            this.Dispatcher.InvokeAsync(() =>
+                            {
+                                if (pngFiles != null && pngFiles.Length > 0)
+                                {
+                                    currentIndex = pngFiles.Length - 1;
+                                    ShowImage(pngFiles[currentIndex]);
+                                }
+                            });
                             ApplyFilterToNewFolder(subDirs[idx - 1]);
                             return;
                         }
@@ -1483,6 +1501,15 @@ namespace StableSatoViewer
                                     isInitializing = true;
                                     SelectFolderInTree(subDirs[idx - 1]);
                                     isInitializing = false;
+                                    // フィルター適用後、最後のファイルを表示するためにコールバックを使用
+                                    this.Dispatcher.InvokeAsync(() =>
+                                    {
+                                        if (pngFiles != null && pngFiles.Length > 0)
+                                        {
+                                            currentIndex = pngFiles.Length - 1;
+                                            ShowImage(pngFiles[currentIndex]);
+                                        }
+                                    });
                                     ApplyFilterToNewFolder(subDirs[idx - 1]);
                                 }
                             }
