@@ -230,6 +230,90 @@ namespace StableSatoViewer
                 }
             }
 
+            // Delete キーで画像をゴミ箱に移動
+            if (e.Key == Key.Delete)
+            {
+                if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
+                {
+                    string filePath = bm.UriSource.LocalPath;
+                    string fileName = System.IO.Path.GetFileName(filePath);
+                    System.Windows.MessageBoxResult result = System.Windows.MessageBox.Show(
+                        $"Are you sure you want to delete '{fileName}'?",
+                        "Delete Image",
+                        System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Warning
+                    );
+
+                    if (result == System.Windows.MessageBoxResult.Yes)
+                    {
+                        try
+                        {
+                            if (File.Exists(filePath))
+                            {
+                                // ビットマップの参照を解放
+                                imageBox.Source = null;
+                                
+                                // ガベージコレクションを強制実行してメモリを解放
+                                System.GC.Collect();
+                                System.GC.WaitForPendingFinalizers();
+                                System.GC.Collect();
+                                
+                                // 遅延実行でファイルを削除（UI系の参照がすべて解放されるのを待つ）
+                                this.Dispatcher.InvokeAsync(async () =>
+                                {
+                                    try
+                                    {
+                                        // さらにメモリ解放
+                                        await System.Threading.Tasks.Task.Delay(50);
+                                        System.GC.Collect();
+                                        System.GC.WaitForPendingFinalizers();
+                                        
+                                        if (File.Exists(filePath))
+                                        {
+                                            // ファイルをゴミ箱に移動
+                                            Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(
+                                                filePath,
+                                                Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
+                                                Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin
+                                            );
+                                            
+                                            pngFiles = pngFiles.Where(f => f != filePath).ToArray();
+                                            allPngFilesInFolder = allPngFilesInFolder.Where(f => f != filePath).ToArray();
+
+                                            if (pngFiles.Length == 0)
+                                            {
+                                                ShowToast("No more images");
+                                                folderFilesListBox.ItemsSource = null;
+                                                return;
+                                            }
+
+                                            if (currentIndex >= pngFiles.Length)
+                                            {
+                                                currentIndex = pngFiles.Length - 1;
+                                            }
+
+                                            ShowImage(pngFiles[currentIndex]);
+                                            folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                                            ShowToast($"Deleted '{fileName}'");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        ShowToast($"Delete failed: {ex.Message}");
+                                    }
+                                }, System.Windows.Threading.DispatcherPriority.Background);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            ShowToast($"Delete failed: {ex.Message}");
+                        }
+                    }
+                }
+                e.Handled = true;
+                return;
+            }
+
             // 矢印キー（または Alt+矢印）での移動を許可
             var key = e.Key;
             // Alt 修飾付きで届く場合は SystemKey に入ることがあるため両方確認
@@ -345,6 +429,8 @@ namespace StableSatoViewer
         private void ShowImage(string path)
         {
             var bitmap = new BitmapImage(new Uri(path));
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.Freeze();
             imageBox.Source = bitmap;
 
             // 最後に表示した画像を保存
@@ -1532,6 +1618,8 @@ namespace StableSatoViewer
                     {
                         // Show selected image and update pngFiles/currentIndex so navigation works
                         var bitmap = new BitmapImage(new Uri(full));
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.Freeze();
                         imageBox.Source = bitmap;
                         // pngFiles は既にフィルター状態を持っているので、そのまま使用
                         currentIndex = Array.IndexOf(pngFiles, full);
