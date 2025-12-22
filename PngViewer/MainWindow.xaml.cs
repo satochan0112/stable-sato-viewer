@@ -153,6 +153,9 @@ namespace StableSatoViewer
             this.Closing += (s, e) => SaveWindowState();
         }
 
+        /// <summary>
+        /// フィルターテキストボックスの KeyDown イベントハンドラー。Enter キー押下時にフィルター処理を実行します。
+        /// </summary>
         private void FilterTextBox_KeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Enter)
@@ -166,6 +169,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// データグリッドの KeyDown イベントハンドラー。左右矢印キーで画像を切り替えます。
+        /// </summary>
         private void DataGrid_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
@@ -175,6 +181,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// データグリッドセルのマウスクリック時に、セルのテキストをクリップボードにコピーします。
+        /// </summary>
         private void DataGrid_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             // マウスの下にあるセルをヒットテストで探す
@@ -203,6 +212,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// テキストボックスの KeyDown イベントハンドラー。左右矢印キーで画像を切り替えます。
+        /// </summary>
         private void TextBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             if (e.Key == Key.Left || e.Key == Key.Right)
@@ -212,6 +224,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// ウィンドウのキーボード入力を処理します。矢印キー、Escape キー、Delete キーなどの機能を実装しています。
+        /// </summary>
         private void MainWindow_KeyDown(object sender, WpfKeyEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
@@ -407,6 +422,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// マウスプレビュー MouseDown イベント。マウスブラウザボタン（戻る/進む）で画像を切り替えます。
+        /// </summary>
         private void MainWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             // マウスのブラウザ戻る／進むボタンで画像を切り替え
@@ -428,6 +446,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// 指定されたパスの PNG 画像ファイルを表示し、メタデータを解析して UI に反映させます。
+        /// </summary>
         private void ShowImage(string path)
         {
             var bitmap = new BitmapImage(new Uri(path));
@@ -511,6 +532,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// ウィンドウタイトルを「ファイル名（現在のインデックス／全体）」の形式で更新します。
+        /// </summary>
         private void UpdateWindowTitle(string path)
         {
             try
@@ -534,6 +558,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// PNG ファイルからメタデータチャンク（tEXt、iTXt）を抽出し、画面に表示します。
+        /// </summary>
         private void ExtractAndDisplayTextChunks(string filePath)
         {
             Debug.WriteLine(filePath);
@@ -624,6 +651,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// テキストを行単位で分割し、データグリッドに表示します。
+        /// </summary>
         private void DisplayTextAsGrid(WpfDataGrid grid, string text)
         {
             var items = new ObservableCollection<SimpleItem>();
@@ -655,6 +685,9 @@ namespace StableSatoViewer
             grid.ItemsSource = items;
         }
 
+        /// <summary>
+        /// Steps 情報をキー値ペアでグリッドに表示します。
+        /// </summary>
         private void DisplayStepsAsGrid(string stepsText)
         {
             var items = new ObservableCollection<StepsItem>();
@@ -684,6 +717,9 @@ namespace StableSatoViewer
             stepsGrid.ItemsSource = items;
         }
 
+        /// <summary>
+        /// テキストをコロン記号で区切られたキー値ペアに解析します。
+        /// </summary>
         private List<(string Key, string Value)> ParseKeyValuePairs(string text)
         {
             var pairs = new List<(string, string)>();
@@ -745,11 +781,17 @@ namespace StableSatoViewer
             return pairs;
         }
 
+        /// <summary>
+        /// バイト配列をビッグエンディアン形式の 32 ビット整数に変換します。
+        /// </summary>
         private int ReadInt32BigEndian(byte[] bytes)
         {
             return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
         }
 
+        /// <summary>
+        /// レイアウトモード（通常、フロート、非表示）を循環切り替えします。
+        /// </summary>
         private void ToggleButton_Click(object sender, RoutedEventArgs e)
         {
             // 3つのモードを順に切り替え
@@ -757,6 +799,9 @@ namespace StableSatoViewer
             ApplyLayoutMode();
         }
 
+        /// <summary>
+        /// 現在のレイアウトモードに基づいて UI の表示状態を切り替えます。
+        /// </summary>
         private void ApplyLayoutMode()
         {
             // DockPanel 内のグリッドを取得
@@ -826,6 +871,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// フローティングプロンプトに現在のパラメータテキストを表示（グリッド形式）します。
+        /// </summary>
         private void UpdateFloatingPromptContent()
         {
             // フローティングプロンプトに現在のパラメータテキストを表示（グリッド形式）
@@ -847,6 +895,9 @@ namespace StableSatoViewer
             floatingPromptGrid.ItemsSource = items;
         }
 
+        /// <summary>
+        /// 全画面表示と通常表示を切り替えます。
+        /// </summary>
         private void FullScreenButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.WindowState == WindowState.Maximized && this.WindowStyle == WindowStyle.None)
@@ -863,6 +914,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// パラメータテキストの表示形式をグリッド表示と生テキスト表示で切り替えます。
+        /// </summary>
         private void ParametersToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (parametersTextBox.Visibility == Visibility.Visible)
@@ -903,6 +957,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// ネガティブプロンプトの表示形式をグリッド表示と生テキスト表示で切り替えます。
+        /// </summary>
         private void NegativeToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (negativePromptTextBox.Visibility == Visibility.Visible)
@@ -942,6 +999,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// Steps 情報の表示形式をグリッド表示と生テキスト表示で切り替えます。
+        /// </summary>
         private void StepsToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (stepsTextBox.Visibility == Visibility.Visible)
@@ -991,6 +1051,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// 前の画像を表示します。フォルダの最初に達したら前のフォルダの最後に移動します。
+        /// </summary>
         private void PrevImageButton_Click(object sender, RoutedEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
@@ -1036,6 +1099,9 @@ namespace StableSatoViewer
             ShowImage(pngFiles[currentIndex]);
         }
 
+        /// <summary>
+        /// 次の画像を表示します。フォルダの最後に達したら次のフォルダの最初に移動します。
+        /// </summary>
         private void NextImageButton_Click(object sender, RoutedEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
@@ -1072,6 +1138,9 @@ namespace StableSatoViewer
             ShowImage(pngFiles[currentIndex]);
         }
 
+        /// <summary>
+        /// トースト通知を表示します。1.5 秒後に自動消去されます。
+        /// </summary>
         private async void ShowToast(string message)
         {
             toastText.Text = message;
@@ -1080,6 +1149,9 @@ namespace StableSatoViewer
             toastBorder.Visibility = Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// お気に入りポップアップを表示します。
+        /// </summary>
         private void FavoritesButton_Click(object sender, RoutedEventArgs e)
         {
             // Load favorites
@@ -1089,6 +1161,9 @@ namespace StableSatoViewer
             favoritesPopup.IsOpen = true;
         }
 
+        /// <summary>
+        /// 現在表示中の画像をお気に入りに追加します。
+        /// </summary>
         private void AddFavoriteButton_Click(object sender, RoutedEventArgs e)
         {
             if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
@@ -1114,6 +1189,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// すべてのお気に入りを削除します。
+        /// </summary>
         private void RemoveAllFavoritesButton_Click(object sender, RoutedEventArgs e)
         {
             favorites.Clear();
@@ -1123,6 +1201,9 @@ namespace StableSatoViewer
             UpdateFavoritesIndicator();
         }
 
+        /// <summary>
+        /// お気に入り設定ファイルをエクスプローラーで開きます。
+        /// </summary>
         private void EditFavoritesButton_Click(object sender, RoutedEventArgs e)
         {
             // simple edit: open folder
@@ -1131,6 +1212,9 @@ namespace StableSatoViewer
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{favoritesFilePath}\"") { UseShellExecute = true });
         }
 
+        /// <summary>
+        /// お気に入りリストの項目をダブルクリック時、その画像を表示します。
+        /// </summary>
         private void FavoritesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (favoritesListBox.SelectedItem is string path)
@@ -1153,6 +1237,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// お気に入りリストを設定ファイルに保存します。
+        /// </summary>
         private void SaveFavorites()
         {
             try
@@ -1167,6 +1254,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// 設定ファイルからお気に入りリストを読み込みます。
+        /// </summary>
         private void LoadFavorites()
         {
             try
@@ -1186,6 +1276,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// 現在表示中の画像がお気に入りかどうかを表示ボタンで視覚的に表示します。
+        /// </summary>
         private void UpdateFavoritesIndicator()
         {
             try
@@ -1210,6 +1303,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// PNG ファイルのドラッグを受け付け、他のファイル型は却下します。
+        /// </summary>
         private void ImageBorder_PreviewDragOver(object sender, WpfDragEventArgs e)
         {
             // PNG ファイルのみ許可
@@ -1232,6 +1328,9 @@ namespace StableSatoViewer
             e.Handled = true;
         }
 
+        /// <summary>
+        /// ドラッグドロップされた PNG ファイルを開きます。
+        /// </summary>
         private void ImageBorder_Drop(object sender, WpfDragEventArgs e)
         {
             if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) return;
@@ -1259,6 +1358,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// ドライブを取得してフォルダツリーを初期化します。
+        /// </summary>
         private void BuildFolderTree()
         {
             folderTreeView.Items.Clear();
@@ -1276,6 +1378,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// フォルダツリーノードが展開される際、遅延ロードされたサブフォルダを読み込みます。
+        /// </summary>
         private void Folder_Expanded(object sender, RoutedEventArgs e)
         {
             if (sender is TreeViewItem ti)
@@ -1300,6 +1405,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// フォルダツリーでフォルダが選択された際、そのフォルダの PNG ファイル一覧を読み込み表示します。
+        /// </summary>
         private void FolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             // 初期化中はイベントを無視
@@ -1339,6 +1447,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// ファイルリストの項目をダブルクリック時、その画像を表示します。
+        /// </summary>
         private void FolderFilesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (folderFilesListBox.SelectedItem is string name && folderFilesListBox.Tag is string dir)
@@ -1359,6 +1470,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// 最後に選択されたフォルダパスを設定ファイルに保存します。
+        /// </summary>
         private void SaveLastFolder(string dir)
         {
             try
@@ -1370,6 +1484,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// 最後に表示された画像パスを設定ファイルに保存します。
+        /// </summary>
         private void SaveLastImage(string imagePath)
         {
             try
@@ -1381,6 +1498,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// 指定パスをフォルダツリーで検索し、展開・選択します。
+        /// </summary>
         private void SelectFolderInTree(string path)
         {
             try
@@ -1468,6 +1588,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// 指定フォルダから PNG ファイルを読み込み、最初の画像を表示します。
+        /// </summary>
         private void LoadImagesFromFolderWithFilter(string dir)
         {
             try
@@ -1482,6 +1605,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// 新しいフォルダに現在のフィルターを適用して画像一覧を再構築します。
+        /// </summary>
         private void ApplyFilterToNewFolder(string newFolderPath)
         {
             try
@@ -1508,6 +1634,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// フォルダツリーの表示非表示を切り替えます。
+        /// </summary>
         private void TreeToggleButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1546,6 +1675,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// ファイルリストにフォーカスがある時、左右キーで画像を切り替えます。
+        /// </summary>
         private void FolderFilesListBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
             // ファイルリストにフォーカスがある時、左右キーで画像切り替え
@@ -1623,6 +1755,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// ファイルリストの選択が変更された際、選択された画像を表示します。
+        /// </summary>
         private void FolderFilesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
@@ -1659,6 +1794,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// フィルターテキストに基づいて PNG ファイルを検索し、結果を表示します。
+        /// </summary>
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1725,7 +1863,7 @@ namespace StableSatoViewer
                                 {
                                     string key = text.Substring(0, nullIndex);
                                     string value = text.Substring(nullIndex + 1).ToLower();
-                                    
+
                                     if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                                     {
                                         // Search only the parameters text up to 'Negative prompt:'
@@ -1735,7 +1873,7 @@ namespace StableSatoViewer
                                         {
                                             paramText = value.Substring(0, negIndex);
                                         }
-                                        
+
                                         // フィルターテキストが含まれているかチェック
                                         if (paramText.Contains(filterText))
                                         {
@@ -1776,6 +1914,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// フィルターをクリアして全ファイル一覧を復元します。
+        /// </summary>
         private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1829,6 +1970,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// 現在表示中の画像をエクスプローラーで選択状態で開きます。
+        /// </summary>
         private void OpenInExplorerButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1851,6 +1995,9 @@ namespace StableSatoViewer
             }
         }
 
+        /// <summary>
+        /// 設定ファイルから最後に表示した画像パスを読み込みます。
+        /// </summary>
         private string LoadLastImage()
         {
             try
@@ -1869,6 +2016,9 @@ namespace StableSatoViewer
             return null;
         }
 
+        /// <summary>
+        /// ウィンドウの状態（サイズ、位置、レイアウトモードなど）を JSON ファイルに保存します。
+        /// </summary>
         private void SaveWindowState()
         {
             try
@@ -1916,6 +2066,9 @@ namespace StableSatoViewer
             catch { }
         }
 
+        /// <summary>
+        /// JSON ファイルからウィンドウの状態を復元します。
+        /// </summary>
         private void RestoreWindowState()
         {
             try
@@ -2000,33 +2153,60 @@ namespace StableSatoViewer
         }
     }
 
+    /// <summary>
+    /// Steps パラメータをグリッド形式で表示するためのデータクラス
+    /// </summary>
     public class StepsItem
     {
+        /// <summary>Steps のキー</summary>
         public string Key { get; set; }
+        /// <summary>Steps の値</summary>
         public string Value { get; set; }
     }
 
+    /// <summary>
+    /// パラメータ情報を行単位で表示するためのシンプルなデータクラス
+    /// </summary>
     public class SimpleItem
     {
+        /// <summary>テキスト行の値</summary>
         public string Value { get; set; }
     }
 
+    /// <summary>
+    /// ウィンドウの状態（サイズ、位置、レイアウト設定）を JSON で保存・復元するためのクラス
+    /// </summary>
     public class WindowStateData
     {
+        /// <summary>ウィンドウの幅</summary>
         public double WindowWidth { get; set; }
+        /// <summary>ウィンドウの高さ</summary>
         public double WindowHeight { get; set; }
+        /// <summary>ウィンドウの左端位置</summary>
         public double WindowLeft { get; set; }
+        /// <summary>ウィンドウの上端位置</summary>
         public double WindowTop { get; set; }
+        /// <summary>ウィンドウが最大化されているか</summary>
         public bool IsMaximized { get; set; }
+        /// <summary>全画面表示中か</summary>
         public bool IsFullScreen { get; set; }
+        /// <summary>現在のレイアウトモード（0:通常 1:フロート 2:非表示）</summary>
         public int LayoutMode { get; set; }
+        /// <summary>フォルダツリーが表示されているか</summary>
         public bool TreeVisible { get; set; }
+        /// <summary>右パネルが表示されているか</summary>
         public bool RightPanelVisible { get; set; }
+        /// <summary>パラメータグリッドが表示されているか</summary>
         public bool ParametersVisible { get; set; }
+        /// <summary>ネガティブプロンプトグリッドが表示されているか</summary>
         public bool NegativePromptVisible { get; set; }
+        /// <summary>Steps グリッドが表示されているか</summary>
         public bool StepsVisible { get; set; }
+        /// <summary>フォルダツリー列の幅</summary>
         public double TreeColumnWidth { get; set; }
+        /// <summary>右パネル列の幅</summary>
         public double RightPanelColumnWidth { get; set; }
+        /// <summary>フォルダツリーの高さ</summary>
         public double TreeHeight { get; set; }
     }
 }
