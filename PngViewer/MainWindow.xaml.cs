@@ -350,7 +350,7 @@ namespace StableSatoViewer
                 {
                     try
                     {
-                        string parentDir = Directory.GetParent(currentDir)?.FullName;
+                        string? parentDir = Directory.GetParent(currentDir)?.FullName;
                         if (!string.IsNullOrEmpty(parentDir))
                         {
                             var subDirs = Directory.GetDirectories(parentDir).OrderBy(d => d).ToArray();
@@ -386,7 +386,7 @@ namespace StableSatoViewer
                 {
                     try
                     {
-                        string parentDir = Directory.GetParent(currentDir)?.FullName;
+                        string? parentDir = Directory.GetParent(currentDir)?.FullName;
                         if (!string.IsNullOrEmpty(parentDir))
                         {
                             var subDirs = Directory.GetDirectories(parentDir).OrderBy(d => d).ToArray();
@@ -1066,7 +1066,7 @@ namespace StableSatoViewer
             {
                 try
                 {
-                    string parentDir = Directory.GetParent(currentDir)?.FullName;
+                    string? parentDir = Directory.GetParent(currentDir)?.FullName;
                     if (!string.IsNullOrEmpty(parentDir))
                     {
                         var subDirs = Directory.GetDirectories(parentDir).OrderBy(d => d).ToArray();
@@ -1114,7 +1114,7 @@ namespace StableSatoViewer
             {
                 try
                 {
-                    string parentDir = Directory.GetParent(currentDir)?.FullName;
+                    string? parentDir = Directory.GetParent(currentDir)?.FullName;
                     if (!string.IsNullOrEmpty(parentDir))
                     {
                         var subDirs = Directory.GetDirectories(parentDir).OrderBy(d => d).ToArray();
@@ -1703,7 +1703,7 @@ namespace StableSatoViewer
                     {
                         try
                         {
-                            string parentDir = Directory.GetParent(currentDir)?.FullName;
+                            string? parentDir = Directory.GetParent(currentDir)?.FullName;
                             if (!string.IsNullOrEmpty(parentDir))
                             {
                                 var subDirs = Directory.GetDirectories(parentDir).OrderBy(d => d).ToArray();
@@ -1732,7 +1732,7 @@ namespace StableSatoViewer
                     {
                         try
                         {
-                            string parentDir = Directory.GetParent(currentDir)?.FullName;
+                            string? parentDir = Directory.GetParent(currentDir)?.FullName;
                             if (!string.IsNullOrEmpty(parentDir))
                             {
                                 var subDirs = Directory.GetDirectories(parentDir).OrderBy(d => d).ToArray();
