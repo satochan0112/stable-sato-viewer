@@ -1514,10 +1514,10 @@ namespace StableSatoViewer
                 // ドライブを探す
                 string drive = System.IO.Path.GetPathRoot(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
                 
-                TreeViewItem driveNode = null;
+                TreeViewItem? driveNode = null;
                 foreach (TreeViewItem t in folderTreeView.Items)
                 {
-                    string nodeTag = t.Tag as string;
+                    string? nodeTag = t.Tag as string;
                     if (!string.IsNullOrEmpty(nodeTag))
                     {
                         string nodeRoot = System.IO.Path.GetPathRoot(nodeTag).TrimEnd(System.IO.Path.DirectorySeparatorChar);
@@ -1570,7 +1570,7 @@ namespace StableSatoViewer
                     }
 
                     // 次のノードを探す
-                    TreeViewItem nextNode = null;
+                    TreeViewItem? nextNode = null;
                     foreach (TreeViewItem child in currentNode.Items.OfType<TreeViewItem>())
                     {
                         string childPath = (child.Tag as string) ?? "";
@@ -1649,7 +1649,7 @@ namespace StableSatoViewer
             {
                 // DockPanel 内のメイングリッドを探す
                 var dockPanel = (DockPanel)this.Content;
-                Grid mainGrid = null;
+                Grid? mainGrid = null;
                 foreach (UIElement child in dockPanel.Children)
                 {
                     if (child is Grid g && g.ColumnDefinitions.Count >= 5)
@@ -1933,7 +1933,7 @@ namespace StableSatoViewer
                 if (allPngFilesInFolder != null)
                 {
                     // 現在表示されている画像を記憶（ある場合）
-                    string currentImagePath = null;
+                    string? currentImagePath = null;
                     if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                     {
                         currentImagePath = bm.UriSource.LocalPath;
