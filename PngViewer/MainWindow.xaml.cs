@@ -1475,7 +1475,7 @@ namespace StableSatoViewer
         /// <summary>
         /// 最後に選択されたフォルダパスを設定ファイルに保存します。
         /// </summary>
-        private void SaveLastFolder(string dir)
+        private static void SaveLastFolder(string dir)
         {
             try
             {
@@ -1489,7 +1489,7 @@ namespace StableSatoViewer
         /// <summary>
         /// 最後に表示された画像パスを設定ファイルに保存します。
         /// </summary>
-        private void SaveLastImage(string imagePath)
+        private static void SaveLastImage(string imagePath)
         {
             try
             {
@@ -2003,7 +2003,7 @@ namespace StableSatoViewer
         /// <summary>
         /// 設定ファイルから最後に表示した画像パスを読み込みます。
         /// </summary>
-        private string? LoadLastImage()
+        private static string? LoadLastImage()
         {
             try
             {
