@@ -34,16 +34,16 @@
 | 項目 | 設定値 | チェック |
 |------|--------|---------|
 | **Branch name pattern** | `master` | - |
-| **Require a pull request before merging** | オン | ? |
-| Require approvals | オン | ? |
+| **Require a pull request before merging** | オン | :white_check_mark: |
+| Require approvals | オン | :white_check_mark: |
 | Minimum number of approvals | `1` | - |
-| Dismiss stale pull request approvals | オン | ? |
-| Require review from Code Owners | オン | ? |
-| Require branches to be up to date | オン | ? |
-| Require status checks to pass | オン（設定済みなら） | ? or ? |
-| Require conversation resolution | オン | ? |
-| **Include administrators in restrictions** | - | **? チェック外す** |
-| **OR Restrict who can push to matching branches** | - | **? チェックを入れる** |
+| Dismiss stale pull request approvals | オン | :white_check_mark: |
+| Require review from Code Owners | オン | :white_check_mark: |
+| Require branches to be up to date | オン | :white_check_mark: |
+| Require status checks to pass | オン（設定済みなら） | :white_check_mark: または :o: |
+| Require conversation resolution | オン | :white_check_mark: |
+| **Include administrators in restrictions** | - | **:ballot_box: チェック外す** |
+| **OR Restrict who can push to matching branches** | - | **:white_check_mark: チェックを入れる** |
 
 ### ステップ 5: 許可ユーザーの指定（最重要）
 
@@ -54,7 +54,7 @@
 
 追加後は以下のように表示されます：
 ```
-? Restrict who can push to matching branches
+:white_check_mark: Restrict who can push to matching branches
   Users:
   - @satochan0112
 ```
@@ -67,8 +67,8 @@
 
 | ユーザー | 直接プッシュ | PR マージ | 説明 |
 |---------|-----------|---------|------|
-| satochan0112 | ? 可能 | ? 可能 | master に直接プッシュ可能 |
-| その他のコラボレーター | ? 不可 | ? 不可（PR 承認待ち） | PR 経由のみ、satochan0112 の承認が必須 |
+| satochan0112 | :white_check_mark: 可能 | :white_check_mark: 可能 | master に直接プッシュ可能 |
+| その他のコラボレーター | :x: 不可 | :x: 不可（PR 承認待ち） | PR 経由のみ、satochan0112 の承認が必須 |
 
 ## 図解：Web UI での操作
 
@@ -140,12 +140,12 @@ remote: error: You do not have permission to push to this branch on this reposit
 
 ## セキュリティベストプラクティス
 
-? **推奨:**
+:white_check_mark: **推奨:**
 - PR で全ての変更を記録
 - satochan0112 が担当者として変更を確認
 - コミット履歴を追跡可能に保つ
 
-? **避けるべき:**
+:x: **避けるべき:**
 - 複数のユーザーに直接プッシュ権限を与える
 - 保護ルールを頻繁に変更する
 - Admin アカウント情報を共有する
