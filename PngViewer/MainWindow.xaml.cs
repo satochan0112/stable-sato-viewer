@@ -565,90 +565,88 @@ namespace StableSatoViewer
         private void ExtractAndDisplayTextChunks(string filePath)
         {
             Debug.WriteLine(filePath);
-            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-            using (var br = new BinaryReader(fs))
+            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            using var br = new BinaryReader(fs);
+            
+            // PNG シグネチャをスキップ
+            byte[] signature = br.ReadBytes(8);
+
+            string parameters = "";
+            string negativePrompt = "";
+            string steps = "";
+
+            while (fs.Position < fs.Length)
             {
-                // PNG シグネチャをスキップ
-                byte[] signature = br.ReadBytes(8);
+                int length = ReadInt32BigEndian(br.ReadBytes(4));
+                string chunkType = Encoding.ASCII.GetString(br.ReadBytes(4));
+                byte[] data = br.ReadBytes(length);
+                br.ReadBytes(4); // CRC をスキップ
 
-                string parameters = "";
-                string negativePrompt = "";
-                string steps = "";
-
-                while (fs.Position < fs.Length)
+                if (chunkType == "tEXt" || chunkType == "iTXt")
                 {
-                    int length = ReadInt32BigEndian(br.ReadBytes(4));
-                    string chunkType = Encoding.ASCII.GetString(br.ReadBytes(4));
-                    byte[] data = br.ReadBytes(length);
-                    br.ReadBytes(4); // CRC をスキップ
+                    string text = Encoding.UTF8.GetString(data);
 
-                    if (chunkType == "tEXt" || chunkType == "iTXt")
+                    int nullIndex = text.IndexOf('\0');
+                    if (nullIndex > 0)
                     {
-                        string text = Encoding.UTF8.GetString(data);
+                        string key = text[..nullIndex];
+                        string value = text[(nullIndex + 1)..];
 
-                        int nullIndex = text.IndexOf('\0');
-                        if (nullIndex > 0)
+                        if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                         {
-                            string key = text[..nullIndex];
-                            string value = text[(nullIndex + 1)..];
+                            Debug.WriteLine(value);
+                            int negPromptIndex = value.IndexOf("Negative prompt:");
+                            int stepsIndex = value.IndexOf("Steps:");
 
-                            if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
+                            if (negPromptIndex >= 0)
                             {
-                                Debug.WriteLine(value);
-                                int negPromptIndex = value.IndexOf("Negative prompt:");
-                                int stepsIndex = value.IndexOf("Steps:");
+                                parameters = value[..negPromptIndex].Trim();
 
-                                if (negPromptIndex >= 0)
+                                if (stepsIndex >= 0)
                                 {
-                                    parameters = value[..negPromptIndex].Trim();
-
-                                    if (stepsIndex >= 0)
-                                    {
-                                        negativePrompt = value[(negPromptIndex + "Negative prompt:".Length)..stepsIndex].Trim();
-                                        steps = value[(stepsIndex + "Steps:".Length)..].Trim();
-                                    }
-                                    else
-                                    {
-                                        negativePrompt = value[(negPromptIndex + "Negative prompt:".Length)..].Trim();
-                                    }
-                                }
-                                else if (stepsIndex >= 0)
-                                {
-                                    parameters = value[..stepsIndex].Trim();
-                                    steps = value[stepsIndex..].Trim();
+                                    negativePrompt = value[(negPromptIndex + "Negative prompt:".Length)..stepsIndex].Trim();
+                                    steps = value[(stepsIndex + "Steps:".Length)..].Trim();
                                 }
                                 else
                                 {
-                                    parameters = value.Trim();
+                                    negativePrompt = value[(negPromptIndex + "Negative prompt:".Length)..].Trim();
                                 }
+                            }
+                            else if (stepsIndex >= 0)
+                            {
+                                parameters = value[..stepsIndex].Trim();
+                                steps = value[stepsIndex..].Trim();
                             }
                             else
                             {
-                                Debug.WriteLine($"Unknown key: {key} text: {text}");
+                                parameters = value.Trim();
                             }
                         }
                         else
                         {
-                            Debug.WriteLine($"Invalid chunk format (no null separator): {text}");
+                            Debug.WriteLine($"Unknown key: {key} text: {text}");
                         }
                     }
                     else
                     {
-                        Debug.WriteLine($"Skipped chunk: {chunkType}");
+                        Debug.WriteLine($"Invalid chunk format (no null separator): {text}");
                     }
                 }
-
-                DisplayTextAsGrid(parametersGrid, parameters);
-                DisplayTextAsGrid(negativePromptGrid, negativePrompt);
-
-                DisplayStepsAsGrid(steps);
-
-                // モード 1（フロート表示）の場合はフローティングプロンプトも更新
-                if (layoutMode == 1)
+                else
                 {
-                    UpdateFloatingPromptContent();
+                    Debug.WriteLine($"Skipped chunk: {chunkType}");
                 }
+            }
 
+            DisplayTextAsGrid(parametersGrid, parameters);
+            DisplayTextAsGrid(negativePromptGrid, negativePrompt);
+
+            DisplayStepsAsGrid(steps);
+
+            // モード 1（フロート表示）の場合はフローティングプロンプトも更新
+            if (layoutMode == 1)
+            {
+                UpdateFloatingPromptContent();
             }
         }
 
