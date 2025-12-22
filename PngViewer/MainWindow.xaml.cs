@@ -1,17 +1,19 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Linq;
-using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using static System.Net.Mime.MediaTypeNames;
 using WpfDataGrid = System.Windows.Controls.DataGrid;
 using WpfDataGridCell = System.Windows.Controls.DataGridCell;
-using WpfTextBox = System.Windows.Controls.TextBox;
 using WpfDragEventArgs = System.Windows.DragEventArgs;
+using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WpfTextBox = System.Windows.Controls.TextBox;
 
 namespace StableSatoViewer
 {
@@ -534,6 +536,7 @@ namespace StableSatoViewer
 
         private void ExtractAndDisplayTextChunks(string filePath)
         {
+            Debug.WriteLine(filePath);
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var br = new BinaryReader(fs))
             {
@@ -551,7 +554,7 @@ namespace StableSatoViewer
                     byte[] data = br.ReadBytes(length);
                     br.ReadBytes(4); // CRC をスキップ
 
-                    if (chunkType == "tEXt")
+                    if (chunkType == "tEXt" || chunkType == "iTXt")
                     {
                         string text = Encoding.ASCII.GetString(data);
 
@@ -563,6 +566,7 @@ namespace StableSatoViewer
 
                             if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                             {
+                                Debug.WriteLine(value);
                                 int negPromptIndex = value.IndexOf("Negative prompt:");
                                 int stepsIndex = value.IndexOf("Steps:");
 
@@ -590,7 +594,19 @@ namespace StableSatoViewer
                                     parameters = value.Trim();
                                 }
                             }
+                            else
+                            {
+                                Debug.WriteLine($"Unknown key: {key} text: {text}");
+                            }
                         }
+                        else
+                        {
+                            Debug.WriteLine($"Invalid chunk format (no null separator): {text}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Skipped chunk: {chunkType}");
                     }
                 }
 
@@ -1701,7 +1717,7 @@ namespace StableSatoViewer
                             var data = br.ReadBytes(length);
                             br.ReadBytes(4); // CRC
 
-                            if (chunkType == "tEXt")
+                            if (chunkType == "tEXt" || chunkType == "iTXt")
                             {
                                 string text = Encoding.ASCII.GetString(data);
                                 int nullIndex = text.IndexOf('\0');
