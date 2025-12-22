@@ -556,7 +556,7 @@ namespace StableSatoViewer
 
                     if (chunkType == "tEXt" || chunkType == "iTXt")
                     {
-                        string text = Encoding.ASCII.GetString(data);
+                        string text = Encoding.UTF8.GetString(data);
 
                         int nullIndex = text.IndexOf('\0');
                         if (nullIndex > 0)
@@ -1719,7 +1719,7 @@ namespace StableSatoViewer
 
                             if (chunkType == "tEXt" || chunkType == "iTXt")
                             {
-                                string text = Encoding.ASCII.GetString(data);
+                                string text = Encoding.UTF8.GetString(data);
                                 int nullIndex = text.IndexOf('\0');
                                 if (nullIndex >= 0)
                                 {
