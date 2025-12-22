@@ -537,22 +537,24 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ウィンドウタイトルを「ファイル名（現在のインデックス／全体）」の形式で更新します。
+        /// ウィンドウタイトルを「ファイル名（現在のインデックス／全体） - [フォルダ名]」の形式で更新します。
         /// </summary>
         private void UpdateWindowTitle(string path)
         {
             try
             {
                 string fileName = System.IO.Path.GetFileName(path);
+                string folderName = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path) ?? "");
                 int total = (pngFiles != null) ? pngFiles.Length : 0;
                 int index = (pngFiles != null) ? (Array.IndexOf(pngFiles, path) + 1) : 0;
+                
                 if (total > 0 && index > 0)
                 {
-                    this.Title = $"{fileName} ({index}/{total})";
+                    this.Title = $"{fileName} ({index}/{total}) - [{folderName}]";
                 }
                 else
                 {
-                    this.Title = fileName;
+                    this.Title = $"{fileName} - [{folderName}]";
                 }
                 this.Title += " - StableSatoViewer";
             }
