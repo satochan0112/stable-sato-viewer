@@ -807,9 +807,8 @@ namespace StableSatoViewer
             // DockPanel 内のグリッドを取得
             if (this.Content is not DockPanel dockPanel) return;
 
-            Grid mainGrid = null;
-
             // DockPanel 内のすべての子要素からメイングリッドを探す
+            Grid? mainGrid = null;
             foreach (UIElement child in dockPanel.Children)
             {
                 if (child is Grid g && g.ColumnDefinitions.Count >= 5)
