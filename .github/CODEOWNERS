@@ -1,0 +1,5 @@
+# This file defines who must review pull requests
+# See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# master branch requires approval from satochan0112
+* @satochan0112

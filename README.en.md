@@ -257,6 +257,8 @@ Pull requests and issue reports are welcome!
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Create a pull request
 
+For detailed guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 Please refer to the license file in the repository for licensing information.

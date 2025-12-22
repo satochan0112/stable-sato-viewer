@@ -257,6 +257,8 @@ dotnet run
 4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
 5. プルリクエストを作成
 
+詳しくは [CONTRIBUTING.md](CONTRIBUTING.md) を参照してください。
+
 ## ライセンス
 
 このプロジェクトのライセンスについては、リポジトリのライセンスファイルを参照してください。
