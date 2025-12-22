@@ -1289,13 +1289,13 @@ namespace StableSatoViewer
                 {
                     if (favorites.Contains(bm.UriSource.LocalPath))
                     {
-                        favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#60a0ff");
+                        favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#60a0ff")!;
                         favoritesButton.Foreground = System.Windows.Media.Brushes.White;
                         favoritesButton.ToolTip = "Favorited";
                         return;
                     }
                 }
-                favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#2d2d2d");
+                favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#2d2d2d")!;
                 favoritesButton.Foreground = System.Windows.Media.Brushes.White;
                 favoritesButton.ToolTip = "Favorites";
             }
@@ -1370,7 +1370,7 @@ namespace StableSatoViewer
                 foreach (var d in DriveInfo.GetDrives().Where(d => d.IsReady))
                 {
                     var ti = new TreeViewItem { Header = d.Name, Tag = d.RootDirectory.FullName };
-                    ti.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                    ti.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!;
                     ti.Items.Add(null);
                     ti.Expanded += Folder_Expanded;
                     folderTreeView.Items.Add(ti);
@@ -1397,7 +1397,7 @@ namespace StableSatoViewer
                             foreach (var sub in Directory.GetDirectories(path))
                             {
                                 var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
-                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!;
                                 child.Items.Add(null);
                                 child.Expanded += Folder_Expanded;
                                 ti.Items.Add(child);
@@ -1560,7 +1560,7 @@ namespace StableSatoViewer
                                 foreach (var sub in Directory.GetDirectories(pathTag))
                                 {
                                     var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
-                                    child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                                    child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!;
                                     child.Items.Add(null);
                                     child.Expanded += Folder_Expanded;
                                     currentNode.Items.Add(child);
