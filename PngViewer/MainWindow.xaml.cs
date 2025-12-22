@@ -296,7 +296,7 @@ namespace StableSatoViewer
                                             );
                                             
                                             pngFiles = pngFiles.Where(f => f != filePath).ToArray();
-                                            allPngFilesInFolder = allPngFilesInFolder.Where(f => f != filePath).ToArray();
+                                            allPngFilesInFolder = allPngFilesInFolder?.Where(f => f != filePath).ToArray();
 
                                             if (pngFiles.Length == 0)
                                             {
@@ -1208,7 +1208,7 @@ namespace StableSatoViewer
         {
             // 簡単な編集: ファイルをエクスプローラーで開く
             var dir = Path.GetDirectoryName(favoritesFilePath);
-            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{favoritesFilePath}\"") { UseShellExecute = true });
         }
 
@@ -1245,7 +1245,7 @@ namespace StableSatoViewer
             try
             {
                 var dir = Path.GetDirectoryName(favoritesFilePath);
-                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
                 File.WriteAllLines(favoritesFilePath, favorites, Encoding.UTF8);
             }
             catch
@@ -1379,7 +1379,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// フォルダツリーノードが展開される際、遅延ロードされたサブフォルダを読み込みます。
+        /// フォルダツリーノードが展開される際、遅延ロードされたサブフォルダを読み込む
         /// </summary>
         private void Folder_Expanded(object sender, RoutedEventArgs e)
         {
@@ -1773,13 +1773,13 @@ namespace StableSatoViewer
                     var full = System.IO.Path.Combine(dir, name);
                     if (File.Exists(full))
                     {
-                        // 選択された画像を表示し、pngFiles/currentIndex を更新してナビゲーションが機能するようにします
+                        // 選択された画像を表示し、pngFiles/currentIndex を更新してナビゲーションがクラッシュしないようにします
                         var bitmap = new BitmapImage(new Uri(full));
                         bitmap.CacheOption = BitmapCacheOption.OnLoad;
                         bitmap.Freeze();
                         imageBox.Source = bitmap;
                         // pngFiles は既にフィルター状態を持っているので、そのまま使用
-                        currentIndex = Array.IndexOf(pngFiles, full);
+                        currentIndex = pngFiles != null ? Array.IndexOf(pngFiles, full) : -1;
                         if (currentIndex < 0) currentIndex = 0;
 
                         // 最後に表示した画像を保存
