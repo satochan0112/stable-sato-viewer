@@ -823,7 +823,7 @@ namespace StableSatoViewer
             var colDefs = mainGrid.ColumnDefinitions;
             
             // 右側のグリッド（Column=4）を探す
-            Grid rightGrid = null;
+            Grid? rightGrid = null;
             foreach (UIElement child in mainGrid.Children)
             {
                 if (child is Grid g && Grid.GetColumn(g) == 4)
