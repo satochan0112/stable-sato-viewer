@@ -193,9 +193,10 @@ namespace StableSatoViewer
         {
             // マウスの下にあるセルをヒットテストで探す
             var dep = (DependencyObject)e.OriginalSource;
-            while (dep != null && !(dep is WpfDataGridCell))
+            while (dep is not WpfDataGridCell)
             {
                 dep = VisualTreeHelper.GetParent(dep);
+                if (dep == null) return;
             }
 
             if (dep is WpfDataGridCell cell)
@@ -1390,8 +1391,7 @@ namespace StableSatoViewer
                     ti.Items.Clear();
                     try
                     {
-                        var path = ti.Tag as string;
-                        if (path != null)
+                        if (ti.Tag is string path)
                         {
                             foreach (var sub in Directory.GetDirectories(path))
                             {
@@ -1553,8 +1553,7 @@ namespace StableSatoViewer
                         currentNode.Items.Clear();
                         try
                         {
-                            var pathTag = currentNode.Tag as string;
-                            if (pathTag != null)
+                            if (currentNode.Tag is string pathTag)
                             {
                                 foreach (var sub in Directory.GetDirectories(pathTag))
                                 {
@@ -1908,7 +1907,7 @@ namespace StableSatoViewer
                 folderFilesListBox.ItemsSource = fileNames;
                 folderFilesListBox.SelectedIndex = 0;
                 
-                // フィルター後、最初の画像を表示
+                                  // フィルター後、最初の画像を表示
                 currentIndex = 0;
                 ShowImage(pngFiles[0]);
                 
