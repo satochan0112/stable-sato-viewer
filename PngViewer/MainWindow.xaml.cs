@@ -586,8 +586,8 @@ namespace StableSatoViewer
                         int nullIndex = text.IndexOf('\0');
                         if (nullIndex > 0)
                         {
-                            string key = text.Substring(0, nullIndex);
-                            string value = text.Substring(nullIndex + 1);
+                            string key = text[..nullIndex];
+                            string value = text[(nullIndex + 1)..];
 
                             if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                             {
@@ -597,22 +597,22 @@ namespace StableSatoViewer
 
                                 if (negPromptIndex >= 0)
                                 {
-                                    parameters = value.Substring(0, negPromptIndex).Trim();
+                                    parameters = value[..negPromptIndex].Trim();
 
                                     if (stepsIndex >= 0)
                                     {
-                                        negativePrompt = value.Substring(negPromptIndex + "Negative prompt:".Length, stepsIndex - negPromptIndex - "Negative prompt:".Length).Trim();
-                                        steps = value.Substring(stepsIndex + "Steps:".Length).Trim();
+                                        negativePrompt = value[(negPromptIndex + "Negative prompt:".Length)..stepsIndex].Trim();
+                                        steps = value[(stepsIndex + "Steps:".Length)..].Trim();
                                     }
                                     else
                                     {
-                                        negativePrompt = value.Substring(negPromptIndex + "Negative prompt:".Length).Trim();
+                                        negativePrompt = value[(negPromptIndex + "Negative prompt:".Length)..].Trim();
                                     }
                                 }
                                 else if (stepsIndex >= 0)
                                 {
-                                    parameters = value.Substring(0, stepsIndex).Trim();
-                                    steps = value.Substring(stepsIndex).Trim();
+                                    parameters = value[..stepsIndex].Trim();
+                                    steps = value[stepsIndex..].Trim();
                                 }
                                 else
                                 {
@@ -1016,8 +1016,8 @@ namespace StableSatoViewer
                     var idx = line.IndexOf(':');
                     if (idx > 0)
                     {
-                        var key = line.Substring(0, idx).Trim();
-                        var value = line.Substring(idx + 1).Trim();
+                        var key = line[..idx].Trim();
+                        var value = line[(idx + 1)..].Trim();
                         items.Add(new StepsItem { Key = key, Value = value });
                     }
                     else
@@ -1533,7 +1533,7 @@ namespace StableSatoViewer
                 driveNode.IsExpanded = true;
 
                 // パスの各部分を分割
-                string[] pathParts = path.Substring(drive.Length).Trim(System.IO.Path.DirectorySeparatorChar).Split(System.IO.Path.DirectorySeparatorChar);
+                string[] pathParts = path[drive.Length..].Trim(System.IO.Path.DirectorySeparatorChar).Split(System.IO.Path.DirectorySeparatorChar);
 
                 // ツリーを辿りながら各ノードを展開
                 TreeViewItem currentNode = driveNode;
@@ -1865,8 +1865,8 @@ namespace StableSatoViewer
                                 int nullIndex = text.IndexOf('\0');
                                 if (nullIndex >= 0)
                                 {
-                                    string key = text.Substring(0, nullIndex);
-                                    string value = text.Substring(nullIndex + 1).ToLower();
+                                    string key = text[..nullIndex];
+                                    string value = text[(nullIndex + 1)..].ToLower();
 
                                     if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                                     {
@@ -1875,7 +1875,7 @@ namespace StableSatoViewer
                                         int negIndex = value.IndexOf("negative prompt:");
                                         if (negIndex >= 0)
                                         {
-                                            paramText = value.Substring(0, negIndex);
+                                            paramText = value[..negIndex];
                                         }
 
                                         // フィルターテキストが含まれているかチェック
