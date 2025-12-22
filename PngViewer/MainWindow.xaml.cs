@@ -652,7 +652,7 @@ namespace StableSatoViewer
         /// <summary>
         /// テキストを行単位で分割し、データグリッドに表示します。
         /// </summary>
-        private void DisplayTextAsGrid(WpfDataGrid grid, string text)
+        private static void DisplayTextAsGrid(WpfDataGrid grid, string text)
         {
             var items = new ObservableCollection<SimpleItem>();
 
@@ -718,7 +718,7 @@ namespace StableSatoViewer
         /// <summary>
         /// テキストをコロン記号で区切られたキー値ペアに解析します。
         /// </summary>
-        private List<(string Key, string Value)> ParseKeyValuePairs(string text)
+        private static List<(string Key, string Value)> ParseKeyValuePairs(string text)
         {
             var pairs = new List<(string, string)>();
             var currentKey = new StringBuilder();
@@ -782,7 +782,7 @@ namespace StableSatoViewer
         /// <summary>
         /// バイト配列をビッグエンディアン形式の 32 ビット整数に変換します。
         /// </summary>
-        private int ReadInt32BigEndian(byte[] bytes)
+        private static int ReadInt32BigEndian(byte[] bytes)
         {
             return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
         }
