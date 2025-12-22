@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+      working-directory: ./PngViewer
+    
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      working-directory: ./PngViewer
+    
+    - name: Run tests (if available)
+      run: dotnet test --configuration Release --no-build --verbosity normal
+      working-directory: ./PngViewer
+      continue-on-error: true

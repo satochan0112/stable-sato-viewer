@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+      working-directory: ./PngViewer
+    
+    - name: Build Release
+      run: dotnet build --configuration Release --no-restore
+      working-directory: ./PngViewer
+    
+    - name: Publish Windows x64
+      run: dotnet publish -c Release -r win-x64 --self-contained false -o ./publish/win-x64
+      working-directory: ./PngViewer
+    
+    - name: Publish Windows x86
+      run: dotnet publish -c Release -r win-x86 --self-contained false -o ./publish/win-x86
+      working-directory: ./PngViewer
+    
+    - name: Create artifact - x64
+      uses: actions/upload-artifact@v3
+      with:
+        name: StableSatoViewer-${{ github.event.inputs.version }}-win-x64
+        path: ./PngViewer/publish/win-x64
+    
+    - name: Create artifact - x86
+      uses: actions/upload-artifact@v3
+      with:
+        name: StableSatoViewer-${{ github.event.inputs.version }}-win-x86
+        path: ./PngViewer/publish/win-x86
+    
+    - name: Zip artifacts
+      run: |
+        Compress-Archive -Path ".\PngViewer\publish\win-x64\*" -DestinationPath "StableSatoViewer-${{ github.event.inputs.version }}-win-x64.zip"
+        Compress-Archive -Path ".\PngViewer\publish\win-x86\*" -DestinationPath "StableSatoViewer-${{ github.event.inputs.version }}-win-x86.zip"
+      shell: pwsh
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+        release_name: v${{ github.event.inputs.version }}
+        tag_name: v${{ github.event.inputs.version }}
+        body: |
+          # Stable Sato Viewer v${{ github.event.inputs.version }}
+          
+          ## Changes
+          - See commit history for details
+          
+          ## Downloads
+          - **Windows x64**: StableSatoViewer-${{ github.event.inputs.version }}-win-x64.zip
+          - **Windows x86**: StableSatoViewer-${{ github.event.inputs.version }}-win-x86.zip
+          
+          ## Installation
+          1. Download the appropriate version for your system
+          2. Extract the ZIP file
+          3. Run `StableSatoViewer.exe`
+          
+          ## Requirements
+          - Windows 10/11
+          - .NET 10.0 Runtime (or self-contained version)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./StableSatoViewer-${{ github.event.inputs.version }}-win-x64.zip
+        asset_name: StableSatoViewer-${{ github.event.inputs.version }}-win-x64.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload Release Assets (x86)
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./StableSatoViewer-${{ github.event.inputs.version }}-win-x86.zip
+        asset_name: StableSatoViewer-${{ github.event.inputs.version }}-win-x86.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
