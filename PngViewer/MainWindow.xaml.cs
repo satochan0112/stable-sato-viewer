@@ -1512,7 +1512,7 @@ namespace StableSatoViewer
                 path = System.IO.Path.GetFullPath(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
 
                 // ドライブを探す
-                string drive = System.IO.Path.GetPathRoot(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                string drive = (System.IO.Path.GetPathRoot(path) ?? "").TrimEnd(System.IO.Path.DirectorySeparatorChar);
                 
                 TreeViewItem? driveNode = null;
                 foreach (TreeViewItem t in folderTreeView.Items)
@@ -1520,7 +1520,7 @@ namespace StableSatoViewer
                     string? nodeTag = t.Tag as string;
                     if (!string.IsNullOrEmpty(nodeTag))
                     {
-                        string nodeRoot = System.IO.Path.GetPathRoot(nodeTag).TrimEnd(System.IO.Path.DirectorySeparatorChar);
+                        string nodeRoot = (System.IO.Path.GetPathRoot(nodeTag) ?? "").TrimEnd(System.IO.Path.DirectorySeparatorChar);
                         if (nodeRoot.Equals(drive, StringComparison.OrdinalIgnoreCase))
                         {
                             driveNode = t;
