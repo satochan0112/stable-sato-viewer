@@ -466,8 +466,7 @@ namespace StableSatoViewer
                 // imageBorder 内のグリッドの子要素から背景画像を探す
                 try
                 {
-                    Grid innerGrid = imageBorder.Child as Grid;
-                    if (innerGrid != null)
+                    if (imageBorder.Child is Grid innerGrid)
                     {
                         foreach (var child in innerGrid.Children)
                         {
