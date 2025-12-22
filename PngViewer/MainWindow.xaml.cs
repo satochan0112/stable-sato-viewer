@@ -19,11 +19,11 @@ namespace StableSatoViewer
 {
     public partial class MainWindow : Window
     {
-        private string[] pngFiles;
+        private string[]? pngFiles;
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private List<string> favorites = new List<string>();
-        private string[] allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
+        private string[]? allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
         private string windowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
 
@@ -48,7 +48,7 @@ namespace StableSatoViewer
                 var lastImage = LoadLastImage();
                 if (!string.IsNullOrEmpty(lastImage) && File.Exists(lastImage))
                 {
-                    string dir = Path.GetDirectoryName(lastImage);
+                    string dir = Path.GetDirectoryName(lastImage)!;
                     pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                     allPngFilesInFolder = pngFiles;
                     currentIndex = Array.IndexOf(pngFiles, lastImage);
@@ -71,8 +71,9 @@ namespace StableSatoViewer
                     }
                 }
             }
+#pragma warning disable CS0168 // Variable declared but never used
             catch { }
-
+#pragma warning restore CS0168
             // もしコマンドライン引数で PNG ファイルが渡されていれば、最初に表示します
             try
             {
@@ -85,7 +86,7 @@ namespace StableSatoViewer
                         var ext = Path.GetExtension(first);
                         if (!string.IsNullOrEmpty(ext) && ext.Equals(".png", StringComparison.OrdinalIgnoreCase))
                         {
-                            string dir = Path.GetDirectoryName(first);
+                            string dir = Path.GetDirectoryName(first)!;
                             pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                             currentIndex = Array.IndexOf(pngFiles, first);
                             if (currentIndex < 0) currentIndex = 0;
@@ -1221,7 +1222,7 @@ namespace StableSatoViewer
             {
                 if (File.Exists(path))
                 {
-                    string dir = Path.GetDirectoryName(path);
+                    string dir = Path.GetDirectoryName(path)!;
                     pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                     currentIndex = Array.IndexOf(pngFiles, path);
                     if (currentIndex < 0) currentIndex = 0;
@@ -1334,7 +1335,7 @@ namespace StableSatoViewer
         private void ImageBorder_Drop(object sender, WpfDragEventArgs e)
         {
             if (!e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop)) return;
-            var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
+            var files = (string[]?)e.Data.GetData(System.Windows.DataFormats.FileDrop);
             if (files == null || files.Length == 0) return;
 
             // 最初のファイルが PNG なら読み込む
@@ -1344,7 +1345,7 @@ namespace StableSatoViewer
 
             try
             {
-                string dir = Path.GetDirectoryName(first);
+                string dir = Path.GetDirectoryName(first)!;
                 pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                 currentIndex = Array.IndexOf(pngFiles, first);
                 if (currentIndex < 0) currentIndex = 0;
@@ -1391,13 +1392,16 @@ namespace StableSatoViewer
                     try
                     {
                         var path = ti.Tag as string;
-                        foreach (var sub in Directory.GetDirectories(path))
+                        if (path != null)
                         {
-                            var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
-                            child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
-                            child.Items.Add(null);
-                            child.Expanded += Folder_Expanded;
-                            ti.Items.Add(child);
+                            foreach (var sub in Directory.GetDirectories(path))
+                            {
+                                var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
+                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                                child.Items.Add(null);
+                                child.Expanded += Folder_Expanded;
+                                ti.Items.Add(child);
+                            }
                         }
                     }
                     catch { }
@@ -1551,13 +1555,16 @@ namespace StableSatoViewer
                         try
                         {
                             var pathTag = currentNode.Tag as string;
-                            foreach (var sub in Directory.GetDirectories(pathTag))
+                            if (pathTag != null)
                             {
-                                var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
-                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
-                                child.Items.Add(null);
-                                child.Expanded += Folder_Expanded;
-                                currentNode.Items.Add(child);
+                                foreach (var sub in Directory.GetDirectories(pathTag))
+                                {
+                                    var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
+                                    child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0");
+                                    child.Items.Add(null);
+                                    child.Expanded += Folder_Expanded;
+                                    currentNode.Items.Add(child);
+                                }
                             }
                         }
                         catch { }
@@ -1998,7 +2005,7 @@ namespace StableSatoViewer
         /// <summary>
         /// 設定ファイルから最後に表示した画像パスを読み込みます。
         /// </summary>
-        private string LoadLastImage()
+        private string? LoadLastImage()
         {
             try
             {
