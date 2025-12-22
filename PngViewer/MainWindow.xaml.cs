@@ -21,6 +21,9 @@ namespace StableSatoViewer
     {
         // CA1861: Constant arrays extracted to static readonly fields
         private static readonly string[] LineBreakSeparators = ["\r\n", "\n"];
+        
+        // CA1869: Cache JsonSerializerOptions to avoid creating new instances
+        private static readonly System.Text.Json.JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
         private string[]? pngFiles;
         private int currentIndex = 0;
@@ -2065,7 +2068,7 @@ namespace StableSatoViewer
                 var dir = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer");
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-                var json = System.Text.Json.JsonSerializer.Serialize(state, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                var json = System.Text.Json.JsonSerializer.Serialize(state, JsonSerializerOptions);
                 File.WriteAllText(WindowStateFilePath, json, Encoding.UTF8);
             }
             catch { }
