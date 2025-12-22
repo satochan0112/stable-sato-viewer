@@ -551,7 +551,7 @@ namespace StableSatoViewer
                 {
                     this.Title = fileName;
                 }
-                this.Title = this.Title + " - StableSatoViewer";
+                this.Title += " - StableSatoViewer";
             }
             catch
             {
