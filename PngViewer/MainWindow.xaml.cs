@@ -39,7 +39,7 @@ namespace StableSatoViewer
             // ウィンドウの状態を復元
             RestoreWindowState();
 
-            // Build folder tree and restore last folder
+            // ドライブとフォルダツリーを初期化し、最後のフォルダを復元します
             try
             {
                 BuildFolderTree();
@@ -73,7 +73,7 @@ namespace StableSatoViewer
             }
             catch { }
 
-            // もしコマンドライン引数で画像ファイルが渡されていたら最初に表示する
+            // もしコマンドライン引数で PNG ファイルが渡されていれば、最初に表示します
             try
             {
                 var args = Environment.GetCommandLineArgs();
@@ -89,7 +89,7 @@ namespace StableSatoViewer
                             pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                             currentIndex = Array.IndexOf(pngFiles, first);
                             if (currentIndex < 0) currentIndex = 0;
-                            // ShowImage will update UI elements; it's safe after InitializeComponent
+                            // ShowImage は UI 要素を更新します。InitializeComponent 後は安全に実行できます
                             ShowImage(pngFiles[currentIndex]);
                             // フォルダツリーでもこのフォルダを選択
                             SelectFolderInTree(dir);
@@ -462,7 +462,7 @@ namespace StableSatoViewer
             // 背景アイコンを非表示
             if (bitmap != null)
             {
-                // imageBorder内のGridの子要素から背景画像を探す
+                // imageBorder 内のグリッドの子要素から背景画像を探す
                 try
                 {
                     Grid innerGrid = imageBorder.Child as Grid;
@@ -484,10 +484,10 @@ namespace StableSatoViewer
             // ウィンドウタイトルを更新
             UpdateWindowTitle(path);
 
-            // tEXt チャンクを読み取って表示
+            // PNG の tEXt チャンクを読み取って表示
             ExtractAndDisplayTextChunks(path);
 
-            // Update favorites indicator when image changes
+            // 画像が変更されたとき、お気に入り表示を更新
             UpdateFavoritesIndicator();
 
             // 左パネルのファイル一覧を現在の画像のディレクトリで表示し、選択状態を反映する
@@ -498,10 +498,10 @@ namespace StableSatoViewer
                     var dir = System.IO.Path.GetDirectoryName(path);
                     if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
                     {
-                        // 現在のfolderFilesListBoxのディレクトリと異なる場合のみ更新
+                        // 現在の folderFilesListBox のディレクトリと異なる場合のみ更新
                         if (folderFilesListBox.Tag as string != dir)
                         {
-                            // フィルター状態が無い場合のみファイルリストを再取得
+                            // フィルター状態がない場合のみファイルリストを再取得
                             var files = pngFiles;
                             var names = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
                             folderFilesListBox.ItemsSource = names;
@@ -808,7 +808,7 @@ namespace StableSatoViewer
             var dockPanel = (DockPanel)this.Content;
             Grid mainGrid = null;
 
-            // DockPanel 内のすべての子要素からメイングリットを探す
+            // DockPanel 内のすべての子要素からメイングリッドを探す
             foreach (UIElement child in dockPanel.Children)
             {
                 if (child is Grid g && g.ColumnDefinitions.Count >= 5)
@@ -822,7 +822,7 @@ namespace StableSatoViewer
 
             var colDefs = mainGrid.ColumnDefinitions;
             
-            // 右側のグリッド（Column=2）を探す
+            // 右側のグリッド（Column=4）を探す
             Grid rightGrid = null;
             foreach (UIElement child in mainGrid.Children)
             {
@@ -842,7 +842,7 @@ namespace StableSatoViewer
                     rightGrid.Visibility = Visibility.Visible;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
-                    // restore image/right splitter and right column
+                    // 画像、右分割線、右列を復元
                     colDefs[3].Width = new GridLength(5);
                     colDefs[4].Width = new GridLength(300);
                     colDefs[2].Width = new GridLength(1, GridUnitType.Star);
@@ -1154,7 +1154,7 @@ namespace StableSatoViewer
         /// </summary>
         private void FavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            // Load favorites
+            // お気に入りを読み込む
             LoadFavorites();
             favoritesListBox.ItemsSource = null;
             favoritesListBox.ItemsSource = favorites;
@@ -1206,7 +1206,7 @@ namespace StableSatoViewer
         /// </summary>
         private void EditFavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            // simple edit: open folder
+            // 簡単な編集: ファイルをエクスプローラーで開く
             var dir = Path.GetDirectoryName(favoritesFilePath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{favoritesFilePath}\"") { UseShellExecute = true });
@@ -1250,7 +1250,7 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ignore
+                // 無視
             }
         }
 
@@ -1354,7 +1354,7 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ignore
+                // 無視
             }
         }
 
@@ -1417,25 +1417,25 @@ namespace StableSatoViewer
             {
                 SaveLastFolder(p);
                 LoadImagesFromFolderWithFilter(p);
-                // populate file list
+                // ファイル一覧を読み込む
                 try
                 {
                     var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
                     allPngFilesInFolder = files; // すべてのファイルを保存
 
-                    // If a filter is active, apply it to the new folder; otherwise show all
+                    // フィルターがアクティブな場合は、新しいフォルダに適用します。それ以外の場合はすべてを表示
                     if (filterTextBox != null && !string.IsNullOrWhiteSpace(filterTextBox.Text))
                     {
-                        // FilterButton_Click relies on allPngFilesInFolder being set
-                        folderFilesListBox.Tag = p; // store current folder
+                        // FilterButton_Click は allPngFilesInFolder が設定されていることに依存しています
+                        folderFilesListBox.Tag = p; // 現在のフォルダを保存
                         FilterButton_Click(filterButton, new RoutedEventArgs());
                     }
                     else
                     {
                         pngFiles = files; // フィルターをリセット
                         folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                        folderFilesListBox.Tag = p; // store current folder
-                        // do not clear filterTextBox - preserve user's input
+                        folderFilesListBox.Tag = p; // 現在のフォルダを保存
+                        // filterTextBox をクリアしない - ユーザーの入力を保持
                         if (pngFiles.Length > 0)
                         {
                             currentIndex = 0;
@@ -1457,7 +1457,7 @@ namespace StableSatoViewer
                 var full = System.IO.Path.Combine(dir, name);
                 if (File.Exists(full))
                 {
-                    // set pngFiles to files in dir and show selected
+                    // ディレクトリのファイルを pngFiles に設定し、選択したファイルを表示
                     try
                     {
                         pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(x => x).ToArray();
@@ -1641,7 +1641,7 @@ namespace StableSatoViewer
         {
             try
             {
-                // find main grid under DockPanel
+                // DockPanel 内のメイングリッドを探す
                 var dockPanel = (DockPanel)this.Content;
                 Grid mainGrid = null;
                 foreach (UIElement child in dockPanel.Children)
@@ -1660,7 +1660,7 @@ namespace StableSatoViewer
 
                 if (treeBorder.Visibility == Visibility.Visible)
                 {
-                    // hide
+                    // 非表示にする
                     treeBorder.Visibility = Visibility.Collapsed;
                     colDefs[0].Width = new GridLength(0);
                     colDefs[1].Width = new GridLength(0);
@@ -1767,7 +1767,7 @@ namespace StableSatoViewer
                     var full = System.IO.Path.Combine(dir, name);
                     if (File.Exists(full))
                     {
-                        // Show selected image and update pngFiles/currentIndex so navigation works
+                        // 選択された画像を表示し、pngFiles/currentIndex を更新してナビゲーションが機能するようにします
                         var bitmap = new BitmapImage(new Uri(full));
                         bitmap.CacheOption = BitmapCacheOption.OnLoad;
                         bitmap.Freeze();
@@ -1779,18 +1779,18 @@ namespace StableSatoViewer
                         // 最後に表示した画像を保存
                         SaveLastImage(full);
 
-                        // Update title and text chunks
+                        // タイトルとテキストチャンクを更新
                         UpdateWindowTitle(full);
                         ExtractAndDisplayTextChunks(full);
 
-                        // Update favorites indicator
+                        // お気に入り表示を更新
                         UpdateFavoritesIndicator();
                     }
                 }
             }
             catch
             {
-                // ignore
+                // 無視
             }
         }
 
@@ -1840,7 +1840,7 @@ namespace StableSatoViewer
                         using var fs = new FileStream(f, FileMode.Open, FileAccess.Read);
                         using var br = new BinaryReader(fs);
 
-                        // skip PNG signature
+                        // PNG シグネチャをスキップ
                         br.ReadBytes(8);
 
                         bool found = false;
@@ -1866,7 +1866,7 @@ namespace StableSatoViewer
 
                                     if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        // Search only the parameters text up to 'Negative prompt:'
+                                        // 「Negative prompt:」までのパラメータテキストのみを検索
                                         string paramText = value;
                                         int negIndex = value.IndexOf("negative prompt:");
                                         if (negIndex >= 0)
@@ -1887,7 +1887,7 @@ namespace StableSatoViewer
                     }
                     catch
                     {
-                        // ignore read errors
+                        // 読み込みエラーを無視
                     }
                 }
 
@@ -1926,19 +1926,19 @@ namespace StableSatoViewer
 
                 if (allPngFilesInFolder != null)
                 {
-                    // Remember currently displayed image (if any)
+                    // 現在表示されている画像を記憶（ある場合）
                     string currentImagePath = null;
                     if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                     {
                         currentImagePath = bm.UriSource.LocalPath;
                     }
 
-                    // Restore full file list
+                    // ファイル一覧全体を復元
                     pngFiles = allPngFilesInFolder;
                     var names = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
                     folderFilesListBox.ItemsSource = names;
 
-                    // If the currently displayed image is in the restored list, keep it selected
+                    // 現在表示されている画像が復元されたリストにある場合、それを選択したままにします
                     if (!string.IsNullOrEmpty(currentImagePath))
                     {
                         int idx = Array.IndexOf(pngFiles, currentImagePath);
@@ -1947,21 +1947,21 @@ namespace StableSatoViewer
                             currentIndex = idx;
                             folderFilesListBox.SelectedIndex = idx;
                             folderFilesListBox.ScrollIntoView(folderFilesListBox.SelectedItem);
-                            // ensure UI reflects any parsed text/chunks for the same image
+                            // UI が同じ画像の解析されたテキスト/チャンクを反映していることを確認
                             ShowImage(pngFiles[currentIndex]);
                         }
                         else
                         {
-                            // Currently displayed image is not part of this folder's files.
-                            // Do not switch the displayed image to the folder's first image.
-                            // Just leave currentIndex as 0 so navigation won't crash later.
+                            // 現在表示されている画像はこのフォルダのファイルの一部ではありません。
+                            // 表示されている画像をフォルダの最初の画像に切り替えないでください。
+                            // 後でナビゲーションがクラッシュしないよう currentIndex を 0 のままにしておきます。
                             currentIndex = 0;
                             folderFilesListBox.SelectedIndex = -1;
                         }
                     }
                     else
                     {
-                        // No image currently displayed: do not force-show first image
+                        // 画像が現在表示されていない場合：最初の画像の表示を強制しない
                         folderFilesListBox.SelectedIndex = -1;
                     }
                 }
@@ -2127,7 +2127,7 @@ namespace StableSatoViewer
                         if (treeBorder != null)
                             treeBorder.Visibility = state.TreeVisible ? Visibility.Visible : Visibility.Collapsed;
 
-                        // LayoutMode を復元してUIを更新
+                        // LayoutMode を復元して UI を更新
                         layoutMode = state.LayoutMode;
                         ApplyLayoutMode();
 
