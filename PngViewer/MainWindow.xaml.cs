@@ -22,7 +22,7 @@ namespace StableSatoViewer
         private string[]? pngFiles;
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
-        private List<string> favorites = new();
+        private List<string> favorites = [];
         private string[]? allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
         private string windowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
@@ -1262,12 +1262,12 @@ namespace StableSatoViewer
                 }
                 else
                 {
-                    favorites = new List<string>();
+                    favorites = [];
                 }
             }
             catch
             {
-                favorites = new List<string>();
+                favorites = [];
             }
         }
 
