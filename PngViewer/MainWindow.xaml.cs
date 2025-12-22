@@ -805,7 +805,8 @@ namespace StableSatoViewer
         private void ApplyLayoutMode()
         {
             // DockPanel 内のグリッドを取得
-            var dockPanel = (DockPanel)this.Content;
+            if (this.Content is not DockPanel dockPanel) return;
+
             Grid mainGrid = null;
 
             // DockPanel 内のすべての子要素からメイングリッドを探す
