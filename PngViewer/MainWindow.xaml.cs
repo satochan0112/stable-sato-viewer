@@ -237,10 +237,7 @@ namespace StableSatoViewer
                 {
                     this.WindowStyle = WindowStyle.SingleBorderWindow;
                     this.WindowState = WindowState.Normal;
-                    if (fullScreenToggle != null)
-                    {
-                        fullScreenToggle.IsChecked = false;
-                    }
+                    fullScreenToggle?.IsChecked = false;
                     e.Handled = true;
                     return;
                 }
@@ -2089,8 +2086,7 @@ namespace StableSatoViewer
                     {
                         this.WindowStyle = WindowStyle.None;
                         this.WindowState = WindowState.Maximized;
-                        if (fullScreenToggle != null)
-                            fullScreenToggle.IsChecked = true;
+                        fullScreenToggle?.IsChecked = true;
                     }
                     else
                     {
@@ -2128,28 +2124,21 @@ namespace StableSatoViewer
                         }
 
                         // ツリーの表示状態を復元
-                        if (treeBorder != null)
-                            treeBorder.Visibility = state.TreeVisible ? Visibility.Visible : Visibility.Collapsed;
+                        treeBorder?.Visibility = state.TreeVisible ? Visibility.Visible : Visibility.Collapsed;
 
                         // LayoutMode を復元して UI を更新
                         layoutMode = state.LayoutMode;
                         ApplyLayoutMode();
 
                         // 起動時は常にグリッド表示にする
-                        if (parametersGrid != null)
-                            parametersGrid.Visibility = Visibility.Visible;
-                        if (parametersTextBox != null)
-                            parametersTextBox.Visibility = Visibility.Collapsed;
+                        parametersGrid?.Visibility = Visibility.Visible;
+                        parametersTextBox?.Visibility = Visibility.Collapsed;
                         
-                        if (negativePromptGrid != null)
-                            negativePromptGrid.Visibility = Visibility.Visible;
-                        if (negativePromptTextBox != null)
-                            negativePromptTextBox.Visibility = Visibility.Collapsed;
+                        negativePromptGrid?.Visibility = Visibility.Visible;
+                        negativePromptTextBox?.Visibility = Visibility.Collapsed;
                         
-                        if (stepsGrid != null)
-                            stepsGrid.Visibility = Visibility.Visible;
-                        if (stepsTextBox != null)
-                            stepsTextBox.Visibility = Visibility.Collapsed;
+                        stepsGrid?.Visibility = Visibility.Visible;
+                        stepsTextBox?.Visibility = Visibility.Collapsed;
                     };
                 }
             }
