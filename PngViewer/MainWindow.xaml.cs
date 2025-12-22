@@ -2165,9 +2165,9 @@ namespace StableSatoViewer
     public class StepsItem
     {
         /// <summary>Steps のキー</summary>
-        public string Key { get; set; }
+        public string Key { get; set; } = "";
         /// <summary>Steps の値</summary>
-        public string Value { get; set; }
+        public string Value { get; set; } = "";
     }
 
     /// <summary>
@@ -2176,7 +2176,7 @@ namespace StableSatoViewer
     public class SimpleItem
     {
         /// <summary>テキスト行の値</summary>
-        public string Value { get; set; }
+        public string Value { get; set; } = "";
     }
 
     /// <summary>
