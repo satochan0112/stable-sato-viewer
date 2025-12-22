@@ -1,4 +1,4 @@
-ï»¿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,30 +24,30 @@ namespace StableSatoViewer
 
         private string[]? pngFiles;
         private int currentIndex = 0;
-        private int layoutMode = 0; // 0: é€šå¸¸ï¼ˆå·¦ç”»åƒ+å³ãƒ‘ãƒãƒ«ï¼‰, 1: ãƒ•ãƒ­ãƒ¼ãƒˆï¼ˆç”»åƒæœ€å¤§åŒ–+ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆãƒ•ãƒ­ãƒ¼ãƒˆï¼‰, 2: éè¡¨ç¤ºï¼ˆç”»åƒã®ã¿ï¼‰
+        private int layoutMode = 0; // 0: ’Êíi¶‰æ‘œ+‰Eƒpƒlƒ‹j, 1: ƒtƒ[ƒgi‰æ‘œÅ‘å‰»+ƒvƒƒ“ƒvƒgƒtƒ[ƒgj, 2: ”ñ•\¦i‰æ‘œ‚Ì‚İj
         private List<string> favorites = [];
-        private string[]? allPngFilesInFolder; // ã™ã¹ã¦ã®PNGãƒ•ã‚¡ã‚¤ãƒ«ï¼ˆãƒ•ã‚£ãƒ«ã‚¿ãƒ¼å‰ï¼‰
-        private bool isInitializing = false; // åˆæœŸåŒ–ä¸­ãƒ•ãƒ©ã‚°ï¼ˆãƒ•ã‚©ãƒ«ãƒ€é¸æŠã‚¤ãƒ™ãƒ³ãƒˆã‚’æŠ‘åˆ¶ï¼‰
-        private string windowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
+        private string[]? allPngFilesInFolder; // ‚·‚×‚Ä‚ÌPNGƒtƒ@ƒCƒ‹iƒtƒBƒ‹ƒ^[‘Oj
+        private bool isInitializing = false; // ‰Šú‰»’†ƒtƒ‰ƒOiƒtƒHƒ‹ƒ_‘I‘ğƒCƒxƒ“ƒg‚ğ—}§j
+        private static string WindowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
 
-        private string favoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
+        private static string FavoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
         public MainWindow()
         {
             InitializeComponent();
-            // èª­ã¿è¾¼ã‚“ã ãŠæ°—ã«å…¥ã‚Šã«åŸºã¥ã UI ã‚’æ›´æ–°
+            // “Ç‚İ‚ñ‚¾‚¨‹C‚É“ü‚è‚ÉŠî‚Ã‚« UI ‚ğXV
             LoadFavorites();
             UpdateFavoritesIndicator();
 
-            // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®çŠ¶æ…‹ã‚’å¾©å…ƒ
+            // ƒEƒBƒ“ƒhƒE‚Ìó‘Ô‚ğ•œŒ³
             RestoreWindowState();
 
-            // ãƒ‰ãƒ©ã‚¤ãƒ–ã¨ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã‚’åˆæœŸåŒ–ã—ã€æœ€å¾Œã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’å¾©å…ƒã—ã¾ã™
+            // ƒhƒ‰ƒCƒu‚ÆƒtƒHƒ‹ƒ_ƒcƒŠ[‚ğ‰Šú‰»‚µAÅŒã‚ÌƒtƒHƒ‹ƒ_‚ğ•œŒ³‚µ‚Ü‚·
             try
             {
                 BuildFolderTree();
                 
-                // å‰å›è¡¨ç¤ºã—ã¦ã„ãŸç”»åƒã‚’å¾©å…ƒ
+                // ‘O‰ñ•\¦‚µ‚Ä‚¢‚½‰æ‘œ‚ğ•œŒ³
                 var lastImage = LoadLastImage();
                 if (!string.IsNullOrEmpty(lastImage) && File.Exists(lastImage))
                 {
@@ -58,14 +58,14 @@ namespace StableSatoViewer
                     if (currentIndex < 0) currentIndex = 0;
                     ShowImage(pngFiles[currentIndex]);
                     
-                    // ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼é¸æŠæ™‚ã®ã‚¤ãƒ™ãƒ³ãƒˆã‚’æŠ‘åˆ¶
+                    // ƒtƒHƒ‹ƒ_ƒcƒŠ[‘I‘ğ‚ÌƒCƒxƒ“ƒg‚ğ—}§
                     isInitializing = true;
                     SelectFolderInTree(dir);
                     isInitializing = false;
                 }
                 else
                 {
-                    // å‰å›ã®ç”»åƒãŒãªã„å ´åˆã¯ã€å‰å›ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’å¾©å…ƒ
+                    // ‘O‰ñ‚Ì‰æ‘œ‚ª‚È‚¢ê‡‚ÍA‘O‰ñ‚ÌƒtƒHƒ‹ƒ_‚ğ•œŒ³
                     var last = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "lastfolder.txt");
                     if (File.Exists(last))
                     {
@@ -75,7 +75,7 @@ namespace StableSatoViewer
                 }
             }
             catch { }
-            // ã‚‚ã—ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³å¼•æ•°ã§ PNG ãƒ•ã‚¡ã‚¤ãƒ«ãŒæ¸¡ã•ã‚Œã¦ã„ã‚Œã°ã€æœ€åˆã«è¡¨ç¤ºã—ã¾ã™
+            // ‚à‚µƒRƒ}ƒ“ƒhƒ‰ƒCƒ“ˆø”‚Å PNG ƒtƒ@ƒCƒ‹‚ª“n‚³‚ê‚Ä‚¢‚ê‚ÎAÅ‰‚É•\¦‚µ‚Ü‚·
             try
             {
                 var args = Environment.GetCommandLineArgs();
@@ -91,9 +91,9 @@ namespace StableSatoViewer
                             pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
                             currentIndex = Array.IndexOf(pngFiles, first);
                             if (currentIndex < 0) currentIndex = 0;
-                            // ShowImage ã¯ UI è¦ç´ ã‚’æ›´æ–°ã—ã¾ã™ã€‚InitializeComponent å¾Œã¯å®‰å…¨ã«å®Ÿè¡Œã§ãã¾ã™
+                            // ShowImage ‚Í UI —v‘f‚ğXV‚µ‚Ü‚·BInitializeComponent Œã‚ÍˆÀ‘S‚ÉÀs‚Å‚«‚Ü‚·
                             ShowImage(pngFiles[currentIndex]);
-                            // ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã§ã‚‚ã“ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’é¸æŠ
+                            // ƒtƒHƒ‹ƒ_ƒcƒŠ[‚Å‚à‚±‚ÌƒtƒHƒ‹ƒ_‚ğ‘I‘ğ
                             SelectFolderInTree(dir);
                         }
                     }
@@ -101,21 +101,21 @@ namespace StableSatoViewer
             }
             catch
             {
-                // å¼•æ•°èª­ã¿è¾¼ã¿ã‚¨ãƒ©ãƒ¼ã¯ç„¡è¦–ã—ã¦é€šå¸¸èµ·å‹•
+                // ˆø”“Ç‚İ‚İƒGƒ‰[‚Í–³‹‚µ‚Ä’Êí‹N“®
             }
 
-            // ãƒã‚¦ã‚¹ãƒ–ãƒ©ã‚¦ã‚¶ãƒœã‚¿ãƒ³ã‚„ä»–ã®ãƒã‚¦ã‚¹ãƒœã‚¿ãƒ³ã‚’å—ã‘å–ã‚‹ãŸã‚ã«ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ MouseDown ã‚’è³¼èª­
+            // ƒ}ƒEƒXƒuƒ‰ƒEƒUƒ{ƒ^ƒ“‚â‘¼‚Ìƒ}ƒEƒXƒ{ƒ^ƒ“‚ğó‚¯æ‚é‚½‚ß‚ÉƒvƒŒƒrƒ…[ MouseDown ‚ğw“Ç
             this.PreviewMouseDown += MainWindow_PreviewMouseDown;
 
-            // ã‚­ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ²
+            // ƒL[ƒCƒxƒ“ƒg“o˜^
             this.KeyDown += MainWindow_KeyDown;
 
-            // ãƒœã‚¿ãƒ³ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ²
+            // ƒ{ƒ^ƒ“ƒCƒxƒ“ƒg“o˜^
             toggleButton.Click += ToggleButton_Click;
             treeToggleButton.Click += TreeToggleButton_Click;
             fullScreenToggle.Click += FullScreenButton_Click;
 
-            // TextBox ã®ã‚­ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ²ï¼ˆå·¦å³ã‚­ãƒ¼ã®ã¿å‡¦ç†ï¼‰
+            // TextBox ‚ÌƒL[ƒCƒxƒ“ƒg“o˜^i¶‰EƒL[‚Ì‚İˆ—j
             this.Loaded += (s, e) =>
             {
                 foreach (var child in LogicalTreeHelper.GetChildren(this))
@@ -127,36 +127,36 @@ namespace StableSatoViewer
                 }
             };
 
-            // parameters ãƒˆã‚°ãƒ«ã®ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ²
+            // parameters ƒgƒOƒ‹‚ÌƒCƒxƒ“ƒg“o˜^
             parametersToggleButton.Click += ParametersToggleButton_Click;
             negativeToggleButton.Click += NegativeToggleButton_Click;
             stepsToggleButton.Click += StepsToggleButton_Click;
 
-            // ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã®ã‚­ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ²
+            // ƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ÌƒL[ƒCƒxƒ“ƒg“o˜^
             folderFilesListBox.PreviewKeyDown += FolderFilesListBox_PreviewKeyDown;
 
-            // å³ãƒ‘ãƒãƒ«ã®ã‚°ãƒªãƒƒãƒ‰ã‚¯ãƒªãƒƒã‚¯ã§ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ã‚³ãƒ”ãƒ¼
+            // ‰Eƒpƒlƒ‹‚ÌƒOƒŠƒbƒhƒNƒŠƒbƒN‚ÅƒNƒŠƒbƒvƒ{[ƒh‚ÉƒRƒs[
             parametersGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
             negativePromptGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
             stepsGrid.PreviewMouseLeftButtonUp += DataGrid_PreviewMouseLeftButtonUp;
 
-            // å³ãƒ‘ãƒãƒ«ã®ã‚°ãƒªãƒƒãƒ‰ã§ã‚‚â†â†’ã‚­ãƒ¼ã§ç”»åƒåˆ‡ã‚Šæ›¿ãˆ
+            // ‰Eƒpƒlƒ‹‚ÌƒOƒŠƒbƒh‚Å‚à©¨ƒL[‚Å‰æ‘œØ‚è‘Ö‚¦
             parametersGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             negativePromptGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
             stepsGrid.PreviewKeyDown += DataGrid_PreviewKeyDown;
 
-            // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼å…¥åŠ›ã§ Enter æŠ¼ä¸‹æ™‚ã«ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’å®Ÿè¡Œ
+            // ƒtƒBƒ‹ƒ^[“ü—Í‚Å Enter ‰Ÿ‰º‚ÉƒtƒBƒ‹ƒ^[‚ğÀs
             if (filterTextBox != null)
             {
                 filterTextBox.KeyDown += FilterTextBox_KeyDown;
             }
 
-            // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¯ãƒ­ãƒ¼ã‚ºæ™‚ã«çŠ¶æ…‹ã‚’ä¿å­˜
+            // ƒEƒBƒ“ƒhƒEƒNƒ[ƒY‚Éó‘Ô‚ğ•Û‘¶
             this.Closing += (s, e) => SaveWindowState();
         }
 
         /// <summary>
-        /// ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ãƒ†ã‚­ã‚¹ãƒˆãƒœãƒƒã‚¯ã‚¹ã® KeyDown ã‚¤ãƒ™ãƒ³ãƒˆãƒãƒ³ãƒ‰ãƒ©ãƒ¼ã€‚Enter ã‚­ãƒ¼æŠ¼ä¸‹æ™‚ã«ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼å‡¦ç†ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚
+        /// ƒtƒBƒ‹ƒ^[ƒeƒLƒXƒgƒ{ƒbƒNƒX‚Ì KeyDown ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰[BEnter ƒL[‰Ÿ‰º‚ÉƒtƒBƒ‹ƒ^[ˆ—‚ğÀs‚µ‚Ü‚·B
         /// </summary>
         private void FilterTextBox_KeyDown(object sender, WpfKeyEventArgs e)
         {
@@ -172,7 +172,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ‡ãƒ¼ã‚¿ã‚°ãƒªãƒƒãƒ‰ã® KeyDown ã‚¤ãƒ™ãƒ³ãƒˆãƒãƒ³ãƒ‰ãƒ©ãƒ¼ã€‚å·¦å³çŸ¢å°ã‚­ãƒ¼ã§ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒf[ƒ^ƒOƒŠƒbƒh‚Ì KeyDown ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰[B¶‰E–îˆóƒL[‚Å‰æ‘œ‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void DataGrid_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
@@ -184,11 +184,11 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ‡ãƒ¼ã‚¿ã‚°ãƒªãƒƒãƒ‰ã‚»ãƒ«ã®ãƒã‚¦ã‚¹ã‚¯ãƒªãƒƒã‚¯æ™‚ã«ã€ã‚»ãƒ«ã®ãƒ†ã‚­ã‚¹ãƒˆã‚’ã‚¯ãƒªãƒƒãƒ—ãƒœãƒ¼ãƒ‰ã«ã‚³ãƒ”ãƒ¼ã—ã¾ã™ã€‚
+        /// ƒf[ƒ^ƒOƒŠƒbƒhƒZƒ‹‚Ìƒ}ƒEƒXƒNƒŠƒbƒN‚ÉAƒZƒ‹‚ÌƒeƒLƒXƒg‚ğƒNƒŠƒbƒvƒ{[ƒh‚ÉƒRƒs[‚µ‚Ü‚·B
         /// </summary>
         private void DataGrid_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            // ãƒã‚¦ã‚¹ã®ä¸‹ã«ã‚ã‚‹ã‚»ãƒ«ã‚’ãƒ’ãƒƒãƒˆãƒ†ã‚¹ãƒˆã§æ¢ã™
+            // ƒ}ƒEƒX‚Ì‰º‚É‚ ‚éƒZƒ‹‚ğƒqƒbƒgƒeƒXƒg‚Å’T‚·
             var dep = (DependencyObject)e.OriginalSource;
             while (dep != null && !(dep is WpfDataGridCell))
             {
@@ -197,7 +197,7 @@ namespace StableSatoViewer
 
             if (dep is WpfDataGridCell cell)
             {
-                // ã‚»ãƒ«ã®ãƒ†ã‚­ã‚¹ãƒˆã‚’å–å¾—
+                // ƒZƒ‹‚ÌƒeƒLƒXƒg‚ğæ“¾
                 if (cell.Content is TextBlock tb)
                 {
                     string text = tb.Text;
@@ -215,7 +215,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ†ã‚­ã‚¹ãƒˆãƒœãƒƒã‚¯ã‚¹ã® KeyDown ã‚¤ãƒ™ãƒ³ãƒˆãƒãƒ³ãƒ‰ãƒ©ãƒ¼ã€‚å·¦å³çŸ¢å°ã‚­ãƒ¼ã§ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒeƒLƒXƒgƒ{ƒbƒNƒX‚Ì KeyDown ƒCƒxƒ“ƒgƒnƒ“ƒhƒ‰[B¶‰E–îˆóƒL[‚Å‰æ‘œ‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void TextBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
@@ -227,13 +227,13 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰å…¥åŠ›ã‚’å‡¦ç†ã—ã¾ã™ã€‚çŸ¢å°ã‚­ãƒ¼ã€Escape ã‚­ãƒ¼ã€Delete ã‚­ãƒ¼ãªã©ã®æ©Ÿèƒ½ã‚’å®Ÿè£…ã—ã¦ã„ã¾ã™ã€‚
+        /// ƒEƒBƒ“ƒhƒE‚ÌƒL[ƒ{[ƒh“ü—Í‚ğˆ—‚µ‚Ü‚·B–îˆóƒL[AEscape ƒL[ADelete ƒL[‚È‚Ç‚Ì‹@”\‚ğÀ‘•‚µ‚Ä‚¢‚Ü‚·B
         /// </summary>
         private void MainWindow_KeyDown(object sender, WpfKeyEventArgs e)
         {
             if (pngFiles == null || pngFiles.Length == 0) return;
 
-            // Escape ã‚­ãƒ¼ã§å…¨ç”»é¢ã‚’è§£é™¤
+            // Escape ƒL[‚Å‘S‰æ–Ê‚ğ‰ğœ
             if (e.Key == Key.Escape)
             {
                 if (this.WindowState == WindowState.Maximized && this.WindowStyle == WindowStyle.None)
@@ -246,7 +246,7 @@ namespace StableSatoViewer
                 }
             }
 
-            // Delete ã‚­ãƒ¼ã§ç”»åƒã‚’ã‚´ãƒŸç®±ã«ç§»å‹•
+            // Delete ƒL[‚Å‰æ‘œ‚ğƒSƒ~” ‚ÉˆÚ“®
             if (e.Key == Key.Delete)
             {
                 if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
@@ -266,27 +266,27 @@ namespace StableSatoViewer
                         {
                             if (File.Exists(filePath))
                             {
-                                // ãƒ“ãƒƒãƒˆãƒãƒƒãƒ—ã®å‚ç…§ã‚’è§£æ”¾
+                                // ƒrƒbƒgƒ}ƒbƒv‚ÌQÆ‚ğ‰ğ•ú
                                 imageBox.Source = null;
                                 
-                                // ã‚¬ãƒ™ãƒ¼ã‚¸ã‚³ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³ã‚’å¼·åˆ¶å®Ÿè¡Œã—ã¦ãƒ¡ãƒ¢ãƒªã‚’è§£æ”¾
+                                // ƒKƒx[ƒWƒRƒŒƒNƒVƒ‡ƒ“‚ğ‹­§Às‚µ‚Äƒƒ‚ƒŠ‚ğ‰ğ•ú
                                 System.GC.Collect();
                                 System.GC.WaitForPendingFinalizers();
                                 System.GC.Collect();
                                 
-                                // é…å»¶å®Ÿè¡Œã§ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‰Šé™¤ï¼ˆUIç³»ã®å‚ç…§ãŒã™ã¹ã¦è§£æ”¾ã•ã‚Œã‚‹ã®ã‚’å¾…ã¤ï¼‰
+                                // ’x‰„Às‚Åƒtƒ@ƒCƒ‹‚ğíœiUIŒn‚ÌQÆ‚ª‚·‚×‚Ä‰ğ•ú‚³‚ê‚é‚Ì‚ğ‘Ò‚Âj
                                 this.Dispatcher.InvokeAsync(async () =>
                                 {
                                     try
                                     {
-                                        // ã•ã‚‰ã«ãƒ¡ãƒ¢ãƒªè§£æ”¾
+                                        // ‚³‚ç‚Éƒƒ‚ƒŠ‰ğ•ú
                                         await System.Threading.Tasks.Task.Delay(50);
                                         System.GC.Collect();
                                         System.GC.WaitForPendingFinalizers();
                                         
                                         if (File.Exists(filePath))
                                         {
-                                            // ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚´ãƒŸç®±ã«ç§»å‹•
+                                            // ƒtƒ@ƒCƒ‹‚ğƒSƒ~” ‚ÉˆÚ“®
                                             Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(
                                                 filePath,
                                                 Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
@@ -330,9 +330,9 @@ namespace StableSatoViewer
                 return;
             }
 
-            // çŸ¢å°ã‚­ãƒ¼ï¼ˆã¾ãŸã¯ Alt+çŸ¢å°ï¼‰ã§ã®ç§»å‹•ã‚’è¨±å¯
+            // –îˆóƒL[i‚Ü‚½‚Í Alt+–îˆój‚Å‚ÌˆÚ“®‚ğ‹–‰Â
             var key = e.Key;
-            // Alt ä¿®é£¾ä»˜ãã§å±Šãå ´åˆã¯ SystemKey ã«å…¥ã‚‹ã“ã¨ãŒã‚ã‚‹ãŸã‚ä¸¡æ–¹ç¢ºèª
+            // Alt Cü•t‚«‚Å“Í‚­ê‡‚Í SystemKey ‚É“ü‚é‚±‚Æ‚ª‚ ‚é‚½‚ß—¼•ûŠm”F
             if (key == Key.System)
             {
                 key = e.SystemKey;
@@ -394,7 +394,7 @@ namespace StableSatoViewer
                                 isInitializing = true;
                                 SelectFolderInTree(subDirs[idx - 1]);
                                 isInitializing = false;
-                                // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼é©ç”¨å¾Œã€æœ€å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤ºã™ã‚‹ãŸã‚ã«ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ä½¿ç”¨
+                                // ƒtƒBƒ‹ƒ^[“K—pŒãAÅŒã‚Ìƒtƒ@ƒCƒ‹‚ğ•\¦‚·‚é‚½‚ß‚ÉƒR[ƒ‹ƒoƒbƒN‚ğg—p
                                 this.Dispatcher.InvokeAsync(() =>
                                 {
                                     if (pngFiles != null && pngFiles.Length > 0)
@@ -422,23 +422,23 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒã‚¦ã‚¹ãƒ—ãƒ¬ãƒ“ãƒ¥ãƒ¼ MouseDown ã‚¤ãƒ™ãƒ³ãƒˆã€‚ãƒã‚¦ã‚¹ãƒ–ãƒ©ã‚¦ã‚¶ãƒœã‚¿ãƒ³ï¼ˆæˆ»ã‚‹/é€²ã‚€ï¼‰ã§ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒ}ƒEƒXƒvƒŒƒrƒ…[ MouseDown ƒCƒxƒ“ƒgBƒ}ƒEƒXƒuƒ‰ƒEƒUƒ{ƒ^ƒ“i–ß‚é/i‚Şj‚Å‰æ‘œ‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void MainWindow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            // ãƒã‚¦ã‚¹ã®ãƒ–ãƒ©ã‚¦ã‚¶æˆ»ã‚‹ï¼é€²ã‚€ãƒœã‚¿ãƒ³ã§ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆ
+            // ƒ}ƒEƒX‚Ìƒuƒ‰ƒEƒU–ß‚é^i‚Şƒ{ƒ^ƒ“‚Å‰æ‘œ‚ğØ‚è‘Ö‚¦
             if (pngFiles == null || pngFiles.Length == 0) return;
 
             if (e.ChangedButton == MouseButton.XButton1)
             {
-                // é€šå¸¸ XButton1 ã¯ã€Œæˆ»ã‚‹ã€
+                // ’Êí XButton1 ‚Íu–ß‚év
                 currentIndex = (currentIndex - 1 + pngFiles.Length) % pngFiles.Length;
                 ShowImage(pngFiles[currentIndex]);
                 e.Handled = true;
             }
             else if (e.ChangedButton == MouseButton.XButton2)
             {
-                // é€šå¸¸ XButton2 ã¯ã€Œé€²ã‚€ã€
+                // ’Êí XButton2 ‚Íui‚Şv
                 currentIndex = (currentIndex + 1) % pngFiles.Length;
                 ShowImage(pngFiles[currentIndex]);
                 e.Handled = true;
@@ -446,7 +446,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æŒ‡å®šã•ã‚ŒãŸãƒ‘ã‚¹ã® PNG ç”»åƒãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤ºã—ã€ãƒ¡ã‚¿ãƒ‡ãƒ¼ã‚¿ã‚’è§£æã—ã¦ UI ã«åæ˜ ã•ã›ã¾ã™ã€‚
+        /// w’è‚³‚ê‚½ƒpƒX‚Ì PNG ‰æ‘œƒtƒ@ƒCƒ‹‚ğ•\¦‚µAƒƒ^ƒf[ƒ^‚ğ‰ğÍ‚µ‚Ä UI ‚É”½‰f‚³‚¹‚Ü‚·B
         /// </summary>
         private void ShowImage(string path)
         {
@@ -455,13 +455,13 @@ namespace StableSatoViewer
             bitmap.Freeze();
             imageBox.Source = bitmap;
 
-            // æœ€å¾Œã«è¡¨ç¤ºã—ãŸç”»åƒã‚’ä¿å­˜
+            // ÅŒã‚É•\¦‚µ‚½‰æ‘œ‚ğ•Û‘¶
             SaveLastImage(path);
 
-            // èƒŒæ™¯ã‚¢ã‚¤ã‚³ãƒ³ã‚’éè¡¨ç¤º
+            // ”wŒiƒAƒCƒRƒ“‚ğ”ñ•\¦
             if (bitmap != null)
             {
-                // imageBorder å†…ã®ã‚°ãƒªãƒƒãƒ‰ã®å­è¦ç´ ã‹ã‚‰èƒŒæ™¯ç”»åƒã‚’æ¢ã™
+                // imageBorder “à‚ÌƒOƒŠƒbƒh‚Ìq—v‘f‚©‚ç”wŒi‰æ‘œ‚ğ’T‚·
                 try
                 {
                     if (imageBorder.Child is Grid innerGrid)
@@ -479,16 +479,16 @@ namespace StableSatoViewer
                 catch { }
             }
 
-            // ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¿ã‚¤ãƒˆãƒ«ã‚’æ›´æ–°
+            // ƒEƒBƒ“ƒhƒEƒ^ƒCƒgƒ‹‚ğXV
             UpdateWindowTitle(path);
 
-            // PNG ã® tEXt ãƒãƒ£ãƒ³ã‚¯ã‚’èª­ã¿å–ã£ã¦è¡¨ç¤º
+            // PNG ‚Ì tEXt ƒ`ƒƒƒ“ƒN‚ğ“Ç‚İæ‚Á‚Ä•\¦
             ExtractAndDisplayTextChunks(path);
 
-            // ç”»åƒãŒå¤‰æ›´ã•ã‚ŒãŸã¨ãã€ãŠæ°—ã«å…¥ã‚Šè¡¨ç¤ºã‚’æ›´æ–°
+            // ‰æ‘œ‚ª•ÏX‚³‚ê‚½‚Æ‚«A‚¨‹C‚É“ü‚è•\¦‚ğXV
             UpdateFavoritesIndicator();
 
-            // å·¦ãƒ‘ãƒãƒ«ã®ãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§ã‚’ç¾åœ¨ã®ç”»åƒã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã§è¡¨ç¤ºã—ã€é¸æŠçŠ¶æ…‹ã‚’åæ˜ ã™ã‚‹
+            // ¶ƒpƒlƒ‹‚Ìƒtƒ@ƒCƒ‹ˆê——‚ğŒ»İ‚Ì‰æ‘œ‚ÌƒfƒBƒŒƒNƒgƒŠ‚Å•\¦‚µA‘I‘ğó‘Ô‚ğ”½‰f‚·‚é
             try
             {
                 if (folderFilesListBox != null && pngFiles != null)
@@ -496,17 +496,17 @@ namespace StableSatoViewer
                     var dir = System.IO.Path.GetDirectoryName(path);
                     if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
                     {
-                        // ç¾åœ¨ã® folderFilesListBox ã®ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¨ç•°ãªã‚‹å ´åˆã®ã¿æ›´æ–°
+                        // Œ»İ‚Ì folderFilesListBox ‚ÌƒfƒBƒŒƒNƒgƒŠ‚ÆˆÙ‚È‚éê‡‚Ì‚İXV
                         if (folderFilesListBox.Tag as string != dir)
                         {
-                            // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼çŠ¶æ…‹ãŒãªã„å ´åˆã®ã¿ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã‚’å†å–å¾—
+                            // ƒtƒBƒ‹ƒ^[ó‘Ô‚ª‚È‚¢ê‡‚Ì‚İƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ğÄæ“¾
                             var files = pngFiles;
                             var names = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
                             folderFilesListBox.ItemsSource = names;
                             folderFilesListBox.Tag = dir;
                         }
 
-                        // ç¾åœ¨ã®ç”»åƒã«å¯¾å¿œã™ã‚‹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’å–å¾—ã—ã¦é¸æŠ
+                        // Œ»İ‚Ì‰æ‘œ‚É‘Î‰‚·‚éƒCƒ“ƒfƒbƒNƒX‚ğæ“¾‚µ‚Ä‘I‘ğ
                         int idx = Array.IndexOf(pngFiles, path);
                         if (idx >= 0)
                         {
@@ -526,12 +526,12 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ç„¡è¦–
+                // –³‹
             }
         }
 
         /// <summary>
-        /// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚¿ã‚¤ãƒˆãƒ«ã‚’ã€Œãƒ•ã‚¡ã‚¤ãƒ«åï¼ˆç¾åœ¨ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ï¼å…¨ä½“ï¼‰ã€ã®å½¢å¼ã§æ›´æ–°ã—ã¾ã™ã€‚
+        /// ƒEƒBƒ“ƒhƒEƒ^ƒCƒgƒ‹‚ğuƒtƒ@ƒCƒ‹–¼iŒ»İ‚ÌƒCƒ“ƒfƒbƒNƒX^‘S‘Ìjv‚ÌŒ`®‚ÅXV‚µ‚Ü‚·B
         /// </summary>
         private void UpdateWindowTitle(string path)
         {
@@ -552,12 +552,12 @@ namespace StableSatoViewer
             }
             catch
             {
-                // ã‚¿ã‚¤ãƒˆãƒ«æ›´æ–°ã‚¨ãƒ©ãƒ¼ã‚’ç„¡è¦–
+                // ƒ^ƒCƒgƒ‹XVƒGƒ‰[‚ğ–³‹
             }
         }
 
         /// <summary>
-        /// PNG ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ãƒ¡ã‚¿ãƒ‡ãƒ¼ã‚¿ãƒãƒ£ãƒ³ã‚¯ï¼ˆtEXtã€iTXtï¼‰ã‚’æŠ½å‡ºã—ã€ç”»é¢ã«è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// PNG ƒtƒ@ƒCƒ‹‚©‚çƒƒ^ƒf[ƒ^ƒ`ƒƒƒ“ƒNitEXtAiTXtj‚ğ’Šo‚µA‰æ–Ê‚É•\¦‚µ‚Ü‚·B
         /// </summary>
         private void ExtractAndDisplayTextChunks(string filePath)
         {
@@ -565,7 +565,7 @@ namespace StableSatoViewer
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var br = new BinaryReader(fs))
             {
-                // PNG ã‚·ã‚°ãƒãƒãƒ£ã‚’ã‚¹ã‚­ãƒƒãƒ—
+                // PNG ƒVƒOƒlƒ`ƒƒ‚ğƒXƒLƒbƒv
                 byte[] signature = br.ReadBytes(8);
 
                 string parameters = "";
@@ -577,7 +577,7 @@ namespace StableSatoViewer
                     int length = ReadInt32BigEndian(br.ReadBytes(4));
                     string chunkType = Encoding.ASCII.GetString(br.ReadBytes(4));
                     byte[] data = br.ReadBytes(length);
-                    br.ReadBytes(4); // CRC ã‚’ã‚¹ã‚­ãƒƒãƒ—
+                    br.ReadBytes(4); // CRC ‚ğƒXƒLƒbƒv
 
                     if (chunkType == "tEXt" || chunkType == "iTXt")
                     {
@@ -640,7 +640,7 @@ namespace StableSatoViewer
 
                 DisplayStepsAsGrid(steps);
 
-                // ãƒ¢ãƒ¼ãƒ‰ 1ï¼ˆãƒ•ãƒ­ãƒ¼ãƒˆè¡¨ç¤ºï¼‰ã®å ´åˆã¯ãƒ•ãƒ­ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã‚‚æ›´æ–°
+                // ƒ‚[ƒh 1iƒtƒ[ƒg•\¦j‚Ìê‡‚Íƒtƒ[ƒeƒBƒ“ƒOƒvƒƒ“ƒvƒg‚àXV
                 if (layoutMode == 1)
                 {
                     UpdateFloatingPromptContent();
@@ -650,7 +650,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ†ã‚­ã‚¹ãƒˆã‚’è¡Œå˜ä½ã§åˆ†å‰²ã—ã€ãƒ‡ãƒ¼ã‚¿ã‚°ãƒªãƒƒãƒ‰ã«è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ƒeƒLƒXƒg‚ğs’PˆÊ‚Å•ªŠ„‚µAƒf[ƒ^ƒOƒŠƒbƒh‚É•\¦‚µ‚Ü‚·B
         /// </summary>
         private static void DisplayTextAsGrid(WpfDataGrid grid, string text)
         {
@@ -658,14 +658,14 @@ namespace StableSatoViewer
 
             if (!string.IsNullOrEmpty(text))
             {
-                // æ”¹è¡Œã§åˆ†å‰²
+                // ‰üs‚Å•ªŠ„
                 string[] lines = text.Split(LineBreakSeparators, StringSplitOptions.None);
 
                 foreach (string line in lines)
                 {
                     string trimmedLine = line.Trim();
 
-                    // ç©ºè¡Œã€ã‚«ãƒ³ãƒã®ã¿ã€ã¾ãŸã¯ã‚«ãƒ³ãƒã¨ã‚¹ãƒšãƒ¼ã‚¹ã®ã¿ã®å ´åˆã¯ã‚¹ã‚­ãƒƒãƒ—
+                    // ‹ósAƒJƒ“ƒ}‚Ì‚İA‚Ü‚½‚ÍƒJƒ“ƒ}‚ÆƒXƒy[ƒX‚Ì‚İ‚Ìê‡‚ÍƒXƒLƒbƒv
                     if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.All(c => c == ',' || char.IsWhiteSpace(c)))
                     {
                         continue;
@@ -684,7 +684,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// Steps æƒ…å ±ã‚’ã‚­ãƒ¼å€¤ãƒšã‚¢ã§ã‚°ãƒªãƒƒãƒ‰ã«è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// Steps î•ñ‚ğƒL[’lƒyƒA‚ÅƒOƒŠƒbƒh‚É•\¦‚µ‚Ü‚·B
         /// </summary>
         private void DisplayStepsAsGrid(string stepsText)
         {
@@ -692,13 +692,13 @@ namespace StableSatoViewer
 
             if (!string.IsNullOrEmpty(stepsText))
             {
-                // "Steps:" ã‚’ãƒ—ãƒ¬ãƒ•ã‚£ãƒƒã‚¯ã‚¹ã¨ã—ã¦è¿½åŠ 
+                // "Steps:" ‚ğƒvƒŒƒtƒBƒbƒNƒX‚Æ‚µ‚Ä’Ç‰Á
                 if (!stepsText.StartsWith("Steps:"))
                 {
                     stepsText = "Steps: " + stepsText;
                 }
 
-                // ã‚³ãƒ­ãƒ³è¨˜å·ã§ key:value ã®ãƒšã‚¢ã‚’åˆ†å‰²
+                // ƒRƒƒ“‹L†‚Å key:value ‚ÌƒyƒA‚ğ•ªŠ„
                 var keyValuePairs = ParseKeyValuePairs(stepsText);
 
                 foreach (var pair in keyValuePairs)
@@ -709,14 +709,14 @@ namespace StableSatoViewer
 
             if (items.Count == 0)
             {
-                items.Add(new StepsItem { Key = "(ãªã—)", Value = "" });
+                items.Add(new StepsItem { Key = "(‚È‚µ)", Value = "" });
             }
 
             stepsGrid.ItemsSource = items;
         }
 
         /// <summary>
-        /// ãƒ†ã‚­ã‚¹ãƒˆã‚’ã‚³ãƒ­ãƒ³è¨˜å·ã§åŒºåˆ‡ã‚‰ã‚ŒãŸã‚­ãƒ¼å€¤ãƒšã‚¢ã«è§£æã—ã¾ã™ã€‚
+        /// ƒeƒLƒXƒg‚ğƒRƒƒ“‹L†‚Å‹æØ‚ç‚ê‚½ƒL[’lƒyƒA‚É‰ğÍ‚µ‚Ü‚·B
         /// </summary>
         private static List<(string Key, string Value)> ParseKeyValuePairs(string text)
         {
@@ -730,7 +730,7 @@ namespace StableSatoViewer
             {
                 char c = text[i];
 
-                // ãƒ€ãƒ–ãƒ«ã‚¯ã‚©ãƒ¼ãƒˆã®è¿½è·¡
+                // ƒ_ƒuƒ‹ƒNƒH[ƒg‚Ì’ÇÕ
                 if (c == '"')
                 {
                     insideQuotes = !insideQuotes;
@@ -739,12 +739,12 @@ namespace StableSatoViewer
                     else
                         currentKey.Append(c);
                 }
-                // ã‚³ãƒ­ãƒ³ã§ key ã¨ value ã‚’åˆ†å‰²
+                // ƒRƒƒ“‚Å key ‚Æ value ‚ğ•ªŠ„
                 else if (c == ':' && !insideQuotes && !isInValue)
                 {
                     isInValue = true;
                 }
-                // ã‚«ãƒ³ãƒã§ key:value ãƒšã‚¢ã‚’çµ‚äº†ï¼ˆã‚¯ã‚©ãƒ¼ãƒˆå¤–ã®ã¿ï¼‰ 
+                // ƒJƒ“ƒ}‚Å key:value ƒyƒA‚ğI—¹iƒNƒH[ƒgŠO‚Ì‚İj 
                 else if (c == ',' && !insideQuotes && isInValue)
                 {
                     string key = currentKey.ToString().Trim();
@@ -768,7 +768,7 @@ namespace StableSatoViewer
                 }
             }
 
-            // æœ€å¾Œã®ãƒšã‚¢ã‚’è¿½åŠ 
+            // ÅŒã‚ÌƒyƒA‚ğ’Ç‰Á
             if (currentKey.Length > 0 || currentValue.Length > 0)
             {
                 string key = currentKey.ToString().Trim();
@@ -780,7 +780,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒã‚¤ãƒˆé…åˆ—ã‚’ãƒ“ãƒƒã‚°ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³å½¢å¼ã® 32 ãƒ“ãƒƒãƒˆæ•´æ•°ã«å¤‰æ›ã—ã¾ã™ã€‚
+        /// ƒoƒCƒg”z—ñ‚ğƒrƒbƒOƒGƒ“ƒfƒBƒAƒ“Œ`®‚Ì 32 ƒrƒbƒg®”‚É•ÏŠ·‚µ‚Ü‚·B
         /// </summary>
         private static int ReadInt32BigEndian(byte[] bytes)
         {
@@ -788,24 +788,24 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆãƒ¢ãƒ¼ãƒ‰ï¼ˆé€šå¸¸ã€ãƒ•ãƒ­ãƒ¼ãƒˆã€éè¡¨ç¤ºï¼‰ã‚’å¾ªç’°åˆ‡ã‚Šæ›¿ãˆã—ã¾ã™ã€‚
+        /// ƒŒƒCƒAƒEƒgƒ‚[ƒhi’ÊíAƒtƒ[ƒgA”ñ•\¦j‚ğzŠÂØ‚è‘Ö‚¦‚µ‚Ü‚·B
         /// </summary>
         private void ToggleButton_Click(object sender, RoutedEventArgs e)
         {
-            // 3ã¤ã®ãƒ¢ãƒ¼ãƒ‰ã‚’é †ã«åˆ‡ã‚Šæ›¿ãˆ
+            // 3‚Â‚Ìƒ‚[ƒh‚ğ‡‚ÉØ‚è‘Ö‚¦
             layoutMode = (layoutMode + 1) % 3;
             ApplyLayoutMode();
         }
 
         /// <summary>
-        /// ç¾åœ¨ã®ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆãƒ¢ãƒ¼ãƒ‰ã«åŸºã¥ã„ã¦ UI ã®è¡¨ç¤ºçŠ¶æ…‹ã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// Œ»İ‚ÌƒŒƒCƒAƒEƒgƒ‚[ƒh‚ÉŠî‚Ã‚¢‚Ä UI ‚Ì•\¦ó‘Ô‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void ApplyLayoutMode()
         {
-            // DockPanel å†…ã®ã‚°ãƒªãƒƒãƒ‰ã‚’å–å¾—
+            // DockPanel “à‚ÌƒOƒŠƒbƒh‚ğæ“¾
             if (this.Content is not DockPanel dockPanel) return;
 
-            // DockPanel å†…ã®ã™ã¹ã¦ã®å­è¦ç´ ã‹ã‚‰ãƒ¡ã‚¤ãƒ³ã‚°ãƒªãƒƒãƒ‰ã‚’æ¢ã™
+            // DockPanel “à‚Ì‚·‚×‚Ä‚Ìq—v‘f‚©‚çƒƒCƒ“ƒOƒŠƒbƒh‚ğ’T‚·
             Grid? mainGrid = null;
             foreach (UIElement child in dockPanel.Children)
             {
@@ -820,7 +820,7 @@ namespace StableSatoViewer
 
             var colDefs = mainGrid.ColumnDefinitions;
             
-            // å³å´ã®ã‚°ãƒªãƒƒãƒ‰ï¼ˆColumn=4ï¼‰ã‚’æ¢ã™
+            // ‰E‘¤‚ÌƒOƒŠƒbƒhiColumn=4j‚ğ’T‚·
             Grid? rightGrid = null;
             foreach (UIElement child in mainGrid.Children)
             {
@@ -836,18 +836,18 @@ namespace StableSatoViewer
             switch (layoutMode)
             {
                 case 0:
-                    // ãƒ¢ãƒ¼ãƒ‰ 0: é€šå¸¸ï¼ˆå·¦ç”»åƒ+å³ãƒ‘ãƒãƒ«è¡¨ç¤ºï¼‰
+                    // ƒ‚[ƒh 0: ’Êíi¶‰æ‘œ+‰Eƒpƒlƒ‹•\¦j
                     rightGrid.Visibility = Visibility.Visible;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
-                    // ç”»åƒã€å³åˆ†å‰²ç·šã€å³åˆ—ã‚’å¾©å…ƒ
+                    // ‰æ‘œA‰E•ªŠ„üA‰E—ñ‚ğ•œŒ³
                     colDefs[3].Width = new GridLength(5);
                     colDefs[4].Width = new GridLength(300);
                     colDefs[2].Width = new GridLength(1, GridUnitType.Star);
                     break;
 
                 case 1:
-                    // ãƒ¢ãƒ¼ãƒ‰ 1: ãƒ•ãƒ­ãƒ¼ãƒˆï¼ˆç”»åƒæœ€å¤§åŒ– + ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆãƒ•ãƒ­ãƒ¼ãƒˆè¡¨ç¤ºï¼‰
+                    // ƒ‚[ƒh 1: ƒtƒ[ƒgi‰æ‘œÅ‘å‰» + ƒvƒƒ“ƒvƒgƒtƒ[ƒg•\¦j
                     rightGrid.Visibility = Visibility.Collapsed;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Visible;
@@ -858,7 +858,7 @@ namespace StableSatoViewer
                     break;
 
                 case 2:
-                    // ãƒ¢ãƒ¼ãƒ‰ 2: éè¡¨ç¤ºï¼ˆç”»åƒã®ã¿ã€å³ãƒ‘ãƒãƒ«ãªã—ï¼‰
+                    // ƒ‚[ƒh 2: ”ñ•\¦i‰æ‘œ‚Ì‚İA‰Eƒpƒlƒ‹‚È‚µj
                     rightGrid.Visibility = Visibility.Collapsed;
                     imageBorder.Visibility = Visibility.Visible;
                     floatingPromptBorder.Visibility = Visibility.Collapsed;
@@ -870,11 +870,11 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ãƒ­ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã«ç¾åœ¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ†ã‚­ã‚¹ãƒˆã‚’è¡¨ç¤ºï¼ˆã‚°ãƒªãƒƒãƒ‰å½¢å¼ï¼‰ã—ã¾ã™ã€‚
+        /// ƒtƒ[ƒeƒBƒ“ƒOƒvƒƒ“ƒvƒg‚ÉŒ»İ‚Ìƒpƒ‰ƒ[ƒ^ƒeƒLƒXƒg‚ğ•\¦iƒOƒŠƒbƒhŒ`®j‚µ‚Ü‚·B
         /// </summary>
         private void UpdateFloatingPromptContent()
         {
-            // ãƒ•ãƒ­ãƒ¼ãƒ†ã‚£ãƒ³ã‚°ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã«ç¾åœ¨ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ†ã‚­ã‚¹ãƒˆã‚’è¡¨ç¤ºï¼ˆã‚°ãƒªãƒƒãƒ‰å½¢å¼ï¼‰
+            // ƒtƒ[ƒeƒBƒ“ƒOƒvƒƒ“ƒvƒg‚ÉŒ»İ‚Ìƒpƒ‰ƒ[ƒ^ƒeƒLƒXƒg‚ğ•\¦iƒOƒŠƒbƒhŒ`®j
             var items = new ObservableCollection<SimpleItem>();
             if (parametersGrid.ItemsSource is System.Collections.IEnumerable enumerable)
             {
@@ -894,36 +894,36 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// å…¨ç”»é¢è¡¨ç¤ºã¨é€šå¸¸è¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ‘S‰æ–Ê•\¦‚Æ’Êí•\¦‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void FullScreenButton_Click(object sender, RoutedEventArgs e)
         {
             if (this.WindowState == WindowState.Maximized && this.WindowStyle == WindowStyle.None)
             {
-                // å…¨ç”»é¢ã‹ã‚‰é€šå¸¸ã«æˆ»ã™
+                // ‘S‰æ–Ê‚©‚ç’Êí‚É–ß‚·
                 this.WindowStyle = WindowStyle.SingleBorderWindow;
                 this.WindowState = WindowState.Normal;
             }
             else
             {
-                // å…¨ç”»é¢ã«ã™ã‚‹
+                // ‘S‰æ–Ê‚É‚·‚é
                 this.WindowStyle = WindowStyle.None;
                 this.WindowState = WindowState.Maximized;
             }
         }
 
         /// <summary>
-        /// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ†ã‚­ã‚¹ãƒˆã®è¡¨ç¤ºå½¢å¼ã‚’ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã¨ç”Ÿãƒ†ã‚­ã‚¹ãƒˆè¡¨ç¤ºã§åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒpƒ‰ƒ[ƒ^ƒeƒLƒXƒg‚Ì•\¦Œ`®‚ğƒOƒŠƒbƒh•\¦‚Æ¶ƒeƒLƒXƒg•\¦‚ÅØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void ParametersToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (parametersTextBox.Visibility == Visibility.Visible)
             {
-                // ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã«åˆ‡ã‚Šæ›¿ãˆ
+                // ƒOƒŠƒbƒh•\¦‚ÉØ‚è‘Ö‚¦
                 parametersTextBox.Visibility = Visibility.Collapsed;
                 parametersGrid.Visibility = Visibility.Visible;
 
-                // ãƒ†ã‚­ã‚¹ãƒˆã‹ã‚‰ã‚°ãƒªãƒƒãƒ‰ã‚’æ›´æ–°
+                // ƒeƒLƒXƒg‚©‚çƒOƒŠƒbƒh‚ğXV
                 var lines = parametersTextBox.Text.Split(LineBreakSeparators, StringSplitOptions.None);
                 var items = new ObservableCollection<SimpleItem>();
                 foreach (var line in lines)
@@ -935,8 +935,8 @@ namespace StableSatoViewer
             }
             else
             {
-                // ç”Ÿãƒ†ã‚­ã‚¹ãƒˆè¡¨ç¤ºã«åˆ‡ã‚Šæ›¿ãˆ
-                // ã‚°ãƒªãƒƒãƒ‰ã‚¢ã‚¤ãƒ†ãƒ ã‹ã‚‰ç”Ÿãƒ†ã‚­ã‚¹ãƒˆã‚’æ§‹ç¯‰
+                // ¶ƒeƒLƒXƒg•\¦‚ÉØ‚è‘Ö‚¦
+                // ƒOƒŠƒbƒhƒAƒCƒeƒ€‚©‚ç¶ƒeƒLƒXƒg‚ğ\’z
                 var sb = new StringBuilder();
                 if (parametersGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
@@ -956,17 +956,17 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒã‚¬ãƒ†ã‚£ãƒ–ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã®è¡¨ç¤ºå½¢å¼ã‚’ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã¨ç”Ÿãƒ†ã‚­ã‚¹ãƒˆè¡¨ç¤ºã§åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒlƒKƒeƒBƒuƒvƒƒ“ƒvƒg‚Ì•\¦Œ`®‚ğƒOƒŠƒbƒh•\¦‚Æ¶ƒeƒLƒXƒg•\¦‚ÅØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void NegativeToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (negativePromptTextBox.Visibility == Visibility.Visible)
             {
-                // ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã«åˆ‡ã‚Šæ›¿ãˆ
+                // ƒOƒŠƒbƒh•\¦‚ÉØ‚è‘Ö‚¦
                 negativePromptTextBox.Visibility = Visibility.Collapsed;
                 negativePromptGrid.Visibility = Visibility.Visible;
 
-                // ãƒ†ã‚­ã‚¹ãƒˆã‹ã‚‰ã‚°ãƒªãƒƒãƒ‰ã‚’æ›´æ–°
+                // ƒeƒLƒXƒg‚©‚çƒOƒŠƒbƒh‚ğXV
                 var lines = negativePromptTextBox.Text.Split(LineBreakSeparators, StringSplitOptions.None);
                 var items = new ObservableCollection<SimpleItem>();
                 foreach (var line in lines)
@@ -978,8 +978,8 @@ namespace StableSatoViewer
             }
             else
             {
-                // ç”Ÿãƒ†ã‚­ã‚¹ãƒˆè¡¨ç¤ºã«åˆ‡ã‚Šæ›¿ãˆ
-                // ã‚°ãƒªãƒƒãƒ‰ã‚¢ã‚¤ãƒ†ãƒ ã‹ã‚‰ç”Ÿãƒ†ã‚­ã‚¹ãƒˆã‚’æ§‹ç¯‰
+                // ¶ƒeƒLƒXƒg•\¦‚ÉØ‚è‘Ö‚¦
+                // ƒOƒŠƒbƒhƒAƒCƒeƒ€‚©‚ç¶ƒeƒLƒXƒg‚ğ\’z
                 var sb = new StringBuilder();
                 if (negativePromptGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
@@ -999,17 +999,17 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// Steps æƒ…å ±ã®è¡¨ç¤ºå½¢å¼ã‚’ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã¨ç”Ÿãƒ†ã‚­ã‚¹ãƒˆè¡¨ç¤ºã§åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// Steps î•ñ‚Ì•\¦Œ`®‚ğƒOƒŠƒbƒh•\¦‚Æ¶ƒeƒLƒXƒg•\¦‚ÅØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void StepsToggleButton_Click(object sender, RoutedEventArgs e)
         {
             if (stepsTextBox.Visibility == Visibility.Visible)
             {
-                // ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã«åˆ‡ã‚Šæ›¿ãˆ
+                // ƒOƒŠƒbƒh•\¦‚ÉØ‚è‘Ö‚¦
                 stepsTextBox.Visibility = Visibility.Collapsed;
                 stepsGrid.Visibility = Visibility.Visible;
 
-                // ãƒ†ã‚­ã‚¹ãƒˆã‹ã‚‰ã‚°ãƒªãƒƒãƒ‰ã‚’æ›´æ–° - key:value ãƒ©ã‚¤ãƒ³ã‚’è§£æ
+                // ƒeƒLƒXƒg‚©‚çƒOƒŠƒbƒh‚ğXV - key:value ƒ‰ƒCƒ“‚ğ‰ğÍ
                 var lines = stepsTextBox.Text.Split(LineBreakSeparators, StringSplitOptions.RemoveEmptyEntries);
                 var items = new ObservableCollection<StepsItem>();
                 foreach (var line in lines)
@@ -1026,12 +1026,12 @@ namespace StableSatoViewer
                         items.Add(new StepsItem { Key = line.Trim(), Value = "" });
                     }
                 }
-                if (items.Count == 0) items.Add(new StepsItem { Key = "(ãªã—)", Value = "" });
+                if (items.Count == 0) items.Add(new StepsItem { Key = "(‚È‚µ)", Value = "" });
                 stepsGrid.ItemsSource = items;
             }
             else
             {
-                // ç”Ÿãƒ†ã‚­ã‚¹ãƒˆè¡¨ç¤ºã«åˆ‡ã‚Šæ›¿ãˆ
+                // ¶ƒeƒLƒXƒg•\¦‚ÉØ‚è‘Ö‚¦
                 var sb = new StringBuilder();
                 if (stepsGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
@@ -1051,7 +1051,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// å‰ã®ç”»åƒã‚’è¡¨ç¤ºã—ã¾ã™ã€‚ãƒ•ã‚©ãƒ«ãƒ€ã®æœ€åˆã«é”ã—ãŸã‚‰å‰ã®ãƒ•ã‚©ãƒ«ãƒ€ã®æœ€å¾Œã«ç§»å‹•ã—ã¾ã™ã€‚
+        /// ‘O‚Ì‰æ‘œ‚ğ•\¦‚µ‚Ü‚·BƒtƒHƒ‹ƒ_‚ÌÅ‰‚É’B‚µ‚½‚ç‘O‚ÌƒtƒHƒ‹ƒ_‚ÌÅŒã‚ÉˆÚ“®‚µ‚Ü‚·B
         /// </summary>
         private void PrevImageButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1074,7 +1074,7 @@ namespace StableSatoViewer
                             isInitializing = true;
                             SelectFolderInTree(subDirs[idx - 1]);
                             isInitializing = false;
-                            // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼é©ç”¨å¾Œã€æœ€å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤ºã™ã‚‹ãŸã‚ã«ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ä½¿ç”¨
+                            // ƒtƒBƒ‹ƒ^[“K—pŒãAÅŒã‚Ìƒtƒ@ƒCƒ‹‚ğ•\¦‚·‚é‚½‚ß‚ÉƒR[ƒ‹ƒoƒbƒN‚ğg—p
                             this.Dispatcher.InvokeAsync(() =>
                             {
                                 if (pngFiles != null && pngFiles.Length > 0)
@@ -1099,7 +1099,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æ¬¡ã®ç”»åƒã‚’è¡¨ç¤ºã—ã¾ã™ã€‚ãƒ•ã‚©ãƒ«ãƒ€ã®æœ€å¾Œã«é”ã—ãŸã‚‰æ¬¡ã®ãƒ•ã‚©ãƒ«ãƒ€ã®æœ€åˆã«ç§»å‹•ã—ã¾ã™ã€‚
+        /// Ÿ‚Ì‰æ‘œ‚ğ•\¦‚µ‚Ü‚·BƒtƒHƒ‹ƒ_‚ÌÅŒã‚É’B‚µ‚½‚çŸ‚ÌƒtƒHƒ‹ƒ_‚ÌÅ‰‚ÉˆÚ“®‚µ‚Ü‚·B
         /// </summary>
         private void NextImageButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1138,7 +1138,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒˆãƒ¼ã‚¹ãƒˆé€šçŸ¥ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚1.5 ç§’å¾Œã«è‡ªå‹•æ¶ˆå»ã•ã‚Œã¾ã™ã€‚
+        /// ƒg[ƒXƒg’Ê’m‚ğ•\¦‚µ‚Ü‚·B1.5 •bŒã‚É©“®Á‹‚³‚ê‚Ü‚·B
         /// </summary>
         private async void ShowToast(string message)
         {
@@ -1149,11 +1149,11 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãŠæ°—ã«å…¥ã‚Šãƒãƒƒãƒ—ã‚¢ãƒƒãƒ—ã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ‚¨‹C‚É“ü‚èƒ|ƒbƒvƒAƒbƒv‚ğ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void FavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            // ãŠæ°—ã«å…¥ã‚Šã‚’èª­ã¿è¾¼ã‚€
+            // ‚¨‹C‚É“ü‚è‚ğ“Ç‚İ‚Ş
             LoadFavorites();
             favoritesListBox.ItemsSource = null;
             favoritesListBox.ItemsSource = favorites;
@@ -1161,7 +1161,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ç¾åœ¨è¡¨ç¤ºä¸­ã®ç”»åƒã‚’ãŠæ°—ã«å…¥ã‚Šã«è¿½åŠ ã—ã¾ã™ã€‚
+        /// Œ»İ•\¦’†‚Ì‰æ‘œ‚ğ‚¨‹C‚É“ü‚è‚É’Ç‰Á‚µ‚Ü‚·B
         /// </summary>
         private void AddFavoriteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1189,7 +1189,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ã™ã¹ã¦ã®ãŠæ°—ã«å…¥ã‚Šã‚’å‰Šé™¤ã—ã¾ã™ã€‚
+        /// ‚·‚×‚Ä‚Ì‚¨‹C‚É“ü‚è‚ğíœ‚µ‚Ü‚·B
         /// </summary>
         private void RemoveAllFavoritesButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1201,18 +1201,18 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãŠæ°—ã«å…¥ã‚Šè¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ãƒ¼ã§é–‹ãã¾ã™ã€‚
+        /// ‚¨‹C‚É“ü‚èİ’èƒtƒ@ƒCƒ‹‚ğƒGƒNƒXƒvƒ[ƒ‰[‚ÅŠJ‚«‚Ü‚·B
         /// </summary>
         private void EditFavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            // ç°¡å˜ãªç·¨é›†: ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ãƒ¼ã§é–‹ã
-            var dir = Path.GetDirectoryName(favoritesFilePath);
+            // ŠÈ’P‚È•ÒW: ƒtƒ@ƒCƒ‹‚ğƒGƒNƒXƒvƒ[ƒ‰[‚ÅŠJ‚­
+            var dir = Path.GetDirectoryName(FavoritesFilePath);
             if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{favoritesFilePath}\"") { UseShellExecute = true });
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{FavoritesFilePath}\"") { UseShellExecute = true });
         }
 
         /// <summary>
-        /// ãŠæ°—ã«å…¥ã‚Šãƒªã‚¹ãƒˆã®é …ç›®ã‚’ãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯æ™‚ã€ãã®ç”»åƒã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ‚¨‹C‚É“ü‚èƒŠƒXƒg‚Ì€–Ú‚ğƒ_ƒuƒ‹ƒNƒŠƒbƒNA‚»‚Ì‰æ‘œ‚ğ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void FavoritesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -1226,7 +1226,7 @@ namespace StableSatoViewer
                     if (currentIndex < 0) currentIndex = 0;
                     ShowImage(pngFiles[currentIndex]);
                     favoritesPopup.IsOpen = false;
-                    // ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã§ã‚‚ã“ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’é¸æŠ
+                    // ƒtƒHƒ‹ƒ_ƒcƒŠ[‚Å‚à‚±‚ÌƒtƒHƒ‹ƒ_‚ğ‘I‘ğ
                     SelectFolderInTree(dir);
                 }
                 else
@@ -1237,32 +1237,32 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãŠæ°—ã«å…¥ã‚Šãƒªã‚¹ãƒˆã‚’è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã—ã¾ã™ã€‚
+        /// ‚¨‹C‚É“ü‚èƒŠƒXƒg‚ğİ’èƒtƒ@ƒCƒ‹‚É•Û‘¶‚µ‚Ü‚·B
         /// </summary>
         private void SaveFavorites()
         {
             try
             {
-                var dir = Path.GetDirectoryName(favoritesFilePath);
+                var dir = Path.GetDirectoryName(FavoritesFilePath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.WriteAllLines(favoritesFilePath, favorites, Encoding.UTF8);
+                File.WriteAllLines(FavoritesFilePath, favorites, Encoding.UTF8);
             }
             catch
             {
-                // ç„¡è¦–
+                // –³‹
             }
         }
 
         /// <summary>
-        /// è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ãŠæ°—ã«å…¥ã‚Šãƒªã‚¹ãƒˆã‚’èª­ã¿è¾¼ã¿ã¾ã™ã€‚
+        /// İ’èƒtƒ@ƒCƒ‹‚©‚ç‚¨‹C‚É“ü‚èƒŠƒXƒg‚ğ“Ç‚İ‚İ‚Ü‚·B
         /// </summary>
         private void LoadFavorites()
         {
             try
             {
-                if (File.Exists(favoritesFilePath))
+                if (File.Exists(FavoritesFilePath))
                 {
-                    favorites = File.ReadAllLines(favoritesFilePath, Encoding.UTF8).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+                    favorites = File.ReadAllLines(FavoritesFilePath, Encoding.UTF8).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
                 }
                 else
                 {
@@ -1276,7 +1276,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ç¾åœ¨è¡¨ç¤ºä¸­ã®ç”»åƒãŒãŠæ°—ã«å…¥ã‚Šã‹ã©ã†ã‹ã‚’è¡¨ç¤ºãƒœã‚¿ãƒ³ã§è¦–è¦šçš„ã«è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// Œ»İ•\¦’†‚Ì‰æ‘œ‚ª‚¨‹C‚É“ü‚è‚©‚Ç‚¤‚©‚ğ•\¦ƒ{ƒ^ƒ“‚Å‹Šo“I‚É•\¦‚µ‚Ü‚·B
         /// </summary>
         private void UpdateFavoritesIndicator()
         {
@@ -1303,11 +1303,11 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// PNG ãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‰ãƒ©ãƒƒã‚°ã‚’å—ã‘ä»˜ã‘ã€ä»–ã®ãƒ•ã‚¡ã‚¤ãƒ«å‹ã¯å´ä¸‹ã—ã¾ã™ã€‚
+        /// PNG ƒtƒ@ƒCƒ‹‚Ìƒhƒ‰ƒbƒO‚ğó‚¯•t‚¯A‘¼‚Ìƒtƒ@ƒCƒ‹Œ^‚Í‹p‰º‚µ‚Ü‚·B
         /// </summary>
         private void ImageBorder_PreviewDragOver(object sender, WpfDragEventArgs e)
         {
-            // PNG ãƒ•ã‚¡ã‚¤ãƒ«ã®ã¿è¨±å¯
+            // PNG ƒtƒ@ƒCƒ‹‚Ì‚İ‹–‰Â
             if (e.Data.GetDataPresent(System.Windows.DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(System.Windows.DataFormats.FileDrop);
@@ -1328,7 +1328,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ‰ãƒ©ãƒƒã‚°ãƒ‰ãƒ­ãƒƒãƒ—ã•ã‚ŒãŸ PNG ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ãã¾ã™ã€‚
+        /// ƒhƒ‰ƒbƒOƒhƒƒbƒv‚³‚ê‚½ PNG ƒtƒ@ƒCƒ‹‚ğŠJ‚«‚Ü‚·B
         /// </summary>
         private void ImageBorder_Drop(object sender, WpfDragEventArgs e)
         {
@@ -1336,7 +1336,7 @@ namespace StableSatoViewer
             var files = (string[]?)e.Data.GetData(System.Windows.DataFormats.FileDrop);
             if (files == null || files.Length == 0) return;
 
-            // æœ€åˆã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒ PNG ãªã‚‰èª­ã¿è¾¼ã‚€
+            // Å‰‚Ìƒtƒ@ƒCƒ‹‚ª PNG ‚È‚ç“Ç‚İ‚Ş
             var first = files[0];
             if (!File.Exists(first)) return;
             if (!string.Equals(Path.GetExtension(first), ".png", StringComparison.OrdinalIgnoreCase)) return;
@@ -1348,17 +1348,17 @@ namespace StableSatoViewer
                 currentIndex = Array.IndexOf(pngFiles, first);
                 if (currentIndex < 0) currentIndex = 0;
                 ShowImage(pngFiles[currentIndex]);
-                // ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã§ã‚‚ã“ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’é¸æŠ
+                // ƒtƒHƒ‹ƒ_ƒcƒŠ[‚Å‚à‚±‚ÌƒtƒHƒ‹ƒ_‚ğ‘I‘ğ
                 SelectFolderInTree(dir);
             }
             catch
             {
-                // ç„¡è¦–
+                // –³‹
             }
         }
 
         /// <summary>
-        /// ãƒ‰ãƒ©ã‚¤ãƒ–ã‚’å–å¾—ã—ã¦ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã‚’åˆæœŸåŒ–ã—ã¾ã™ã€‚
+        /// ƒhƒ‰ƒCƒu‚ğæ“¾‚µ‚ÄƒtƒHƒ‹ƒ_ƒcƒŠ[‚ğ‰Šú‰»‚µ‚Ü‚·B
         /// </summary>
         private void BuildFolderTree()
         {
@@ -1378,7 +1378,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ãƒãƒ¼ãƒ‰ãŒå±•é–‹ã•ã‚Œã‚‹éš›ã€é…å»¶ãƒ­ãƒ¼ãƒ‰ã•ã‚ŒãŸã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚’èª­ã¿è¾¼ã‚€
+        /// ƒtƒHƒ‹ƒ_ƒcƒŠ[ƒm[ƒh‚ª“WŠJ‚³‚ê‚éÛA’x‰„ƒ[ƒh‚³‚ê‚½ƒTƒuƒtƒHƒ‹ƒ_‚ğ“Ç‚İ‚Ş
         /// </summary>
         private void Folder_Expanded(object sender, RoutedEventArgs e)
         {
@@ -1408,36 +1408,36 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã§ãƒ•ã‚©ãƒ«ãƒ€ãŒé¸æŠã•ã‚ŒãŸéš›ã€ãã®ãƒ•ã‚©ãƒ«ãƒ€ã® PNG ãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§ã‚’èª­ã¿è¾¼ã¿è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ƒtƒHƒ‹ƒ_ƒcƒŠ[‚ÅƒtƒHƒ‹ƒ_‚ª‘I‘ğ‚³‚ê‚½ÛA‚»‚ÌƒtƒHƒ‹ƒ_‚Ì PNG ƒtƒ@ƒCƒ‹ˆê——‚ğ“Ç‚İ‚İ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void FolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            // åˆæœŸåŒ–ä¸­ã¯ã‚¤ãƒ™ãƒ³ãƒˆã‚’ç„¡è¦–
+            // ‰Šú‰»’†‚ÍƒCƒxƒ“ƒg‚ğ–³‹
             if (isInitializing) return;
 
             if (folderTreeView.SelectedItem is TreeViewItem t && t.Tag is string p)
             {
                 SaveLastFolder(p);
                 LoadImagesFromFolderWithFilter(p);
-                // ãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§ã‚’èª­ã¿è¾¼ã‚€
+                // ƒtƒ@ƒCƒ‹ˆê——‚ğ“Ç‚İ‚Ş
                 try
                 {
                     var files = Directory.GetFiles(p, "*.png").OrderBy(x => x).ToArray();
-                    allPngFilesInFolder = files; // ã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä¿å­˜
+                    allPngFilesInFolder = files; // ‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹‚ğ•Û‘¶
 
-                    // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ãŒã‚¢ã‚¯ãƒ†ã‚£ãƒ–ãªå ´åˆã¯ã€æ–°ã—ã„ãƒ•ã‚©ãƒ«ãƒ€ã«é©ç”¨ã—ã¾ã™ã€‚ãã‚Œä»¥å¤–ã®å ´åˆã¯ã™ã¹ã¦ã‚’è¡¨ç¤º
+                    // ƒtƒBƒ‹ƒ^[‚ªƒAƒNƒeƒBƒu‚Èê‡‚ÍAV‚µ‚¢ƒtƒHƒ‹ƒ_‚É“K—p‚µ‚Ü‚·B‚»‚êˆÈŠO‚Ìê‡‚Í‚·‚×‚Ä‚ğ•\¦
                     if (filterTextBox != null && !string.IsNullOrWhiteSpace(filterTextBox.Text))
                     {
-                        // FilterButton_Click ã¯ allPngFilesInFolder ãŒè¨­å®šã•ã‚Œã¦ã„ã‚‹ã“ã¨ã«ä¾å­˜ã—ã¦ã„ã¾ã™
-                        folderFilesListBox.Tag = p; // ç¾åœ¨ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’ä¿å­˜
+                        // FilterButton_Click ‚Í allPngFilesInFolder ‚ªİ’è‚³‚ê‚Ä‚¢‚é‚±‚Æ‚ÉˆË‘¶‚µ‚Ä‚¢‚Ü‚·
+                        folderFilesListBox.Tag = p; // Œ»İ‚ÌƒtƒHƒ‹ƒ_‚ğ•Û‘¶
                         FilterButton_Click(filterButton, new RoutedEventArgs());
                     }
                     else
                     {
-                        pngFiles = files; // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’ãƒªã‚»ãƒƒãƒˆ
+                        pngFiles = files; // ƒtƒBƒ‹ƒ^[‚ğƒŠƒZƒbƒg
                         folderFilesListBox.ItemsSource = files.Select(f => System.IO.Path.GetFileName(f)).ToList();
-                        folderFilesListBox.Tag = p; // ç¾åœ¨ã®ãƒ•ã‚©ãƒ«ãƒ€ã‚’ä¿å­˜
-                        // filterTextBox ã‚’ã‚¯ãƒªã‚¢ã—ãªã„ - ãƒ¦ãƒ¼ã‚¶ãƒ¼ã®å…¥åŠ›ã‚’ä¿æŒ
+                        folderFilesListBox.Tag = p; // Œ»İ‚ÌƒtƒHƒ‹ƒ_‚ğ•Û‘¶
+                        // filterTextBox ‚ğƒNƒŠƒA‚µ‚È‚¢ - ƒ†[ƒU[‚Ì“ü—Í‚ğ•Û
                         if (pngFiles.Length > 0)
                         {
                             currentIndex = 0;
@@ -1450,7 +1450,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã®é …ç›®ã‚’ãƒ€ãƒ–ãƒ«ã‚¯ãƒªãƒƒã‚¯æ™‚ã€ãã®ç”»åƒã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ƒtƒ@ƒCƒ‹ƒŠƒXƒg‚Ì€–Ú‚ğƒ_ƒuƒ‹ƒNƒŠƒbƒNA‚»‚Ì‰æ‘œ‚ğ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void FolderFilesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
@@ -1459,7 +1459,7 @@ namespace StableSatoViewer
                 var full = System.IO.Path.Combine(dir, name);
                 if (File.Exists(full))
                 {
-                    // ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ pngFiles ã«è¨­å®šã—ã€é¸æŠã—ãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤º
+                    // ƒfƒBƒŒƒNƒgƒŠ‚Ìƒtƒ@ƒCƒ‹‚ğ pngFiles ‚Éİ’è‚µA‘I‘ğ‚µ‚½ƒtƒ@ƒCƒ‹‚ğ•\¦
                     try
                     {
                         pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(x => x).ToArray();
@@ -1473,7 +1473,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æœ€å¾Œã«é¸æŠã•ã‚ŒãŸãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ã‚’è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã—ã¾ã™ã€‚
+        /// ÅŒã‚É‘I‘ğ‚³‚ê‚½ƒtƒHƒ‹ƒ_ƒpƒX‚ğİ’èƒtƒ@ƒCƒ‹‚É•Û‘¶‚µ‚Ü‚·B
         /// </summary>
         private void SaveLastFolder(string dir)
         {
@@ -1487,7 +1487,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æœ€å¾Œã«è¡¨ç¤ºã•ã‚ŒãŸç”»åƒãƒ‘ã‚¹ã‚’è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã—ã¾ã™ã€‚
+        /// ÅŒã‚É•\¦‚³‚ê‚½‰æ‘œƒpƒX‚ğİ’èƒtƒ@ƒCƒ‹‚É•Û‘¶‚µ‚Ü‚·B
         /// </summary>
         private void SaveLastImage(string imagePath)
         {
@@ -1501,16 +1501,16 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æŒ‡å®šãƒ‘ã‚¹ã‚’ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã§æ¤œç´¢ã—ã€å±•é–‹ãƒ»é¸æŠã—ã¾ã™ã€‚
+        /// w’èƒpƒX‚ğƒtƒHƒ‹ƒ_ƒcƒŠ[‚ÅŒŸõ‚µA“WŠJE‘I‘ğ‚µ‚Ü‚·B
         /// </summary>
         private void SelectFolderInTree(string path)
         {
             try
             {
-                // ãƒ‘ã‚¹ã‚’æ­£è¦åŒ–
+                // ƒpƒX‚ğ³‹K‰»
                 path = System.IO.Path.GetFullPath(path).TrimEnd(System.IO.Path.DirectorySeparatorChar);
 
-                // ãƒ‰ãƒ©ã‚¤ãƒ–ã‚’æ¢ã™
+                // ƒhƒ‰ƒCƒu‚ğ’T‚·
                 string drive = (System.IO.Path.GetPathRoot(path) ?? "").TrimEnd(System.IO.Path.DirectorySeparatorChar);
                 
                 TreeViewItem? driveNode = null;
@@ -1530,13 +1530,13 @@ namespace StableSatoViewer
 
                 if (driveNode == null) return;
 
-                // ãƒ‰ãƒ©ã‚¤ãƒ–ãƒãƒ¼ãƒ‰ã‚’å±•é–‹
+                // ƒhƒ‰ƒCƒuƒm[ƒh‚ğ“WŠJ
                 driveNode.IsExpanded = true;
 
-                // ãƒ‘ã‚¹ã®å„éƒ¨åˆ†ã‚’åˆ†å‰²
+                // ƒpƒX‚ÌŠe•”•ª‚ğ•ªŠ„
                 string[] pathParts = path[drive.Length..].Trim(System.IO.Path.DirectorySeparatorChar).Split(System.IO.Path.DirectorySeparatorChar);
 
-                // ãƒ„ãƒªãƒ¼ã‚’è¾¿ã‚ŠãªãŒã‚‰å„ãƒãƒ¼ãƒ‰ã‚’å±•é–‹
+                // ƒcƒŠ[‚ğ’H‚è‚È‚ª‚çŠeƒm[ƒh‚ğ“WŠJ
                 TreeViewItem currentNode = driveNode;
                 string currentPath = drive;
 
@@ -1546,7 +1546,7 @@ namespace StableSatoViewer
 
                     currentPath = System.IO.Path.Combine(currentPath, part);
 
-                    // å­ãƒãƒ¼ãƒ‰ã‚’å±•é–‹
+                    // qƒm[ƒh‚ğ“WŠJ
                     if (currentNode.Items.Count == 1 && currentNode.Items[0] == null)
                     {
                         currentNode.Items.Clear();
@@ -1568,7 +1568,7 @@ namespace StableSatoViewer
                         catch { }
                     }
 
-                    // æ¬¡ã®ãƒãƒ¼ãƒ‰ã‚’æ¢ã™
+                    // Ÿ‚Ìƒm[ƒh‚ğ’T‚·
                     TreeViewItem? nextNode = null;
                     foreach (TreeViewItem child in currentNode.Items.OfType<TreeViewItem>())
                     {
@@ -1586,7 +1586,7 @@ namespace StableSatoViewer
                     currentNode.IsExpanded = true;
                 }
 
-                // æœ€çµ‚ãƒãƒ¼ãƒ‰ã‚’é¸æŠ
+                // ÅIƒm[ƒh‚ğ‘I‘ğ
                 currentNode.IsSelected = true;
                 currentNode.BringIntoView();
             }
@@ -1594,7 +1594,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€ã‹ã‚‰ PNG ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã¿ã€æœ€åˆã®ç”»åƒã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// w’èƒtƒHƒ‹ƒ_‚©‚ç PNG ƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚İAÅ‰‚Ì‰æ‘œ‚ğ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void LoadImagesFromFolderWithFilter(string dir)
         {
@@ -1611,7 +1611,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// æ–°ã—ã„ãƒ•ã‚©ãƒ«ãƒ€ã«ç¾åœ¨ã®ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’é©ç”¨ã—ã¦ç”»åƒä¸€è¦§ã‚’å†æ§‹ç¯‰ã—ã¾ã™ã€‚
+        /// V‚µ‚¢ƒtƒHƒ‹ƒ_‚ÉŒ»İ‚ÌƒtƒBƒ‹ƒ^[‚ğ“K—p‚µ‚Ä‰æ‘œˆê——‚ğÄ\’z‚µ‚Ü‚·B
         /// </summary>
         private void ApplyFilterToNewFolder(string newFolderPath)
         {
@@ -1640,13 +1640,13 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã®è¡¨ç¤ºéè¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒtƒHƒ‹ƒ_ƒcƒŠ[‚Ì•\¦”ñ•\¦‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void TreeToggleButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // DockPanel å†…ã®ãƒ¡ã‚¤ãƒ³ã‚°ãƒªãƒƒãƒ‰ã‚’æ¢ã™
+                // DockPanel “à‚ÌƒƒCƒ“ƒOƒŠƒbƒh‚ğ’T‚·
                 var dockPanel = (DockPanel)this.Content;
                 Grid? mainGrid = null;
                 foreach (UIElement child in dockPanel.Children)
@@ -1665,7 +1665,7 @@ namespace StableSatoViewer
 
                 if (treeBorder.Visibility == Visibility.Visible)
                 {
-                    // éè¡¨ç¤ºã«ã™ã‚‹
+                    // ”ñ•\¦‚É‚·‚é
                     treeBorder.Visibility = Visibility.Collapsed;
                     colDefs[0].Width = new GridLength(0);
                     colDefs[1].Width = new GridLength(0);
@@ -1681,11 +1681,11 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ãŒã‚ã‚‹æ™‚ã€å·¦å³ã‚­ãƒ¼ã§ç”»åƒã‚’åˆ‡ã‚Šæ›¿ãˆã¾ã™ã€‚
+        /// ƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ÉƒtƒH[ƒJƒX‚ª‚ ‚éA¶‰EƒL[‚Å‰æ‘œ‚ğØ‚è‘Ö‚¦‚Ü‚·B
         /// </summary>
         private void FolderFilesListBox_PreviewKeyDown(object sender, WpfKeyEventArgs e)
         {
-            // ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã«ãƒ•ã‚©ãƒ¼ã‚«ã‚¹ãŒã‚ã‚‹æ™‚ã€å·¦å³ã‚­ãƒ¼ã§ç”»åƒåˆ‡ã‚Šæ›¿ãˆ
+            // ƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ÉƒtƒH[ƒJƒX‚ª‚ ‚éA¶‰EƒL[‚Å‰æ‘œØ‚è‘Ö‚¦
             if (e.Key == Key.Left || e.Key == Key.Right)
             {
                 if (pngFiles == null || pngFiles.Length == 0) return;
@@ -1740,7 +1740,7 @@ namespace StableSatoViewer
                                     isInitializing = true;
                                     SelectFolderInTree(subDirs[idx - 1]);
                                     isInitializing = false;
-                                    // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼é©ç”¨å¾Œã€æœ€å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤ºã™ã‚‹ãŸã‚ã«ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã‚’ä½¿ç”¨
+                                    // ƒtƒBƒ‹ƒ^[“K—pŒãAÅŒã‚Ìƒtƒ@ƒCƒ‹‚ğ•\¦‚·‚é‚½‚ß‚ÉƒR[ƒ‹ƒoƒbƒN‚ğg—p
                                     this.Dispatcher.InvokeAsync(() =>
                                     {
                                         if (pngFiles != null && pngFiles.Length > 0)
@@ -1761,7 +1761,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã®é¸æŠãŒå¤‰æ›´ã•ã‚ŒãŸéš›ã€é¸æŠã•ã‚ŒãŸç”»åƒã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ƒtƒ@ƒCƒ‹ƒŠƒXƒg‚Ì‘I‘ğ‚ª•ÏX‚³‚ê‚½ÛA‘I‘ğ‚³‚ê‚½‰æ‘œ‚ğ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void FolderFilesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1772,35 +1772,35 @@ namespace StableSatoViewer
                     var full = System.IO.Path.Combine(dir, name);
                     if (File.Exists(full))
                     {
-                        // é¸æŠã•ã‚ŒãŸç”»åƒã‚’è¡¨ç¤ºã—ã€pngFiles/currentIndex ã‚’æ›´æ–°ã—ã¦ãƒŠãƒ“ã‚²ãƒ¼ã‚·ãƒ§ãƒ³ãŒã‚¯ãƒ©ãƒƒã‚·ãƒ¥ã—ãªã„ã‚ˆã†ã«ã—ã¾ã™
+                        // ‘I‘ğ‚³‚ê‚½‰æ‘œ‚ğ•\¦‚µApngFiles/currentIndex ‚ğXV‚µ‚ÄƒiƒrƒQ[ƒVƒ‡ƒ“‚ªƒNƒ‰ƒbƒVƒ…‚µ‚È‚¢‚æ‚¤‚É‚µ‚Ü‚·
                         var bitmap = new BitmapImage(new Uri(full));
                         bitmap.CacheOption = BitmapCacheOption.OnLoad;
                         bitmap.Freeze();
                         imageBox.Source = bitmap;
-                        // pngFiles ã¯æ—¢ã«ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼çŠ¶æ…‹ã‚’æŒã£ã¦ã„ã‚‹ã®ã§ã€ãã®ã¾ã¾ä½¿ç”¨
+                        // pngFiles ‚ÍŠù‚ÉƒtƒBƒ‹ƒ^[ó‘Ô‚ğ‚Á‚Ä‚¢‚é‚Ì‚ÅA‚»‚Ì‚Ü‚Üg—p
                         currentIndex = pngFiles != null ? Array.IndexOf(pngFiles, full) : -1;
                         if (currentIndex < 0) currentIndex = 0;
 
-                        // æœ€å¾Œã«è¡¨ç¤ºã—ãŸç”»åƒã‚’ä¿å­˜
+                        // ÅŒã‚É•\¦‚µ‚½‰æ‘œ‚ğ•Û‘¶
                         SaveLastImage(full);
 
-                        // ã‚¿ã‚¤ãƒˆãƒ«ã¨ãƒ†ã‚­ã‚¹ãƒˆãƒãƒ£ãƒ³ã‚¯ã‚’æ›´æ–°
+                        // ƒ^ƒCƒgƒ‹‚ÆƒeƒLƒXƒgƒ`ƒƒƒ“ƒN‚ğXV
                         UpdateWindowTitle(full);
                         ExtractAndDisplayTextChunks(full);
 
-                        // ãŠæ°—ã«å…¥ã‚Šè¡¨ç¤ºã‚’æ›´æ–°
+                        // ‚¨‹C‚É“ü‚è•\¦‚ğXV
                         UpdateFavoritesIndicator();
                     }
                 }
             }
             catch
             {
-                // ç„¡è¦–
+                // –³‹
             }
         }
 
         /// <summary>
-        /// ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ãƒ†ã‚­ã‚¹ãƒˆã«åŸºã¥ã„ã¦ PNG ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ¤œç´¢ã—ã€çµæœã‚’è¡¨ç¤ºã—ã¾ã™ã€‚
+        /// ƒtƒBƒ‹ƒ^[ƒeƒLƒXƒg‚ÉŠî‚Ã‚¢‚Ä PNG ƒtƒ@ƒCƒ‹‚ğŒŸõ‚µAŒ‹‰Ê‚ğ•\¦‚µ‚Ü‚·B
         /// </summary>
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1812,7 +1812,7 @@ namespace StableSatoViewer
                 
                 if (string.IsNullOrEmpty(filterText))
                 {
-                    // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ãªã—ï¼šã™ã¹ã¦ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’è¡¨ç¤º
+                    // ƒtƒBƒ‹ƒ^[‚È‚µF‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹‚ğ•\¦
                     if (allPngFilesInFolder != null)
                     {
                         pngFiles = allPngFilesInFolder;
@@ -1829,7 +1829,7 @@ namespace StableSatoViewer
                     return;
                 }
 
-                // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼å‡¦ç†ï¼šãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§ã«è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ãƒ•ã‚¡ã‚¤ãƒ«ã®ã¿ã‚’ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼å¯¾è±¡ã¨ã™ã‚‹
+                // ƒtƒBƒ‹ƒ^[ˆ—Fƒtƒ@ƒCƒ‹ˆê——‚É•\¦‚³‚ê‚Ä‚¢‚éƒtƒ@ƒCƒ‹‚Ì‚İ‚ğƒtƒBƒ‹ƒ^[‘ÎÛ‚Æ‚·‚é
                 if (allPngFilesInFolder == null || allPngFilesInFolder.Length == 0)
                 {
                     ShowToast("No files to filter");
@@ -1845,7 +1845,7 @@ namespace StableSatoViewer
                         using var fs = new FileStream(f, FileMode.Open, FileAccess.Read);
                         using var br = new BinaryReader(fs);
 
-                        // PNG ã‚·ã‚°ãƒãƒãƒ£ã‚’ã‚¹ã‚­ãƒƒãƒ—
+                        // PNG ƒVƒOƒlƒ`ƒƒ‚ğƒXƒLƒbƒv
                         br.ReadBytes(8);
 
                         bool found = false;
@@ -1871,7 +1871,7 @@ namespace StableSatoViewer
 
                                     if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase))
                                     {
-                                        // ã€ŒNegative prompt:ã€ã¾ã§ã®ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ†ã‚­ã‚¹ãƒˆã®ã¿ã‚’æ¤œç´¢
+                                        // uNegative prompt:v‚Ü‚Å‚Ìƒpƒ‰ƒ[ƒ^ƒeƒLƒXƒg‚Ì‚İ‚ğŒŸõ
                                         string paramText = value;
                                         int negIndex = value.IndexOf("negative prompt:");
                                         if (negIndex >= 0)
@@ -1879,7 +1879,7 @@ namespace StableSatoViewer
                                             paramText = value[..negIndex];
                                         }
 
-                                        // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ãƒ†ã‚­ã‚¹ãƒˆãŒå«ã¾ã‚Œã¦ã„ã‚‹ã‹ãƒã‚§ãƒƒã‚¯
+                                        // ƒtƒBƒ‹ƒ^[ƒeƒLƒXƒg‚ªŠÜ‚Ü‚ê‚Ä‚¢‚é‚©ƒ`ƒFƒbƒN
                                         if (paramText.Contains(filterText))
                                         {
                                             filtered.Add(f);
@@ -1892,7 +1892,7 @@ namespace StableSatoViewer
                     }
                     catch
                     {
-                        // èª­ã¿è¾¼ã¿ã‚¨ãƒ©ãƒ¼ã‚’ç„¡è¦–
+                        // “Ç‚İ‚İƒGƒ‰[‚ğ–³‹
                     }
                 }
 
@@ -1907,7 +1907,7 @@ namespace StableSatoViewer
                 folderFilesListBox.ItemsSource = fileNames;
                 folderFilesListBox.SelectedIndex = 0;
                 
-                // ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼å¾Œã€æœ€åˆã®ç”»åƒã‚’è¡¨ç¤º
+                // ƒtƒBƒ‹ƒ^[ŒãAÅ‰‚Ì‰æ‘œ‚ğ•\¦
                 currentIndex = 0;
                 ShowImage(pngFiles[0]);
                 
@@ -1920,7 +1920,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ãƒ•ã‚£ãƒ«ã‚¿ãƒ¼ã‚’ã‚¯ãƒªã‚¢ã—ã¦å…¨ãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§ã‚’å¾©å…ƒã—ã¾ã™ã€‚
+        /// ƒtƒBƒ‹ƒ^[‚ğƒNƒŠƒA‚µ‚Ä‘Sƒtƒ@ƒCƒ‹ˆê——‚ğ•œŒ³‚µ‚Ü‚·B
         /// </summary>
         private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1931,19 +1931,19 @@ namespace StableSatoViewer
 
                 if (allPngFilesInFolder != null)
                 {
-                    // ç¾åœ¨è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ç”»åƒã‚’è¨˜æ†¶ï¼ˆã‚ã‚‹å ´åˆï¼‰
+                    // Œ»İ•\¦‚³‚ê‚Ä‚¢‚é‰æ‘œ‚ğ‹L‰¯i‚ ‚éê‡j
                     string? currentImagePath = null;
                     if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                     {
                         currentImagePath = bm.UriSource.LocalPath;
                     }
 
-                    // ãƒ•ã‚¡ã‚¤ãƒ«ä¸€è¦§å…¨ä½“ã‚’å¾©å…ƒ
+                    // ƒtƒ@ƒCƒ‹ˆê——‘S‘Ì‚ğ•œŒ³
                     pngFiles = allPngFilesInFolder;
                     var names = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
                     folderFilesListBox.ItemsSource = names;
 
-                    // ç¾åœ¨è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ç”»åƒãŒå¾©å…ƒã•ã‚ŒãŸãƒªã‚¹ãƒˆã«ã‚ã‚‹å ´åˆã€ãã‚Œã‚’é¸æŠã—ãŸã¾ã¾ã«ã—ã¾ã™
+                    // Œ»İ•\¦‚³‚ê‚Ä‚¢‚é‰æ‘œ‚ª•œŒ³‚³‚ê‚½ƒŠƒXƒg‚É‚ ‚éê‡A‚»‚ê‚ğ‘I‘ğ‚µ‚½‚Ü‚Ü‚É‚µ‚Ü‚·
                     if (!string.IsNullOrEmpty(currentImagePath))
                     {
                         int idx = Array.IndexOf(pngFiles, currentImagePath);
@@ -1952,21 +1952,21 @@ namespace StableSatoViewer
                             currentIndex = idx;
                             folderFilesListBox.SelectedIndex = idx;
                             folderFilesListBox.ScrollIntoView(folderFilesListBox.SelectedItem);
-                            // UI ãŒåŒã˜ç”»åƒã®è§£æã•ã‚ŒãŸãƒ†ã‚­ã‚¹ãƒˆ/ãƒãƒ£ãƒ³ã‚¯ã‚’åæ˜ ã—ã¦ã„ã‚‹ã“ã¨ã‚’ç¢ºèª
+                            // UI ‚ª“¯‚¶‰æ‘œ‚Ì‰ğÍ‚³‚ê‚½ƒeƒLƒXƒg/ƒ`ƒƒƒ“ƒN‚ğ”½‰f‚µ‚Ä‚¢‚é‚±‚Æ‚ğŠm”F
                             ShowImage(pngFiles[currentIndex]);
                         }
                         else
                         {
-                            // ç¾åœ¨è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ç”»åƒã¯ã“ã®ãƒ•ã‚©ãƒ«ãƒ€ã®ãƒ•ã‚¡ã‚¤ãƒ«ã®ä¸€éƒ¨ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚
-                            // è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ç”»åƒã‚’ãƒ•ã‚©ãƒ«ãƒ€ã®æœ€åˆã®ç”»åƒã«åˆ‡ã‚Šæ›¿ãˆãªã„ã§ãã ã•ã„ã€‚
-                            // å¾Œã§ãƒŠãƒ“ã‚²ãƒ¼ã‚·ãƒ§ãƒ³ãŒã‚¯ãƒ©ãƒƒã‚·ãƒ¥ã—ãªã„ã‚ˆã† currentIndex ã‚’ 0 ã®ã¾ã¾ã«ã—ã¦ãŠãã¾ã™ã€‚
+                            // Œ»İ•\¦‚³‚ê‚Ä‚¢‚é‰æ‘œ‚Í‚±‚ÌƒtƒHƒ‹ƒ_‚Ìƒtƒ@ƒCƒ‹‚Ìˆê•”‚Å‚Í‚ ‚è‚Ü‚¹‚ñB
+                            // •\¦‚³‚ê‚Ä‚¢‚é‰æ‘œ‚ğƒtƒHƒ‹ƒ_‚ÌÅ‰‚Ì‰æ‘œ‚ÉØ‚è‘Ö‚¦‚È‚¢‚Å‚­‚¾‚³‚¢B
+                            // Œã‚ÅƒiƒrƒQ[ƒVƒ‡ƒ“‚ªƒNƒ‰ƒbƒVƒ…‚µ‚È‚¢‚æ‚¤ currentIndex ‚ğ 0 ‚Ì‚Ü‚Ü‚É‚µ‚Ä‚¨‚«‚Ü‚·B
                             currentIndex = 0;
                             folderFilesListBox.SelectedIndex = -1;
                         }
                     }
                     else
                     {
-                        // ç”»åƒãŒç¾åœ¨è¡¨ç¤ºã•ã‚Œã¦ã„ãªã„å ´åˆï¼šæœ€åˆã®ç”»åƒã®è¡¨ç¤ºã‚’å¼·åˆ¶ã—ãªã„
+                        // ‰æ‘œ‚ªŒ»İ•\¦‚³‚ê‚Ä‚¢‚È‚¢ê‡FÅ‰‚Ì‰æ‘œ‚Ì•\¦‚ğ‹­§‚µ‚È‚¢
                         folderFilesListBox.SelectedIndex = -1;
                     }
                 }
@@ -1976,7 +1976,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ç¾åœ¨è¡¨ç¤ºä¸­ã®ç”»åƒã‚’ã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ãƒ¼ã§é¸æŠçŠ¶æ…‹ã§é–‹ãã¾ã™ã€‚
+        /// Œ»İ•\¦’†‚Ì‰æ‘œ‚ğƒGƒNƒXƒvƒ[ƒ‰[‚Å‘I‘ğó‘Ô‚ÅŠJ‚«‚Ü‚·B
         /// </summary>
         private void OpenInExplorerButton_Click(object sender, RoutedEventArgs e)
         {
@@ -1985,7 +1985,7 @@ namespace StableSatoViewer
                 if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                 {
                     string imagePath = bm.UriSource.LocalPath;
-                    // ã‚¨ã‚¯ã‚¹ãƒ—ãƒ­ãƒ¼ãƒ©ãƒ¼ã§ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é¸æŠçŠ¶æ…‹ã§é–‹ã
+                    // ƒGƒNƒXƒvƒ[ƒ‰[‚Åƒtƒ@ƒCƒ‹‚ğ‘I‘ğó‘Ô‚ÅŠJ‚­
                     System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{imagePath}\"") { UseShellExecute = true });
                     ShowToast("Opened in Explorer");
                 }
@@ -2001,7 +2001,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰æœ€å¾Œã«è¡¨ç¤ºã—ãŸç”»åƒãƒ‘ã‚¹ã‚’èª­ã¿è¾¼ã¿ã¾ã™ã€‚
+        /// İ’èƒtƒ@ƒCƒ‹‚©‚çÅŒã‚É•\¦‚µ‚½‰æ‘œƒpƒX‚ğ“Ç‚İ‚İ‚Ü‚·B
         /// </summary>
         private string? LoadLastImage()
         {
@@ -2022,7 +2022,7 @@ namespace StableSatoViewer
         }
 
         /// <summary>
-        /// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®çŠ¶æ…‹ï¼ˆã‚µã‚¤ã‚ºã€ä½ç½®ã€ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆãƒ¢ãƒ¼ãƒ‰ãªã©ï¼‰ã‚’ JSON ãƒ•ã‚¡ã‚¤ãƒ«ã«ä¿å­˜ã—ã¾ã™ã€‚
+        /// ƒEƒBƒ“ƒhƒE‚Ìó‘ÔiƒTƒCƒYAˆÊ’uAƒŒƒCƒAƒEƒgƒ‚[ƒh‚È‚Çj‚ğ JSON ƒtƒ@ƒCƒ‹‚É•Û‘¶‚µ‚Ü‚·B
         /// </summary>
         private void SaveWindowState()
         {
@@ -2044,7 +2044,7 @@ namespace StableSatoViewer
                     StepsVisible = stepsGrid?.Visibility == Visibility.Visible
                 };
 
-                // ã‚°ãƒªãƒƒãƒ‰ã®åˆ—å¹…ã‚’å–å¾—
+                // ƒOƒŠƒbƒh‚Ì—ñ•‚ğæ“¾
                 if (this.Content is DockPanel dockPanel)
                 {
                     var grid = dockPanel.Children.OfType<Grid>().FirstOrDefault();
@@ -2056,7 +2056,7 @@ namespace StableSatoViewer
                     }
                 }
 
-                // ãƒ„ãƒªãƒ¼ã®é«˜ã•ã‚’å–å¾—
+                // ƒcƒŠ[‚Ì‚‚³‚ğæ“¾
                 if (treeBorder != null && treeBorder.Child is Grid treeGrid && treeGrid.RowDefinitions.Count >= 3)
                 {
                     state.TreeHeight = treeGrid.RowDefinitions[0].ActualHeight;
@@ -2066,26 +2066,26 @@ namespace StableSatoViewer
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
                 var json = System.Text.Json.JsonSerializer.Serialize(state, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                File.WriteAllText(windowStateFilePath, json, Encoding.UTF8);
+                File.WriteAllText(WindowStateFilePath, json, Encoding.UTF8);
             }
             catch { }
         }
 
         /// <summary>
-        /// JSON ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®çŠ¶æ…‹ã‚’å¾©å…ƒã—ã¾ã™ã€‚
+        /// JSON ƒtƒ@ƒCƒ‹‚©‚çƒEƒBƒ“ƒhƒE‚Ìó‘Ô‚ğ•œŒ³‚µ‚Ü‚·B
         /// </summary>
         private void RestoreWindowState()
         {
             try
             {
-                if (!File.Exists(windowStateFilePath)) return;
+                if (!File.Exists(WindowStateFilePath)) return;
 
-                var json = File.ReadAllText(windowStateFilePath, Encoding.UTF8);
+                var json = File.ReadAllText(WindowStateFilePath, Encoding.UTF8);
                 var state = System.Text.Json.JsonSerializer.Deserialize<WindowStateData>(json);
 
                 if (state != null)
                 {
-                    // å…¨ç”»é¢çŠ¶æ…‹ã‚’å¾©å…ƒï¼ˆã‚µã‚¤ã‚ºãƒ»ä½ç½®ã®å‰ã«è¨­å®šï¼‰
+                    // ‘S‰æ–Êó‘Ô‚ğ•œŒ³iƒTƒCƒYEˆÊ’u‚Ì‘O‚Éİ’èj
                     if (state.IsFullScreen)
                     {
                         this.WindowStyle = WindowStyle.None;
@@ -2094,7 +2094,7 @@ namespace StableSatoViewer
                     }
                     else
                     {
-                        // é€šå¸¸ãƒ¢ãƒ¼ãƒ‰ï¼šã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã‚µã‚¤ã‚ºã¨ä½ç½®ã‚’å¾©å…ƒ
+                        // ’Êíƒ‚[ƒhFƒEƒBƒ“ƒhƒEƒTƒCƒY‚ÆˆÊ’u‚ğ•œŒ³
                         this.Width = state.WindowWidth;
                         this.Height = state.WindowHeight;
                         this.Left = state.WindowLeft;
@@ -2106,11 +2106,11 @@ namespace StableSatoViewer
                         }
                     }
 
-                    // ã“ã®æ®µéšã§ã¯ã€ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆãŒç¢ºå®šã—ã¦ã„ãªã„ãŸã‚ã€
-                    // Loaded ã‚¤ãƒ™ãƒ³ãƒˆå¾Œã«åˆ—å¹…ã‚„ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆãƒ¢ãƒ¼ãƒ‰ã‚’è¨­å®šã™ã‚‹
+                    // ‚±‚Ì’iŠK‚Å‚ÍAƒŒƒCƒAƒEƒg‚ªŠm’è‚µ‚Ä‚¢‚È‚¢‚½‚ßA
+                    // Loaded ƒCƒxƒ“ƒgŒã‚É—ñ•‚âƒŒƒCƒAƒEƒgƒ‚[ƒh‚ğİ’è‚·‚é
                     this.Loaded += (s, e) =>
                     {
-                        // ã‚°ãƒªãƒƒãƒ‰ã®åˆ—å¹…ã‚’å¾©å…ƒ
+                        // ƒOƒŠƒbƒh‚Ì—ñ•‚ğ•œŒ³
                         if (this.Content is DockPanel dockPanel)
                         {
                             var grid = dockPanel.Children.OfType<Grid>().FirstOrDefault();
@@ -2121,20 +2121,20 @@ namespace StableSatoViewer
                             }
                         }
 
-                        // ãƒ„ãƒªãƒ¼ã®é«˜ã•ã‚’å¾©å…ƒ
+                        // ƒcƒŠ[‚Ì‚‚³‚ğ•œŒ³
                         if (treeBorder != null && treeBorder.Child is Grid treeGrid && treeGrid.RowDefinitions.Count >= 3 && !double.IsNaN(state.TreeHeight))
                         {
                             treeGrid.RowDefinitions[0].Height = new GridLength(state.TreeHeight);
                         }
 
-                        // ãƒ„ãƒªãƒ¼ã®è¡¨ç¤ºçŠ¶æ…‹ã‚’å¾©å…ƒ
+                        // ƒcƒŠ[‚Ì•\¦ó‘Ô‚ğ•œŒ³
                         treeBorder?.Visibility = state.TreeVisible ? Visibility.Visible : Visibility.Collapsed;
 
-                        // LayoutMode ã‚’å¾©å…ƒã—ã¦ UI ã‚’æ›´æ–°
+                        // LayoutMode ‚ğ•œŒ³‚µ‚Ä UI ‚ğXV
                         layoutMode = state.LayoutMode;
                         ApplyLayoutMode();
 
-                        // èµ·å‹•æ™‚ã¯å¸¸ã«ã‚°ãƒªãƒƒãƒ‰è¡¨ç¤ºã«ã™ã‚‹
+                        // ‹N“®‚Íí‚ÉƒOƒŠƒbƒh•\¦‚É‚·‚é
                         parametersGrid?.Visibility = Visibility.Visible;
                         parametersTextBox?.Visibility = Visibility.Collapsed;
                         
@@ -2151,59 +2151,59 @@ namespace StableSatoViewer
     }
 
     /// <summary>
-    /// Steps ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’ã‚°ãƒªãƒƒãƒ‰å½¢å¼ã§è¡¨ç¤ºã™ã‚‹ãŸã‚ã®ãƒ‡ãƒ¼ã‚¿ã‚¯ãƒ©ã‚¹
+    /// Steps ƒpƒ‰ƒ[ƒ^‚ğƒOƒŠƒbƒhŒ`®‚Å•\¦‚·‚é‚½‚ß‚Ìƒf[ƒ^ƒNƒ‰ƒX
     /// </summary>
     public class StepsItem
     {
-        /// <summary>Steps ã®ã‚­ãƒ¼</summary>
+        /// <summary>Steps ‚ÌƒL[</summary>
         public string Key { get; set; } = "";
-        /// <summary>Steps ã®å€¤</summary>
+        /// <summary>Steps ‚Ì’l</summary>
         public string Value { get; set; } = "";
     }
 
     /// <summary>
-    /// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿æƒ…å ±ã‚’è¡Œå˜ä½ã§è¡¨ç¤ºã™ã‚‹ãŸã‚ã®ã‚·ãƒ³ãƒ—ãƒ«ãªãƒ‡ãƒ¼ã‚¿ã‚¯ãƒ©ã‚¹
+    /// ƒpƒ‰ƒ[ƒ^î•ñ‚ğs’PˆÊ‚Å•\¦‚·‚é‚½‚ß‚ÌƒVƒ“ƒvƒ‹‚Èƒf[ƒ^ƒNƒ‰ƒX
     /// </summary>
     public class SimpleItem
     {
-        /// <summary>ãƒ†ã‚­ã‚¹ãƒˆè¡Œã®å€¤</summary>
+        /// <summary>ƒeƒLƒXƒgs‚Ì’l</summary>
         public string Value { get; set; } = "";
     }
 
     /// <summary>
-    /// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®çŠ¶æ…‹ï¼ˆã‚µã‚¤ã‚ºã€ä½ç½®ã€ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆè¨­å®šï¼‰ã‚’ JSON ã§ä¿å­˜ãƒ»å¾©å…ƒã™ã‚‹ãŸã‚ã®ã‚¯ãƒ©ã‚¹
+    /// ƒEƒBƒ“ƒhƒE‚Ìó‘ÔiƒTƒCƒYAˆÊ’uAƒŒƒCƒAƒEƒgİ’èj‚ğ JSON ‚Å•Û‘¶E•œŒ³‚·‚é‚½‚ß‚ÌƒNƒ‰ƒX
     /// </summary>
     public class WindowStateData
     {
-        /// <summary>ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å¹…</summary>
+        /// <summary>ƒEƒBƒ“ƒhƒE‚Ì•</summary>
         public double WindowWidth { get; set; }
-        /// <summary>ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®é«˜ã•</summary>
+        /// <summary>ƒEƒBƒ“ƒhƒE‚Ì‚‚³</summary>
         public double WindowHeight { get; set; }
-        /// <summary>ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®å·¦ç«¯ä½ç½®</summary>
+        /// <summary>ƒEƒBƒ“ƒhƒE‚Ì¶’[ˆÊ’u</summary>
         public double WindowLeft { get; set; }
-        /// <summary>ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ã®ä¸Šç«¯ä½ç½®</summary>
+        /// <summary>ƒEƒBƒ“ƒhƒE‚Ìã’[ˆÊ’u</summary>
         public double WindowTop { get; set; }
-        /// <summary>ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãŒæœ€å¤§åŒ–ã•ã‚Œã¦ã„ã‚‹ã‹</summary>
+        /// <summary>ƒEƒBƒ“ƒhƒE‚ªÅ‘å‰»‚³‚ê‚Ä‚¢‚é‚©</summary>
         public bool IsMaximized { get; set; }
-        /// <summary>å…¨ç”»é¢è¡¨ç¤ºä¸­ã‹</summary>
+        /// <summary>‘S‰æ–Ê•\¦’†‚©</summary>
         public bool IsFullScreen { get; set; }
-        /// <summary>ç¾åœ¨ã®ãƒ¬ã‚¤ã‚¢ã‚¦ãƒˆãƒ¢ãƒ¼ãƒ‰ï¼ˆ0:é€šå¸¸ 1:ãƒ•ãƒ­ãƒ¼ãƒˆ 2:éè¡¨ç¤ºï¼‰</summary>
+        /// <summary>Œ»İ‚ÌƒŒƒCƒAƒEƒgƒ‚[ƒhi0:’Êí 1:ƒtƒ[ƒg 2:”ñ•\¦j</summary>
         public int LayoutMode { get; set; }
-        /// <summary>ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ã‹</summary>
+        /// <summary>ƒtƒHƒ‹ƒ_ƒcƒŠ[‚ª•\¦‚³‚ê‚Ä‚¢‚é‚©</summary>
         public bool TreeVisible { get; set; }
-        /// <summary>å³ãƒ‘ãƒãƒ«ãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ã‹</summary>
+        /// <summary>‰Eƒpƒlƒ‹‚ª•\¦‚³‚ê‚Ä‚¢‚é‚©</summary>
         public bool RightPanelVisible { get; set; }
-        /// <summary>ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚°ãƒªãƒƒãƒ‰ãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ã‹</summary>
+        /// <summary>ƒpƒ‰ƒ[ƒ^ƒOƒŠƒbƒh‚ª•\¦‚³‚ê‚Ä‚¢‚é‚©</summary>
         public bool ParametersVisible { get; set; }
-        /// <summary>ãƒã‚¬ãƒ†ã‚£ãƒ–ãƒ—ãƒ­ãƒ³ãƒ—ãƒˆã‚°ãƒªãƒƒãƒ‰ãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ã‹</summary>
+        /// <summary>ƒlƒKƒeƒBƒuƒvƒƒ“ƒvƒgƒOƒŠƒbƒh‚ª•\¦‚³‚ê‚Ä‚¢‚é‚©</summary>
         public bool NegativePromptVisible { get; set; }
-        /// <summary>Steps ã‚°ãƒªãƒƒãƒ‰ãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ã‹</summary>
+        /// <summary>Steps ƒOƒŠƒbƒh‚ª•\¦‚³‚ê‚Ä‚¢‚é‚©</summary>
         public bool StepsVisible { get; set; }
-        /// <summary>ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼åˆ—ã®å¹…</summary>
+        /// <summary>ƒtƒHƒ‹ƒ_ƒcƒŠ[—ñ‚Ì•</summary>
         public double TreeColumnWidth { get; set; }
-        /// <summary>å³ãƒ‘ãƒãƒ«åˆ—ã®å¹…</summary>
+        /// <summary>‰Eƒpƒlƒ‹—ñ‚Ì•</summary>
         public double RightPanelColumnWidth { get; set; }
-        /// <summary>ãƒ•ã‚©ãƒ«ãƒ€ãƒ„ãƒªãƒ¼ã®é«˜ã•</summary>
+        /// <summary>ƒtƒHƒ‹ƒ_ƒcƒŠ[‚Ì‚‚³</summary>
         public double TreeHeight { get; set; }
     }
 }
