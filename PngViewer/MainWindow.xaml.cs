@@ -19,6 +19,9 @@ namespace StableSatoViewer
 {
     public partial class MainWindow : Window
     {
+        // CA1861: Constant arrays extracted to static readonly fields
+        private static readonly string[] LineBreakSeparators = ["\r\n", "\n"];
+
         private string[]? pngFiles;
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
@@ -656,7 +659,7 @@ namespace StableSatoViewer
             if (!string.IsNullOrEmpty(text))
             {
                 // 改行で分割
-                string[] lines = text.Split(new[] { "\n", "\r\n" }, StringSplitOptions.None);
+                string[] lines = text.Split(LineBreakSeparators, StringSplitOptions.None);
 
                 foreach (string line in lines)
                 {
@@ -921,7 +924,7 @@ namespace StableSatoViewer
                 parametersGrid.Visibility = Visibility.Visible;
 
                 // テキストからグリッドを更新
-                var lines = parametersTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                var lines = parametersTextBox.Text.Split(LineBreakSeparators, StringSplitOptions.None);
                 var items = new ObservableCollection<SimpleItem>();
                 foreach (var line in lines)
                 {
@@ -964,7 +967,7 @@ namespace StableSatoViewer
                 negativePromptGrid.Visibility = Visibility.Visible;
 
                 // テキストからグリッドを更新
-                var lines = negativePromptTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                var lines = negativePromptTextBox.Text.Split(LineBreakSeparators, StringSplitOptions.None);
                 var items = new ObservableCollection<SimpleItem>();
                 foreach (var line in lines)
                 {
@@ -976,6 +979,7 @@ namespace StableSatoViewer
             else
             {
                 // 生テキスト表示に切り替え
+                // グリッドアイテムから生テキストを構築
                 var sb = new StringBuilder();
                 if (negativePromptGrid.ItemsSource is System.Collections.IEnumerable enumerable)
                 {
@@ -1006,7 +1010,7 @@ namespace StableSatoViewer
                 stepsGrid.Visibility = Visibility.Visible;
 
                 // テキストからグリッドを更新 - key:value ラインを解析
-                var lines = stepsTextBox.Text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                var lines = stepsTextBox.Text.Split(LineBreakSeparators, StringSplitOptions.RemoveEmptyEntries);
                 var items = new ObservableCollection<StepsItem>();
                 foreach (var line in lines)
                 {
