@@ -454,8 +454,10 @@ namespace StableSatoViewer
         /// </summary>
         private void ShowImage(string path)
         {
-            var bitmap = new BitmapImage(new Uri(path));
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            var bitmap = new BitmapImage(new Uri(path))
+            {
+                CacheOption = BitmapCacheOption.OnLoad
+            };
             bitmap.Freeze();
             imageBox.Source = bitmap;
 
@@ -662,7 +664,6 @@ namespace StableSatoViewer
             {
                 // 改行で分割
                 string[] lines = text.Split(LineBreakSeparators, StringSplitOptions.None);
-
                 foreach (string line in lines)
                 {
                     string trimmedLine = line.Trim();
@@ -1369,8 +1370,12 @@ namespace StableSatoViewer
             {
                 foreach (var d in DriveInfo.GetDrives().Where(d => d.IsReady))
                 {
-                    var ti = new TreeViewItem { Header = d.Name, Tag = d.RootDirectory.FullName };
-                    ti.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!;
+                    var ti = new TreeViewItem
+                    {
+                        Header = d.Name,
+                        Tag = d.RootDirectory.FullName,
+                        Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!
+                    };
                     ti.Items.Add(null);
                     ti.Expanded += Folder_Expanded;
                     folderTreeView.Items.Add(ti);
@@ -1395,8 +1400,12 @@ namespace StableSatoViewer
                         {
                             foreach (var sub in Directory.GetDirectories(path))
                             {
-                                var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
-                                child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!;
+                                var child = new TreeViewItem
+                                {
+                                    Header = Path.GetFileName(sub),
+                                    Tag = sub,
+                                    Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!
+                                };
                                 child.Items.Add(null);
                                 child.Expanded += Folder_Expanded;
                                 ti.Items.Add(child);
@@ -1557,8 +1566,12 @@ namespace StableSatoViewer
                             {
                                 foreach (var sub in Directory.GetDirectories(pathTag))
                                 {
-                                    var child = new TreeViewItem { Header = Path.GetFileName(sub), Tag = sub };
-                                    child.Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!;
+                                    var child = new TreeViewItem
+                                    {
+                                        Header = Path.GetFileName(sub),
+                                        Tag = sub,
+                                        Foreground = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#e0e0e0")!
+                                    };
                                     child.Items.Add(null);
                                     child.Expanded += Folder_Expanded;
                                     currentNode.Items.Add(child);
@@ -1773,8 +1786,10 @@ namespace StableSatoViewer
                     if (File.Exists(full))
                     {
                         // 選択された画像を表示し、pngFiles/currentIndex を更新してナビゲーションがクラッシュしないようにします
-                        var bitmap = new BitmapImage(new Uri(full));
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        var bitmap = new BitmapImage(new Uri(full))
+                        {
+                            CacheOption = BitmapCacheOption.OnLoad
+                        };
                         bitmap.Freeze();
                         imageBox.Source = bitmap;
                         // pngFiles は既にフィルター状態を持っているので、そのまま使用
