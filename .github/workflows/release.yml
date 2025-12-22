@@ -13,6 +13,10 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   build-and-release:
     runs-on: windows-latest
