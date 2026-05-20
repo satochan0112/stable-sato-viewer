@@ -29,11 +29,14 @@ namespace StableSatoViewer
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private List<string> favorites = [];
-        private string[]? allPngFilesInFolder; // すべてのPNGファイル（フィルター前）
+        private List<HistoryItem> history = [];
+        private string[]? allPngFilesInFolder;
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
         private static string WindowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
 
         private static string FavoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
+
+        private static string HistoryFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "history.json");
 
         public MainWindow()
         {
@@ -41,6 +44,9 @@ namespace StableSatoViewer
             // 読み込んだお気に入りに基づき UI を更新
             LoadFavorites();
             UpdateFavoritesIndicator();
+
+            // 履歴を読み込み
+            LoadHistory();
 
             // ウィンドウの状態を復元
             RestoreWindowState();
@@ -493,6 +499,9 @@ namespace StableSatoViewer
 
             // 画像が変更されたとき、お気に入り表示を更新
             UpdateFavoritesIndicator();
+
+            // 履歴に記録
+            AddToHistory(path);
 
             // 左パネルのファイル一覧を現在の画像のディレクトリで表示し、選択状態を反映する
             try
@@ -1166,6 +1175,23 @@ namespace StableSatoViewer
         }
 
         /// <summary>
+        /// 履歴ボタンクリック時のイベントハンドラ。履歴を読み込んでポップアップを表示します。
+        /// </summary>
+        private void HistoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 履歴を読み込み
+            LoadHistory();
+
+            // 履歴を新しい順にソート
+            var sortedHistory = history.OrderByDescending(h => h.OpenedAt).ToList();
+
+            // DataGrid に設定
+            historyListBox.ItemsSource = null;
+            historyListBox.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<HistoryItem>(sortedHistory);
+            historyPopup.IsOpen = true;
+        }
+
+        /// <summary>
         /// 現在表示中の画像をお気に入りに追加します。
         /// </summary>
         private void AddFavoriteButton_Click(object sender, RoutedEventArgs e)
@@ -1248,6 +1274,37 @@ namespace StableSatoViewer
         }
 
         /// <summary>
+        /// 履歴リストの項目をダブルクリックしたとき、その画像を表示します。
+        /// </summary>
+        private void HistoryListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (historyListBox.SelectedItem is HistoryItem historyItem)
+            {
+                if (File.Exists(historyItem.FilePath))
+                {
+                    string dir = Path.GetDirectoryName(historyItem.FilePath)!;
+                    pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                    allPngFilesInFolder = pngFiles;
+
+                    // ファイルリストを更新（ShowImage前に更新する必要があります）
+                    folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    folderFilesListBox.Tag = dir;
+
+                    currentIndex = Array.IndexOf(pngFiles, historyItem.FilePath);
+                    if (currentIndex < 0) currentIndex = 0;
+                    ShowImage(pngFiles[currentIndex]);
+                    historyPopup.IsOpen = false;
+                    // フォルダツリーで当該フォルダを選択
+                    SelectFolderInTree(dir);
+                }
+                else
+                {
+                    ShowToast("History image not found");
+                }
+            }
+        }
+
+        /// <summary>
         /// お気に入りリストを設定ファイルに保存します。
         /// </summary>
         private void SaveFavorites()
@@ -1283,6 +1340,83 @@ namespace StableSatoViewer
             catch
             {
                 favorites = [];
+            }
+        }
+
+        /// <summary>
+        /// すべての履歴をクリアします。
+        /// </summary>
+        private void ClearAllHistoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            history.Clear();
+            SaveHistory();
+            historyListBox.ItemsSource = null;
+            ShowToast("All history cleared");
+        }
+
+        /// <summary>
+        /// 設定ファイルから履歴リストを読み込みます。
+        /// </summary>
+        private void LoadHistory()
+        {
+            try
+            {
+                if (File.Exists(HistoryFilePath))
+                {
+                    var json = File.ReadAllText(HistoryFilePath, Encoding.UTF8);
+                    history = System.Text.Json.JsonSerializer.Deserialize<List<HistoryItem>>(json, JsonSerializerOptions) ?? [];
+                }
+                else
+                {
+                    history = [];
+                }
+            }
+            catch
+            {
+                history = [];
+            }
+        }
+
+        /// <summary>
+        /// 履歴リストを設定ファイルに保存します。
+        /// </summary>
+        private void SaveHistory()
+        {
+            try
+            {
+                var dir = Path.GetDirectoryName(HistoryFilePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                var json = System.Text.Json.JsonSerializer.Serialize(history, JsonSerializerOptions);
+                File.WriteAllText(HistoryFilePath, json, Encoding.UTF8);
+            }
+            catch
+            {
+                // エラーは無視
+            }
+        }
+
+        /// <summary>
+        /// 画像を履歴に追加します。同じ画像でも毎回新しいエントリとして記録します。
+        /// </summary>
+        private void AddToHistory(string filePath)
+        {
+            try
+            {
+                LoadHistory();
+
+                // 新しいエントリを追加（重複を許可）
+                history.Add(new HistoryItem
+                {
+                    FilePath = filePath,
+                    FileName = System.IO.Path.GetFileName(filePath),
+                    OpenedAt = DateTime.Now
+                });
+
+                SaveHistory();
+            }
+            catch
+            {
+                // エラーは無視
             }
         }
 
@@ -2191,6 +2325,21 @@ namespace StableSatoViewer
     {
         /// <summary>テキスト行の値</summary>
         public string Value { get; set; } = "";
+    }
+
+    /// <summary>
+    /// 開いた画像の履歴を記録するためのデータクラス
+    /// </summary>
+    public class HistoryItem
+    {
+        /// <summary>画像ファイルのフルパス</summary>
+        public string FilePath { get; set; } = "";
+        /// <summary>ファイル名（表示用）</summary>
+        public string FileName { get; set; } = "";
+        /// <summary>開いた日時</summary>
+        public DateTime OpenedAt { get; set; }
+        /// <summary>開いた日時の文字列表現（表示用）</summary>
+        public string OpenedAtString => OpenedAt.ToString("yyyy/MM/dd HH:mm:ss");
     }
 
     /// <summary>

@@ -80,10 +80,16 @@
 
             <!-- フロート表示ボタン -->
             <!-- 右上のフローティングコントロール（画像領域を覆わないよう領域を限定） -->
-            <Canvas Grid.Column="2" Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="213" Height="56" Margin="0,10,10,0">
+            <Canvas Grid.Column="2" Background="Transparent" IsHitTestVisible="True" Panel.ZIndex="3000" HorizontalAlignment="Right" VerticalAlignment="Top" Width="259" Height="56" Margin="0,10,10,0">
+                <!-- 履歴ボタン（時計アイコン） -->
+                <Button x:Name="historyButton" Content="&#xE81C;" Width="36" Height="36"
+                        Canvas.Left="16" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
+                        Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
+                        FontSize="16" Cursor="Hand" Click="HistoryButton_Click" ToolTip="History" />
+
                 <!-- お気に入りボタン（★） -->
                 <Button x:Name="favoritesButton" Content="&#xE734;" Width="36" Height="36"
-                        Canvas.Left="70" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
+                        Canvas.Left="62" Canvas.Top="10" FontFamily="Segoe MDL2 Assets"
                         Background="#2d2d2d" Foreground="#ffffff" BorderThickness="0"
                         FontSize="16" Cursor="Hand" Click="FavoritesButton_Click" ToolTip="Favorites" />
 
@@ -175,6 +181,81 @@
                                     <Button x:Name="editFavoritesButton" Content="ブックマークの編集" Click="EditFavoritesButton_Click"/>
                                 </StackPanel>
                                 <ListBox x:Name="favoritesListBox" Grid.Row="1" Background="#1e1e1e" Foreground="#e0e0e0" BorderThickness="0" MouseDoubleClick="FavoritesListBox_MouseDoubleClick"/>
+                            </Grid>
+                        </Border>
+                    </Popup>
+
+                    <!-- 履歴ポップアップ -->
+                    <Popup x:Name="historyPopup" PlacementTarget="{Binding ElementName=historyButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                        <Border Background="#2d2d2d" BorderBrush="#404040" BorderThickness="1" CornerRadius="4" Padding="6" Width="520" Height="320">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Left" Margin="0,0,0,6">
+                                    <Button x:Name="clearAllHistoryButton" Content="履歴をすべてクリア" Margin="0,0,6,0" Click="ClearAllHistoryButton_Click"/>
+                                </StackPanel>
+                                <DataGrid x:Name="historyListBox" Grid.Row="1" Background="#1e1e1e" Foreground="#ffffff" 
+                                          BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
+                                          CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                                          CanUserSortColumns="False" MouseDoubleClick="HistoryListBox_MouseDoubleClick"
+                                          HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040">
+                                    <DataGrid.Resources>
+                                        <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#ffffff" />
+                                        <Style TargetType="DataGridRow">
+                                            <Setter Property="Background" Value="#1e1e1e"/>
+                                            <Setter Property="Foreground" Value="#ffffff"/>
+                                            <Setter Property="MinHeight" Value="28"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#404040"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#505050"/>
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="#404040"/>
+                                            <Setter Property="Foreground" Value="#ffffff"/>
+                                            <Setter Property="Padding" Value="5"/>
+                                            <Setter Property="BorderBrush" Value="#505050"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                        </Style>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Padding" Value="5,3,5,3"/>
+                                            <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.Resources>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="開いた日時" Binding="{Binding OpenedAtString}" Width="150" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#a0c0ff"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </Grid>
                         </Border>
                     </Popup>
