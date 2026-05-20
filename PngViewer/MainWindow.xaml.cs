@@ -1551,6 +1551,40 @@ namespace StableSatoViewer
         }
 
         /// <summary>
+        /// 履歴リストの削除ボタンがクリックされたとき、その履歴を削除します。
+        /// </summary>
+        private void HistoryListBox_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // クリックされた要素を取得
+            var hitTestResult = VisualTreeHelper.HitTest(historyListBox, e.GetPosition(historyListBox));
+            if (hitTestResult?.VisualHit == null) return;
+
+            // クリックされたのがボタンかどうかを確認
+            var button = FindVisualParent<System.Windows.Controls.Button>(hitTestResult.VisualHit);
+            if (button == null) return;
+
+            // ボタンの内容が "✕" かどうかを確認
+            if (button.Content?.ToString() != "✕") return;
+
+            // ボタンが属する行を取得
+            var row = FindVisualParent<DataGridRow>(button);
+            if (row?.Item is HistoryItem item)
+            {
+                history.Remove(item);
+                SaveHistory();
+
+                // DataGrid を更新
+                if (historyListBox.ItemsSource is System.Collections.ObjectModel.ObservableCollection<HistoryItem> collection)
+                {
+                    collection.Remove(item);
+                }
+
+                ShowToast("履歴から削除しました");
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
         /// お気に入りリストを設定ファイルに保存します。
         /// </summary>
         private void SaveFavorites()
@@ -1652,13 +1686,24 @@ namespace StableSatoViewer
             {
                 LoadHistory();
 
-                // 新しいエントリを追加（重複を許可）
-                history.Add(new HistoryItem
+                // 最新の履歴1行が同じファイルかどうかを確認
+                var latestItem = history.OrderByDescending(h => h.OpenedAt).FirstOrDefault();
+
+                if (latestItem != null && latestItem.FilePath == filePath)
                 {
-                    FilePath = filePath,
-                    FileName = System.IO.Path.GetFileName(filePath),
-                    OpenedAt = DateTime.Now
-                });
+                    // 最新の履歴が同じファイルの場合は、開いた日時のみ更新
+                    latestItem.OpenedAt = DateTime.Now;
+                }
+                else
+                {
+                    // それ以外は新しいエントリを追加（重複を許可）
+                    history.Add(new HistoryItem
+                    {
+                        FilePath = filePath,
+                        FileName = System.IO.Path.GetFileName(filePath),
+                        OpenedAt = DateTime.Now
+                    });
+                }
 
                 SaveHistory();
 
