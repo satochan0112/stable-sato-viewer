@@ -1570,13 +1570,19 @@ namespace StableSatoViewer
             var row = FindVisualParent<DataGridRow>(button);
             if (row?.Item is HistoryItem item)
             {
-                history.Remove(item);
-                SaveHistory();
-
-                // DataGrid を更新
+                // UI の ObservableCollection から削除
                 if (historyListBox.ItemsSource is System.Collections.ObjectModel.ObservableCollection<HistoryItem> collection)
                 {
                     collection.Remove(item);
+                }
+
+                // メモリ上の history リストからも削除（ファイルパスで検索して削除）
+                LoadHistory();  // 最新の状態を読み込む
+                var itemToRemove = history.FirstOrDefault(h => h.FilePath == item.FilePath && h.OpenedAt == item.OpenedAt);
+                if (itemToRemove != null)
+                {
+                    history.Remove(itemToRemove);
+                    SaveHistory();  // ファイルに保存
                 }
 
                 ShowToast("履歴から削除しました");
