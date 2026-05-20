@@ -1370,24 +1370,54 @@ namespace StableSatoViewer
 
             // クリックされたのがボタンかどうかを確認
             var button = FindVisualParent<System.Windows.Controls.Button>(hitTestResult.VisualHit);
-            if (button == null) return;
 
-            // ボタンの内容が "✕" かどうかを確認
-            if (button.Content?.ToString() != "✕") return;
-
-            // ボタンが属する行を取得
-            var row = FindVisualParent<DataGridRow>(button);
-            if (row?.Item is FavoriteItem item)
+            if (button != null && button.Content?.ToString() == "✕")
             {
-                favorites.Remove(item);
-                SaveFavorites();
-                if (favoritesCollection != null)
+                // 削除ボタンがクリックされた場合
+                var row = FindVisualParent<DataGridRow>(button);
+                if (row?.Item is FavoriteItem item)
                 {
-                    favoritesCollection.Remove(item);
+                    favorites.Remove(item);
+                    SaveFavorites();
+                    if (favoritesCollection != null)
+                    {
+                        favoritesCollection.Remove(item);
+                    }
+                    ShowToast("お気に入りから削除しました");
+                    UpdateFavoritesIndicator();
+                    e.Handled = true;
                 }
-                ShowToast("Favorite removed");
-                UpdateFavoritesIndicator();
-                e.Handled = true;
+            }
+            else
+            {
+                // 削除ボタン以外がクリックされた場合、その行の項目を開く
+                var row = FindVisualParent<DataGridRow>(hitTestResult.VisualHit);
+                if (row?.Item is FavoriteItem favoriteItem)
+                {
+                    if (File.Exists(favoriteItem.FilePath))
+                    {
+                        string dir = Path.GetDirectoryName(favoriteItem.FilePath)!;
+                        pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                        allPngFilesInFolder = pngFiles;
+
+                        // ファイルリストを更新（ShowImage前に更新する必要があります）
+                        folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                        folderFilesListBox.Tag = dir;
+
+                        currentIndex = Array.IndexOf(pngFiles, favoriteItem.FilePath);
+                        if (currentIndex < 0) currentIndex = 0;
+                        ShowImage(pngFiles[currentIndex]);
+                        favoritesPopup.IsOpen = false;
+                        isSelectingFromFavorites = true;
+                        SelectFolderInTree(dir);
+                        isSelectingFromFavorites = false;
+                    }
+                    else
+                    {
+                        ShowToast("ファイルが見つかりません");
+                    }
+                    e.Handled = true;
+                }
             }
         }
 
@@ -1561,32 +1591,62 @@ namespace StableSatoViewer
 
             // クリックされたのがボタンかどうかを確認
             var button = FindVisualParent<System.Windows.Controls.Button>(hitTestResult.VisualHit);
-            if (button == null) return;
 
-            // ボタンの内容が "✕" かどうかを確認
-            if (button.Content?.ToString() != "✕") return;
-
-            // ボタンが属する行を取得
-            var row = FindVisualParent<DataGridRow>(button);
-            if (row?.Item is HistoryItem item)
+            if (button != null && button.Content?.ToString() == "✕")
             {
-                // UI の ObservableCollection から削除
-                if (historyListBox.ItemsSource is System.Collections.ObjectModel.ObservableCollection<HistoryItem> collection)
+                // 削除ボタンがクリックされた場合
+                var row = FindVisualParent<DataGridRow>(button);
+                if (row?.Item is HistoryItem item)
                 {
-                    collection.Remove(item);
-                }
+                    // UI の ObservableCollection から削除
+                    if (historyListBox.ItemsSource is System.Collections.ObjectModel.ObservableCollection<HistoryItem> collection)
+                    {
+                        collection.Remove(item);
+                    }
 
-                // メモリ上の history リストからも削除（ファイルパスで検索して削除）
-                LoadHistory();  // 最新の状態を読み込む
-                var itemToRemove = history.FirstOrDefault(h => h.FilePath == item.FilePath && h.OpenedAt == item.OpenedAt);
-                if (itemToRemove != null)
+                    // メモリ上の history リストからも削除（ファイルパスで検索して削除）
+                    LoadHistory();  // 最新の状態を読み込む
+                    var itemToRemove = history.FirstOrDefault(h => h.FilePath == item.FilePath && h.OpenedAt == item.OpenedAt);
+                    if (itemToRemove != null)
+                    {
+                        history.Remove(itemToRemove);
+                        SaveHistory();  // ファイルに保存
+                    }
+
+                    ShowToast("履歴から削除しました");
+                    e.Handled = true;
+                }
+            }
+            else
+            {
+                // 削除ボタン以外がクリックされた場合、その行の項目を開く
+                var row = FindVisualParent<DataGridRow>(hitTestResult.VisualHit);
+                if (row?.Item is HistoryItem historyItem)
                 {
-                    history.Remove(itemToRemove);
-                    SaveHistory();  // ファイルに保存
-                }
+                    if (File.Exists(historyItem.FilePath))
+                    {
+                        string dir = Path.GetDirectoryName(historyItem.FilePath)!;
+                        pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                        allPngFilesInFolder = pngFiles;
 
-                ShowToast("履歴から削除しました");
-                e.Handled = true;
+                        // ファイルリストを更新（ShowImage前に更新する必要があります）
+                        folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                        folderFilesListBox.Tag = dir;
+
+                        currentIndex = Array.IndexOf(pngFiles, historyItem.FilePath);
+                        if (currentIndex < 0) currentIndex = 0;
+                        ShowImage(pngFiles[currentIndex]);
+                        historyPopup.IsOpen = false;
+                        isSelectingFromFavorites = true;
+                        SelectFolderInTree(dir);
+                        isSelectingFromFavorites = false;
+                    }
+                    else
+                    {
+                        ShowToast("ファイルが見つかりません");
+                    }
+                    e.Handled = true;
+                }
             }
         }
 

@@ -184,13 +184,14 @@
                                           BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
                                           CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
                                           CanUserSortColumns="False" HeadersVisibility="Column"
-                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#303030" VerticalScrollBarVisibility="Auto" MouseDoubleClick="FavoritesListBox_MouseDoubleClick" PreviewMouseLeftButtonDown="FavoritesListBox_PreviewMouseLeftButtonDown">
+                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#303030" VerticalScrollBarVisibility="Auto" PreviewMouseLeftButtonDown="FavoritesListBox_PreviewMouseLeftButtonDown">
                                     <DataGrid.Resources>
                                         <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#ffffff" />
                                         <Style TargetType="DataGridRow">
                                             <Setter Property="Background" Value="Transparent"/>
                                             <Setter Property="Foreground" Value="#ffffff"/>
                                             <Setter Property="MinHeight" Value="70"/>
+                                            <Setter Property="Cursor" Value="Hand"/>
                                             <Style.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter Property="Background" Value="#303030"/>
@@ -276,8 +277,7 @@
                                 <DataGrid x:Name="historyListBox" Grid.Row="1" Background="#1e1e1e" Foreground="#ffffff" 
                                           BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
                                           CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
-                                          CanUserSortColumns="False" MouseDoubleClick="HistoryListBox_MouseDoubleClick"
-                                          PreviewMouseLeftButtonDown="HistoryListBox_PreviewMouseLeftButtonDown"
+                                          CanUserSortColumns="False" PreviewMouseLeftButtonDown="HistoryListBox_PreviewMouseLeftButtonDown"
                                           HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#404040">
                                     <DataGrid.Resources>
                                         <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#ffffff" />
@@ -285,6 +285,7 @@
                                             <Setter Property="Background" Value="#1e1e1e"/>
                                             <Setter Property="Foreground" Value="#ffffff"/>
                                             <Setter Property="MinHeight" Value="28"/>
+                                            <Setter Property="Cursor" Value="Hand"/>
                                             <Style.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter Property="Background" Value="#404040"/>
