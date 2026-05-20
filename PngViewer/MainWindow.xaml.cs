@@ -261,7 +261,7 @@ namespace StableSatoViewer
                         $"Are you sure you want to delete '{fileName}'?",
                         "Delete Image",
                         System.Windows.MessageBoxButton.YesNo,
-                        System.Windows.MessageBoxImage.Warning
+                        System.Windows.MessageBoxImage.None
                     );
 
                     if (result == System.Windows.MessageBoxResult.Yes)
