@@ -1227,6 +1227,12 @@ namespace StableSatoViewer
                 {
                     string dir = Path.GetDirectoryName(path)!;
                     pngFiles = Directory.GetFiles(dir, "*.png").OrderBy(f => f).ToArray();
+                    allPngFilesInFolder = pngFiles;
+                    
+                    // ファイルリストを更新（ShowImage前に更新する必要があります）
+                    folderFilesListBox.ItemsSource = pngFiles.Select(f => System.IO.Path.GetFileName(f)).ToList();
+                    folderFilesListBox.Tag = dir;
+                    
                     currentIndex = Array.IndexOf(pngFiles, path);
                     if (currentIndex < 0) currentIndex = 0;
                     ShowImage(pngFiles[currentIndex]);
