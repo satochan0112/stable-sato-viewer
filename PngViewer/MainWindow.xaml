@@ -238,6 +238,15 @@
                                         </Style>
                                     </DataGrid.Resources>
                                     <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="サムネイル" Width="70" IsReadOnly="True">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="#505050" BorderThickness="1" CornerRadius="2" Background="#1e1e1e" Padding="2">
+                                                        <Image Source="{Binding ThumbnailImage}" Stretch="Uniform" Width="64" Height="64"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                         <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="*" IsReadOnly="True">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">

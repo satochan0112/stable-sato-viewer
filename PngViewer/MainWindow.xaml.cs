@@ -30,6 +30,7 @@ namespace StableSatoViewer
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private List<string> favorites = [];
         private List<HistoryItem> history = [];
+        private Dictionary<string, System.Windows.Media.ImageSource?> thumbnailMemoryCache = [];
         private string[]? allPngFilesInFolder;
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
         private static string WindowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
@@ -37,6 +38,8 @@ namespace StableSatoViewer
         private static string FavoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
 
         private static string HistoryFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "history.json");
+
+        private static string ThumbnailCacheDirPath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "ThumbnailCache");
 
         public MainWindow()
         {
@@ -1177,7 +1180,7 @@ namespace StableSatoViewer
         /// <summary>
         /// 履歴ボタンクリック時のイベントハンドラ。履歴を読み込んでポップアップを表示します。
         /// </summary>
-        private void HistoryButton_Click(object sender, RoutedEventArgs e)
+        private async void HistoryButton_Click(object sender, RoutedEventArgs e)
         {
             // 履歴を読み込み
             LoadHistory();
@@ -1189,6 +1192,32 @@ namespace StableSatoViewer
             historyListBox.ItemsSource = null;
             historyListBox.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<HistoryItem>(sortedHistory);
             historyPopup.IsOpen = true;
+
+            await Task.Run(() =>
+            {
+                foreach (var item in sortedHistory)
+                {
+                    if (item.ThumbnailImage == null && !string.IsNullOrEmpty(item.FilePath))
+                    {
+                        if (!thumbnailMemoryCache.TryGetValue(item.FilePath, out var cached))
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                cached = GetOrGenerateThumbnail(item.FilePath);
+                                thumbnailMemoryCache[item.FilePath] = cached;
+                                item.ThumbnailImage = cached;
+                            });
+                        }
+                        else
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                item.ThumbnailImage = cached;
+                            });
+                        }
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -1229,6 +1258,75 @@ namespace StableSatoViewer
             favoritesListBox.ItemsSource = null;
             ShowToast("All favorites removed");
             UpdateFavoritesIndicator();
+        }
+
+        private System.Windows.Media.ImageSource? GetOrGenerateThumbnail(string imagePath)
+        {
+            try
+            {
+                if (!File.Exists(imagePath))
+                    return null;
+
+                if (!Directory.Exists(ThumbnailCacheDirPath))
+                    Directory.CreateDirectory(ThumbnailCacheDirPath);
+
+                string cacheFileName = System.Security.Cryptography.MD5.HashData(System.Text.Encoding.UTF8.GetBytes(imagePath)).Aggregate("", (s, b) => s + b.ToString("x2")) + ".png";
+                string cachePath = Path.Combine(ThumbnailCacheDirPath, cacheFileName);
+
+                if (File.Exists(cachePath))
+                {
+                    return CreateBitmapImage(cachePath);
+                }
+
+                var originalBitmap = CreateBitmapImage(imagePath);
+                if (originalBitmap == null)
+                    return null;
+
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create((BitmapSource)originalBitmap));
+
+                using (var fileStream = new FileStream(cachePath, FileMode.Create))
+                {
+                    encoder.Save(fileStream);
+                }
+
+                return originalBitmap;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private System.Windows.Media.ImageSource? CreateBitmapImage(string imagePath)
+        {
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(imagePath);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.DecodePixelWidth = 64;
+                bitmap.DecodePixelHeight = 64;
+                bitmap.EndInit();
+                return bitmap;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private System.Windows.Media.ImageSource? GetCachedThumbnail(string imagePath)
+        {
+            if (thumbnailMemoryCache.TryGetValue(imagePath, out var cached))
+            {
+                return cached;
+            }
+
+            var thumbnail = GetOrGenerateThumbnail(imagePath);
+            thumbnailMemoryCache[imagePath] = thumbnail;
+            return thumbnail;
         }
 
         /// <summary>
@@ -1413,6 +1511,32 @@ namespace StableSatoViewer
                 });
 
                 SaveHistory();
+
+                Task.Run(() =>
+                {
+                    if (!thumbnailMemoryCache.TryGetValue(filePath, out var cached))
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            cached = GetOrGenerateThumbnail(filePath);
+                            thumbnailMemoryCache[filePath] = cached;
+                            if (history.FirstOrDefault(h => h.FilePath == filePath) is HistoryItem item)
+                            {
+                                item.ThumbnailImage = cached;
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            if (history.FirstOrDefault(h => h.FilePath == filePath) is HistoryItem item)
+                            {
+                                item.ThumbnailImage = cached;
+                            }
+                        });
+                    }
+                });
             }
             catch
             {
@@ -2330,8 +2454,10 @@ namespace StableSatoViewer
     /// <summary>
     /// 開いた画像の履歴を記録するためのデータクラス
     /// </summary>
-    public class HistoryItem
+    public class HistoryItem : System.ComponentModel.INotifyPropertyChanged
     {
+        private System.Windows.Media.ImageSource? _thumbnailImage;
+
         /// <summary>画像ファイルのフルパス</summary>
         public string FilePath { get; set; } = "";
         /// <summary>ファイル名（表示用）</summary>
@@ -2340,7 +2466,23 @@ namespace StableSatoViewer
         public DateTime OpenedAt { get; set; }
         /// <summary>開いた日時の文字列表現（表示用）</summary>
         public string OpenedAtString => OpenedAt.ToString("yyyy/MM/dd HH:mm:ss");
+        /// <summary>サムネイル画像（バインド用）</summary>
+        public System.Windows.Media.ImageSource? ThumbnailImage 
+        { 
+            get => _thumbnailImage;
+            set
+            {
+                if (_thumbnailImage != value)
+                {
+                    _thumbnailImage = value;
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(ThumbnailImage)));
+                }
+            }
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
     }
+
 
     /// <summary>
     /// ウィンドウの状態（サイズ、位置、レイアウト設定）を JSON で保存・復元するためのクラス
