@@ -28,7 +28,7 @@ namespace StableSatoViewer
         private string[]? pngFiles;
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
-        private List<string> favorites = [];
+        private List<FavoriteItem> favorites = [];
         private List<HistoryItem> history = [];
         private Dictionary<string, System.Windows.Media.ImageSource?> thumbnailMemoryCache = [];
         private string[]? allPngFilesInFolder;
@@ -1168,13 +1168,39 @@ namespace StableSatoViewer
         /// <summary>
         /// お気に入りポップアップを表示します。
         /// </summary>
-        private void FavoritesButton_Click(object sender, RoutedEventArgs e)
+        private async void FavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            // お気に入りを読み込む
             LoadFavorites();
             favoritesListBox.ItemsSource = null;
-            favoritesListBox.ItemsSource = favorites;
+            var collection = new System.Collections.ObjectModel.ObservableCollection<FavoriteItem>(favorites);
+            favoritesListBox.ItemsSource = collection;
             favoritesPopup.IsOpen = true;
+
+            await Task.Run(() =>
+            {
+                foreach (var item in collection)
+                {
+                    if (item.ThumbnailImage == null && !string.IsNullOrEmpty(item.FilePath))
+                    {
+                        if (!thumbnailMemoryCache.TryGetValue(item.FilePath, out var cached))
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                cached = GetOrGenerateThumbnail(item.FilePath);
+                                thumbnailMemoryCache[item.FilePath] = cached;
+                                item.ThumbnailImage = cached;
+                            });
+                        }
+                        else
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                item.ThumbnailImage = cached;
+                            });
+                        }
+                    }
+                }
+            });
         }
 
         /// <summary>
@@ -1228,14 +1254,39 @@ namespace StableSatoViewer
             if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
             {
                 var path = bm.UriSource.LocalPath;
-                if (!favorites.Contains(path))
+                if (!favorites.Any(f => f.FilePath == path))
                 {
-                    favorites.Add(path);
+                    var newFavorite = new FavoriteItem
+                    {
+                        FilePath = path,
+                        FileName = System.IO.Path.GetFileName(path)
+                    };
+                    favorites.Add(newFavorite);
                     SaveFavorites();
                     favoritesListBox.ItemsSource = null;
-                    favoritesListBox.ItemsSource = favorites;
+                    favoritesListBox.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<FavoriteItem>(favorites);
                     ShowToast("Added to favorites");
                     UpdateFavoritesIndicator();
+
+                    Task.Run(() =>
+                    {
+                        if (!thumbnailMemoryCache.TryGetValue(path, out var cached))
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                cached = GetOrGenerateThumbnail(path);
+                                thumbnailMemoryCache[path] = cached;
+                                newFavorite.ThumbnailImage = cached;
+                            });
+                        }
+                        else
+                        {
+                            Dispatcher.Invoke(() =>
+                            {
+                                newFavorite.ThumbnailImage = cached;
+                            });
+                        }
+                    });
                 }
                 else
                 {
@@ -1344,8 +1395,9 @@ namespace StableSatoViewer
         /// </summary>
         private void FavoritesListBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (favoritesListBox.SelectedItem is string path)
+            if (favoritesListBox.SelectedItem is FavoriteItem item && !string.IsNullOrEmpty(item.FilePath))
             {
+                var path = item.FilePath;
                 if (File.Exists(path))
                 {
                     string dir = Path.GetDirectoryName(path)!;
@@ -1410,11 +1462,11 @@ namespace StableSatoViewer
             {
                 var dir = Path.GetDirectoryName(FavoritesFilePath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                File.WriteAllLines(FavoritesFilePath, favorites, Encoding.UTF8);
+                var json = System.Text.Json.JsonSerializer.Serialize(favorites, JsonSerializerOptions);
+                File.WriteAllText(FavoritesFilePath, json, Encoding.UTF8);
             }
             catch
             {
-                // 無視
             }
         }
 
@@ -1427,7 +1479,8 @@ namespace StableSatoViewer
             {
                 if (File.Exists(FavoritesFilePath))
                 {
-                    favorites = File.ReadAllLines(FavoritesFilePath, Encoding.UTF8).Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+                    var json = File.ReadAllText(FavoritesFilePath, Encoding.UTF8);
+                    favorites = System.Text.Json.JsonSerializer.Deserialize<List<FavoriteItem>>(json, JsonSerializerOptions) ?? [];
                 }
                 else
                 {
@@ -1553,7 +1606,7 @@ namespace StableSatoViewer
                 if (favoritesButton == null) return;
                 if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
                 {
-                    if (favorites.Contains(bm.UriSource.LocalPath))
+                    if (favorites.Any(f => f.FilePath == bm.UriSource.LocalPath))
                     {
                         favoritesButton.Background = (System.Windows.Media.Brush)new System.Windows.Media.BrushConverter().ConvertFromString("#60a0ff")!;
                         favoritesButton.Foreground = System.Windows.Media.Brushes.White;
@@ -2466,6 +2519,28 @@ namespace StableSatoViewer
         /// <summary>開いた日時の文字列表現（表示用）</summary>
         public string OpenedAtString => OpenedAt.ToString("yyyy/MM/dd HH:mm:ss");
         /// <summary>サムネイル画像（バインド用）</summary>
+        public System.Windows.Media.ImageSource? ThumbnailImage 
+        { 
+            get => _thumbnailImage;
+            set
+            {
+                if (_thumbnailImage != value)
+                {
+                    _thumbnailImage = value;
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(ThumbnailImage)));
+                }
+            }
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    }
+
+    public class FavoriteItem : System.ComponentModel.INotifyPropertyChanged
+    {
+        private System.Windows.Media.ImageSource? _thumbnailImage;
+
+        public string FilePath { get; set; } = "";
+        public string FileName { get; set; } = "";
         public System.Windows.Media.ImageSource? ThumbnailImage 
         { 
             get => _thumbnailImage;

@@ -180,7 +180,67 @@
                                     <Button x:Name="removeAllFavoritesButton" Content="すべてのブックマークを削除" Margin="0,0,6,0" Click="RemoveAllFavoritesButton_Click"/>
                                     <Button x:Name="editFavoritesButton" Content="ブックマークの編集" Click="EditFavoritesButton_Click"/>
                                 </StackPanel>
-                                <ListBox x:Name="favoritesListBox" Grid.Row="1" Background="#1e1e1e" Foreground="#e0e0e0" BorderThickness="0" MouseDoubleClick="FavoritesListBox_MouseDoubleClick"/>
+                                <DataGrid x:Name="favoritesListBox" Grid.Row="1" Background="#1e1e1e" Foreground="#ffffff" 
+                                          BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
+                                          CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                                          CanUserSortColumns="False" HeadersVisibility="Column"
+                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#303030" VerticalScrollBarVisibility="Auto" MouseDoubleClick="FavoritesListBox_MouseDoubleClick">
+                                    <DataGrid.Resources>
+                                        <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#ffffff" />
+                                        <Style TargetType="DataGridRow">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="Foreground" Value="#ffffff"/>
+                                            <Setter Property="MinHeight" Value="70"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter Property="Background" Value="#303030"/>
+                                                </Trigger>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="#404040"/>
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                        <Style TargetType="DataGridColumnHeader">
+                                            <Setter Property="Background" Value="#404040"/>
+                                            <Setter Property="Foreground" Value="#ffffff"/>
+                                            <Setter Property="Padding" Value="5"/>
+                                            <Setter Property="BorderBrush" Value="#505050"/>
+                                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                        </Style>
+                                        <Style TargetType="DataGridCell">
+                                            <Setter Property="Background" Value="Transparent"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Padding" Value="5,3,5,3"/>
+                                            <Setter Property="VerticalAlignment" Value="Stretch"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="IsSelected" Value="True">
+                                                    <Setter Property="Background" Value="Transparent"/>
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.Resources>
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="サムネイル" Width="70" IsReadOnly="True">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Border BorderBrush="#505050" BorderThickness="1" CornerRadius="2" Background="#1e1e1e" Padding="2" MaxWidth="64" MaxHeight="64" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Image Source="{Binding ThumbnailImage}" Stretch="Uniform"/>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="ファイル名" Binding="{Binding FileName}" Width="*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </Grid>
                         </Border>
                     </Popup>
