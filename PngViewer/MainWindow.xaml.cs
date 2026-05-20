@@ -29,6 +29,7 @@ namespace StableSatoViewer
         private int currentIndex = 0;
         private int layoutMode = 0; // 0: 通常（左画像+右パネル）, 1: フロート（画像最大化+プロンプトフロート）, 2: 非表示（画像のみ）
         private List<FavoriteItem> favorites = [];
+        private System.Collections.ObjectModel.ObservableCollection<FavoriteItem>? favoritesCollection;
         private List<HistoryItem> history = [];
         private Dictionary<string, System.Windows.Media.ImageSource?> thumbnailMemoryCache = [];
         private string[]? allPngFilesInFolder;
@@ -1171,15 +1172,15 @@ namespace StableSatoViewer
         /// </summary>
         private async void FavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            LoadFavorites();
-            favoritesListBox.ItemsSource = null;
-            var collection = new System.Collections.ObjectModel.ObservableCollection<FavoriteItem>(favorites);
-            favoritesListBox.ItemsSource = collection;
+            // favoritesCollection を常に最新の favorites リストで再初期化し、登録日時の降順でソート
+            var sortedFavorites = favorites.OrderByDescending(f => f.AddedAt).ToList();
+            favoritesCollection = new System.Collections.ObjectModel.ObservableCollection<FavoriteItem>(sortedFavorites);
+            favoritesListBox.ItemsSource = favoritesCollection;
             favoritesPopup.IsOpen = true;
 
             await Task.Run(() =>
             {
-                foreach (var item in collection)
+                foreach (var item in favoritesCollection)
                 {
                     if (item.ThumbnailImage == null && !string.IsNullOrEmpty(item.FilePath))
                     {
@@ -1248,27 +1249,55 @@ namespace StableSatoViewer
         }
 
         /// <summary>
+        /// お気に入りボタンパネルのマウスアップイベント
+        /// </summary>
+        private void ButtonsPanel_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.OriginalSource is System.Windows.Controls.Button button && button.Tag is string tag)
+            {
+                if (tag == "add")
+                {
+                    AddFavoriteButton_Click(button, e);
+                }
+                else if (tag == "removeAll")
+                {
+                    RemoveAllFavoritesButton_Click(button, e);
+                }
+            }
+        }
+
+        /// <summary>
         /// 現在表示中の画像をお気に入りに追加します。
         /// </summary>
         private void AddFavoriteButton_Click(object sender, RoutedEventArgs e)
         {
+            ShowToast("お気に入りに追加しました");
+            e.Handled = true;
+
             if (imageBox?.Source is BitmapImage bm && bm.UriSource != null)
             {
                 var path = bm.UriSource.LocalPath;
+
                 if (!favorites.Any(f => f.FilePath == path))
                 {
                     var newFavorite = new FavoriteItem
                     {
                         FilePath = path,
-                        FileName = System.IO.Path.GetFileName(path)
+                        FileName = System.IO.Path.GetFileName(path),
+                        AddedAt = DateTime.Now
                     };
                     favorites.Add(newFavorite);
                     SaveFavorites();
-                    favoritesListBox.ItemsSource = null;
-                    favoritesListBox.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<FavoriteItem>(favorites);
-                    ShowToast("Added to favorites");
+
+                    // UI スレッドで安全に Collection を更新（降順なので先頭に追加）
+                    if (favoritesCollection != null)
+                    {
+                        favoritesCollection.Insert(0, newFavorite);
+                    }
+
                     UpdateFavoritesIndicator();
 
+                    // サムネイル生成を非同期で実行
                     Task.Run(() =>
                     {
                         if (!thumbnailMemoryCache.TryGetValue(path, out var cached))
@@ -1291,12 +1320,12 @@ namespace StableSatoViewer
                 }
                 else
                 {
-                    ShowToast("Already in favorites");
+                    ShowToast("既にお気に入りに登録されています");
                 }
             }
             else
             {
-                ShowToast("No image open");
+                ShowToast("画像が開かれていません");
             }
         }
 
@@ -1305,11 +1334,76 @@ namespace StableSatoViewer
         /// </summary>
         private void RemoveAllFavoritesButton_Click(object sender, RoutedEventArgs e)
         {
-            favorites.Clear();
-            SaveFavorites();
-            favoritesListBox.ItemsSource = null;
-            ShowToast("All favorites removed");
-            UpdateFavoritesIndicator();
+            ShowToast("Remove all clicked");
+            e.Handled = true;
+
+            var result = System.Windows.MessageBox.Show(
+                "すべてのお気に入りを削除してもよろしいですか？",
+                "確認",
+                System.Windows.MessageBoxButton.YesNo,
+                System.Windows.MessageBoxImage.Question
+            );
+
+            if (result == System.Windows.MessageBoxResult.Yes)
+            {
+                favorites.Clear();
+                SaveFavorites();
+                ShowToast("All favorites deleted");
+
+                if (favoritesCollection != null)
+                {
+                    favoritesCollection.Clear();
+                }
+
+                UpdateFavoritesIndicator();
+            }
+        }
+
+        /// <summary>
+        /// 個別のお気に入りを削除します。
+        /// </summary>
+        private void FavoritesListBox_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // クリックされた要素を取得
+            var hitTestResult = VisualTreeHelper.HitTest(favoritesListBox, e.GetPosition(favoritesListBox));
+            if (hitTestResult?.VisualHit == null) return;
+
+            // クリックされたのがボタンかどうかを確認
+            var button = FindVisualParent<System.Windows.Controls.Button>(hitTestResult.VisualHit);
+            if (button == null) return;
+
+            // ボタンの内容が "✕" かどうかを確認
+            if (button.Content?.ToString() != "✕") return;
+
+            // ボタンが属する行を取得
+            var row = FindVisualParent<DataGridRow>(button);
+            if (row?.Item is FavoriteItem item)
+            {
+                favorites.Remove(item);
+                SaveFavorites();
+                if (favoritesCollection != null)
+                {
+                    favoritesCollection.Remove(item);
+                }
+                ShowToast("Favorite removed");
+                UpdateFavoritesIndicator();
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// ビジュアルツリーから指定された型の親要素を取得します。
+        /// </summary>
+        private T? FindVisualParent<T>(System.Windows.DependencyObject child) where T : System.Windows.DependencyObject
+        {
+            var parent = VisualTreeHelper.GetParent(child);
+            while (parent != null)
+            {
+                if (parent is T typedParent)
+                    return typedParent;
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+            return null;
         }
 
         private System.Windows.Media.ImageSource? GetOrGenerateThumbnail(string imagePath)
@@ -1468,8 +1562,9 @@ namespace StableSatoViewer
                 var json = System.Text.Json.JsonSerializer.Serialize(favorites, JsonSerializerOptions);
                 File.WriteAllText(FavoritesFilePath, json, Encoding.UTF8);
             }
-            catch
+            catch (Exception ex)
             {
+                System.Windows.MessageBox.Show($"Error saving favorites: {ex.Message}");
             }
         }
 
@@ -2546,6 +2641,9 @@ namespace StableSatoViewer
 
         public string FilePath { get; set; } = "";
         public string FileName { get; set; } = "";
+        public DateTime AddedAt { get; set; } = DateTime.Now;
+
+        [System.Text.Json.Serialization.JsonIgnore]
         public System.Windows.Media.ImageSource? ThumbnailImage 
         { 
             get => _thumbnailImage;

@@ -129,7 +129,7 @@
 
                 <!-- トースト通知 -->
                 <Border x:Name="toastBorder" Visibility="Collapsed" Canvas.Left="10" Canvas.Top="50"
-                        Background="#333" CornerRadius="4" Padding="8" Opacity="0.95" Panel.ZIndex="200">
+                        Background="#333" CornerRadius="4" Padding="8" Opacity="0.95" Panel.ZIndex="10000">
                     <TextBlock x:Name="toastText" Foreground="#ffffff" FontSize="12">Copied to clipboard!</TextBlock>
                 </Border>
             </Canvas>
@@ -184,7 +184,7 @@
                                           BorderThickness="0" RowHeaderWidth="0" AutoGenerateColumns="False"
                                           CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
                                           CanUserSortColumns="False" HeadersVisibility="Column"
-                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#303030" VerticalScrollBarVisibility="Auto" MouseDoubleClick="FavoritesListBox_MouseDoubleClick">
+                                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#303030" VerticalScrollBarVisibility="Auto" MouseDoubleClick="FavoritesListBox_MouseDoubleClick" PreviewMouseLeftButtonDown="FavoritesListBox_PreviewMouseLeftButtonDown">
                                     <DataGrid.Resources>
                                         <SolidColorBrush x:Key="DataGrid.SelectedForeground" Color="#ffffff" />
                                         <Style TargetType="DataGridRow">
@@ -239,6 +239,23 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
+                                        <DataGridTextColumn Header="追加日時" Binding="{Binding AddedAt, StringFormat='yyyy/MM/dd HH:mm:ss'}" Width="160" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#ffffff"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="TextAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTemplateColumn Header="削除" Width="50" IsReadOnly="True">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="✕" Foreground="#ff6b6b" Background="Transparent" BorderThickness="0" Cursor="Hand" 
+                                                            Padding="0" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" FontWeight="Bold"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
