@@ -241,8 +241,8 @@
                                         <DataGridTemplateColumn Header="サムネイル" Width="70" IsReadOnly="True">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Border BorderBrush="#505050" BorderThickness="1" CornerRadius="2" Background="#1e1e1e" Padding="2">
-                                                        <Image Source="{Binding ThumbnailImage}" Stretch="Uniform" Width="64" Height="64"/>
+                                                    <Border BorderBrush="#505050" BorderThickness="1" CornerRadius="2" Background="#1e1e1e" Padding="2" MaxWidth="64" MaxHeight="64" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Image Source="{Binding ThumbnailImage}" Stretch="Uniform"/>
                                                     </Border>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>

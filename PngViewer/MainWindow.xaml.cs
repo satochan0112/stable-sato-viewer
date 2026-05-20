@@ -1307,7 +1307,6 @@ namespace StableSatoViewer
                 bitmap.UriSource = new Uri(imagePath);
                 bitmap.CacheOption = BitmapCacheOption.OnLoad;
                 bitmap.DecodePixelWidth = 64;
-                bitmap.DecodePixelHeight = 64;
                 bitmap.EndInit();
                 return bitmap;
             }
