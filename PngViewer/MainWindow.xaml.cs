@@ -480,6 +480,22 @@ namespace StableSatoViewer
             bitmap.Freeze();
             imageBox.Source = bitmap;
 
+            // 最小ズーム値を計算（ウィンドウにピッタリ収まるサイズ）
+            CalculateMinZoomRatio();
+
+            // ズームを最小値にリセット
+            currentZoomRatio = minZoomRatio;
+            imageScale.ScaleX = currentZoomRatio;
+            imageScale.ScaleY = currentZoomRatio;
+
+            // Canvas のサイズを設定（ズーム率を適用）
+            imageCanvas.Width = bitmap.Width * currentZoomRatio;
+            imageCanvas.Height = bitmap.Height * currentZoomRatio;
+
+            // スクロール位置をリセット
+            imageScrollViewer.ScrollToHorizontalOffset(0);
+            imageScrollViewer.ScrollToVerticalOffset(0);
+
             // 最後に表示した画像を保存
             SaveLastImage(path);
 
@@ -1897,6 +1913,65 @@ namespace StableSatoViewer
             catch
             {
                 // 無視
+            }
+        }
+
+        /// <summary>
+        /// 最小ズーム値を計算（画像がウィンドウにピッタリ収まるサイズ）
+        /// </summary>
+        private void CalculateMinZoomRatio()
+        {
+            if (imageBox.Source == null || imageScrollViewer == null) return;
+
+            double imageWidth = imageBox.Source.Width;
+            double imageHeight = imageBox.Source.Height;
+            double viewportWidth = imageScrollViewer.ActualWidth;
+            double viewportHeight = imageScrollViewer.ActualHeight;
+
+            if (imageWidth <= 0 || imageHeight <= 0 || viewportWidth <= 0 || viewportHeight <= 0)
+            {
+                minZoomRatio = 1.0;
+                return;
+            }
+
+            // アスペクト比を考慮して、ビューポートに収まるズーム率を計算
+            double zoomByWidth = viewportWidth / imageWidth;
+            double zoomByHeight = viewportHeight / imageHeight;
+
+            // より小さい方（制限になる方）を選択
+            minZoomRatio = Math.Min(zoomByWidth, zoomByHeight);
+        }
+
+        /// <summary>
+        /// ウィンドウリサイズ時の処理
+        /// </summary>
+        private void ImageBorder_SizeChanged(object sender, System.Windows.SizeChangedEventArgs e)
+        {
+            // 画像が読み込まれている場合のみ処理
+            if (imageBox.Source == null) return;
+
+            // 最小ズーム値を再計算
+            CalculateMinZoomRatio();
+
+            // ズームを最小値にリセット
+            currentZoomRatio = minZoomRatio;
+            imageScale.ScaleX = currentZoomRatio;
+            imageScale.ScaleY = currentZoomRatio;
+
+            // Canvas のサイズを設定（ズーム率を適用）
+            double imageWidth = imageBox.Source.Width;
+            double imageHeight = imageBox.Source.Height;
+            imageCanvas.Width = imageWidth * currentZoomRatio;
+            imageCanvas.Height = imageHeight * currentZoomRatio;
+
+            // スクロール位置をリセット
+            imageScrollViewer.ScrollToHorizontalOffset(0);
+            imageScrollViewer.ScrollToVerticalOffset(0);
+
+            // ウィンドウタイトルを更新
+            if (pngFiles != null && currentIndex >= 0 && currentIndex < pngFiles.Length)
+            {
+                UpdateWindowTitle(pngFiles[currentIndex]);
             }
         }
 
