@@ -17,6 +17,7 @@
   - Generation Parameters (Steps, CFG Scale, Sampler, etc.)
 - :mag: **Filter Function** - Search and filter images by prompt content
 - :star: **Favorites Management** - Bookmark frequently used images
+- :history: **History** - Record and replay opened images
 - :art: **Multiple Layout Modes** - Switch display modes based on your needs
 - :clipboard: **Clipboard Copy** - Click cells to copy text to clipboard
 - :wastebasket: **Recycle Bin Delete** - Safely delete unwanted images
@@ -46,152 +47,176 @@ dotnet build -c Release
 
 ## Usage
 
+### Opening Images
+
+#### 1. Select from Folder Tree
+
+- Expand and select folders in the folder tree on the left
+- PNG images in the selected folder appear in the file list
+- Single-click an image in the file list to display it
+
+#### 2. Drag and Drop
+
+- Drag and drop PNG files or folders onto the image display area
+- **File**: Display that specific file
+- **Folder**: Open that folder and display the first PNG in it
+
+#### 3. Command Line Arguments
+
+```bash
+StableSatoViewer.exe "C:\path\to\image.png"
+```
+
+### Switching Images
+
+| Operation | Result |
+|-----------|--------|
+| `Left` / `Right` keys | Previous image / Next image |
+| Mouse side buttons | XButton1 (back) / XButton2 (forward) to switch images |
+| File list selection | Single-click to display an image |
+
 ### Zoom Functionality
 
 #### Scroll to Zoom
 
-- **Mouse wheel up**: Zoom in (up to 500%)
-- **Mouse wheel down**: Zoom out (minimum size that fits the window)
-- Zoom changes are applied gradually
+- **Mouse wheel up**: Zoom in
+- **Mouse wheel down**: Zoom out
+- **Zoom Range**:
+  - Minimum: Image fits perfectly in the window (may be below 100% if window is small)
+  - Maximum: 500%
+- Zoom changes gradually (approximately 10% per scroll step)
 
 #### Cursor-Centered Zoom
 
-- When scrolling to zoom, the zoom is centered on the mouse cursor position
+- Scrolling zooms around the mouse cursor position
 - Allows intuitive zooming into the area you want to examine
 
 #### Drag to Pan
 
-- When the image is zoomed in, drag to move the visible area
+- When image is zoomed in (larger than the minimum), drag to move the visible area
 - Useful for examining zoomed-in details
 
 #### Window Resize Support
 
-- When you resize the window, the zoom automatically resets to the minimum value that fits the new window size
+- When you resize the window, zoom automatically resets to fit the new window size
+- Zoom information is cleared and the new window size's minimum value is applied
 - The entire image remains visible even if the window is small
 
 #### Zoom Percentage in Window Title
 
-- Current zoom level is displayed as "Zoom: 100%" in the window title
+- Window title displays current zoom level as "Zoom: 100%"
 - Provides a reference for the current zoom level
 
-### Other Basic Features
+### Metadata Display
 
-For detailed usage instructions, see:
+When an image is opened, the right panel displays:
 
-- **Opening Images**: Folder tree, drag-and-drop, command-line arguments
-- **Metadata Display**: Prompts, negative prompts, generation parameters
-- **Favorites**: Bookmark images, delete individual favorites, clear all
-- **History**: Manage opened images, reopen from history
-- **Filter**: Search images by prompt content
-- Click the toggle button next to each section header
-- **Grid Display**: Formatted display by row (default)
-- **Text Display**: Display raw text as-is
+1. **Parameters (Prompt)**
+   - The prompt used to generate the image
+   - May be displayed across multiple lines
+
+2. **Negative Prompt**
+   - Prompt content excluded during generation
+
+3. **Steps (Generation Parameters)**
+   - Steps, CFG Scale, Sampler, Model, etc.
+   - Displayed as key-value pairs
+
+#### Toggle Text/Grid Display
+
+- Click the toggle button for each section
+- **Grid Display** (default): Displays with line numbers
+- **Text Display**: Displays as text
 
 #### Copy to Clipboard
 
-- In grid display mode, click on a cell
-- Cell content is copied to clipboard
-- Toast notification shows "Copied to clipboard!"
-
-### Layout Modes
-
-Switch between 3 modes with the `[Display Toggle]` button in the upper right:
-
-| Mode | Description |
-|------|-------------|
-| **0: Normal** | Left: Folder tree, Center: Image, Right: Metadata panel |
-| **1: Float** | Maximize image, floating prompt display |
-| **2: Hidden** | Image only (metadata panel hidden) |
+- In grid display mode, click a cell to copy
+- In text display mode, click the "Copy" button
+- Paste the copied text into other applications
 
 ### Filter Function
 
-You can search images by prompt content:
+- Enter prompt content in the filter box on the right
+- Filters images in the current folder by matching prompts
+- Click `Clear` button to remove filter
 
-1. Enter keywords in the "Filter" text box in the upper right
-2. Press `Enter` key or click `[Filter]` button
-3. Only images matching the prompt (before Negative Prompt) are displayed
-4. Clear the filter with `[Clear]` button
-
-**Examples**:
-- `masterpiece` �� Display only images containing "masterpiece"
-- `1girl` �� Display only images containing "1girl"
-
-### Favorites Function
+### Favorites Management
 
 #### Add to Favorites
 
 1. Display an image
-2. Click the `[��]` button in the upper right
-3. Click `[Add Bookmark]` button in the popup
+2. Click the `[★]` button on the right
+3. Click `[Add to Bookmark]` in the popup
 
-#### Display and Open Favorites
+#### View Favorites
 
-1. Click the `[��]` button
-2. Click an image from the list (single click) to open
+1. Click the `[★]` button
+2. Single-click an image in the popup list to open it
 
 #### Favorites Details
 
-- **Added Time**: Each favorite displays the time added in `yyyy/MM/dd HH:mm:ss` format
-- **Display Order**: Most recently added items appear at the top
-- **Delete Button**: Individual items can be deleted with the `[?]` button on the right side of list
+- **Added Date**: Each favorite shows the date added in "yyyy/MM/dd HH:mm:ss" format
+- **Display Order**: Newest favorites appear at the top (sorted by newest first)
+- **Delete Button**: Click the "×" button on the right to delete individual favorites
 
 #### Manage Favorites
 
-- **Remove All**: `[Remove All Bookmarks]` button in popup
-- **Manual Edit**: `[Edit Bookmarks]` button to open file
-  - Save location: `%AppData%\StableSatoViewer\favorites.json`
-  - File path, file name, and added time are saved in JSON format
+- **Delete All**: Click `[Delete All Bookmarks]` button in the popup
+- **View File**:
+  - Location: `%AppData%\StableSatoViewer\favorites.json`
+  - JSON format stores file path, filename, and date added
 
 ### History Function
 
-#### Display and Open History
+#### View History
 
-1. Click the `[Clock Icon]` button
-2. Click an image from the list (single click) to open
+1. Click the history icon button on the left
+2. Single-click an image in the popup list to open it
 
-#### History Features
+#### History Behavior
 
-- **Duplicate Prevention**: When opening the same file as the most recent history, no new line is added; only the opened time is updated
-- **Opened Time**: Each history item displays the opened time in `yyyy/MM/dd HH:mm:ss` format
-- **Display Order**: Most recently opened items appear at the top
+- **Duplicate Handling**: If the newest history entry matches the file you just opened, the date is updated instead of adding a new entry
+- **Opened Date**: Each history entry shows "yyyy/MM/dd HH:mm:ss" format
+- **Display Order**: Newest entries appear at the top (sorted by newest first)
 
 #### Delete History
 
-- Individual items can be deleted with the `[?]` button on the right side of list
-- Delete all history with `[Clear All History]` button
+- Click the "×" button on the right to delete individual entries
+- Click `[Clear All History]` button to delete all history
 
 #### History File
 
-- Save location: `%AppData%\StableSatoViewer\history.json`
+- Location: `%AppData%\StableSatoViewer\history.json`
 - Saved in JSON format
 
 ### Other Features
 
-#### Delete Images
+#### Delete Image
 
 - Press `Delete` key
-- Select `Yes` in confirmation dialog
+- Select `Yes` in the confirmation dialog
 - Image is moved to recycle bin (not permanently deleted)
 
 #### Open in Explorer
 
-- Click `[Open in Explorer]` button in the upper right
-- Current image is displayed in Explorer with selection
+- Click `[Open in Explorer]` button on the right
+- Opens Explorer with current image selected
 
-#### Toggle Folder Tree Display
+#### Toggle Folder Tree
 
-- Toggle folder tree visibility with `[Tree]` button in the upper right
+- Click `[Tree]` button on the left to show/hide folder tree
 
-#### Full Screen Display
+#### Fullscreen Display
 
-- Switch to full screen mode with `[Full Screen]` button in the upper right
-- Exit full screen with `Esc` key
+- Click `[Full Screen]` button on the right to toggle fullscreen mode
+- Press `Esc` to exit fullscreen
 
 ## Keyboard Shortcuts
 
 | Key | Function |
 |-----|----------|
-| `Left` / `Right` | Previous image / Next image |
+| `Left` | Previous image (moves to previous folder at folder start) |
+| `Right` | Next image (moves to next folder at folder end) |
 | `Delete` | Move image to recycle bin |
 | `Esc` | Exit fullscreen mode |
 
@@ -208,11 +233,76 @@ Application state is saved in the following directory:
 └─ lastimage.txt       # Last displayed image
 ```
 
+Deleting these files will reset them on the next startup.
+
+## Troubleshooting
+
+### Image Not Displayed
+
+- Verify the file is a PNG image
+- Check if the file is corrupted
+- Check if a filter is applied (click `Clear` button)
+
+### Metadata Not Displayed
+
+- Only PNG images generated by Stable Diffusion (AUTOMATIC1111/Forge, etc.) are supported
+- The PNG must contain tEXt/iTXt chunks with a "parameters" key
+
+### Cannot Delete Image
+
+- Check if the file is open in another application
+- Check if the file is read-only
+- Try running with administrator privileges
+
+### Window Position Incorrect
+
+- Delete `%AppData%\StableSatoViewer\windowstate.json` and restart
+
 ## Technology Stack
+
+### Technologies Used
 
 - **Framework**: .NET 10.0
 - **UI**: WPF (Windows Presentation Foundation)
 - **Language**: C# 14.0
+
+### Project Structure
+
+```
+stable-sato-viewer/
+├─ PngViewer/
+│  ├─ MainWindow.xaml       # Main window XAML
+│  ├─ MainWindow.xaml.cs    # Main window logic
+│  ├─ App.xaml              # Application resources
+│  ├─ App.xaml.cs           # Application entry point
+│  ├─ Assets/               # Icons and images
+│  └─ StableSatoViewer.csproj
+├─ README.md
+└─ README.en.md
+```
+
+### Building
+
+```bash
+# Debug build
+dotnet build
+
+# Release build
+dotnet build -c Release
+
+# Run
+dotnet run
+```
+
+## Contributing
+
+We welcome pull requests and issue reports!
+
+1. Fork this repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to your branch (`git push origin feature/amazing-feature`)
+5. Create a pull request
 
 ## License
 
@@ -221,6 +311,11 @@ Please refer to the license file in the repository for licensing information.
 ## Author
 
 - **satochan0112** - [GitHub](https://github.com/satochan0112)
+
+## Acknowledgments
+
+- Stable Diffusion community
+- All contributors to this project
 
 ---
 
