@@ -127,19 +127,48 @@ You can search images by prompt content:
 
 1. Display an image
 2. Click the `[Åö]` button in the upper right
-3. Click `[Add Current]` in the popup
+3. Click `[Add Bookmark]` button in the popup
 
-#### Display Favorites
+#### Display and Open Favorites
 
 1. Click the `[Åö]` button
-2. Double-click an image from the list
+2. Click an image from the list (single click) to open
+
+#### Favorites Details
+
+- **Added Time**: Each favorite displays the time added in `yyyy/MM/dd HH:mm:ss` format
+- **Display Order**: Most recently added items appear at the top
+- **Delete Button**: Individual items can be deleted with the `[?]` button on the right side of list
 
 #### Manage Favorites
 
-- **Remove All**: `[Remove All]` button in popup
-- **Manual Edit**: `[Edit Favorites]` button to open file
-  - Save location: `%AppData%\StableSatoViewer\favorites.txt`
-  - Editable as text file with one path per line
+- **Remove All**: `[Remove All Bookmarks]` button in popup
+- **Manual Edit**: `[Edit Bookmarks]` button to open file
+  - Save location: `%AppData%\StableSatoViewer\favorites.json`
+  - File path, file name, and added time are saved in JSON format
+
+### History Function
+
+#### Display and Open History
+
+1. Click the `[Clock Icon]` button
+2. Click an image from the list (single click) to open
+
+#### History Features
+
+- **Duplicate Prevention**: When opening the same file as the most recent history, no new line is added; only the opened time is updated
+- **Opened Time**: Each history item displays the opened time in `yyyy/MM/dd HH:mm:ss` format
+- **Display Order**: Most recently opened items appear at the top
+
+#### Delete History
+
+- Individual items can be deleted with the `[?]` button on the right side of list
+- Delete all history with `[Clear All History]` button
+
+#### History File
+
+- Save location: `%AppData%\StableSatoViewer\history.json`
+- Saved in JSON format
 
 ### Other Features
 
@@ -182,7 +211,8 @@ Application state is saved in the following directory:
 ```
 %AppData%\StableSatoViewer\
 Ñ•ÑüÑü windowstate.json    # Window size, position, layout mode
-Ñ•ÑüÑü favorites.txt       # Favorites list
+Ñ•ÑüÑü favorites.json      # Favorites list (JSON format)
+Ñ•ÑüÑü history.json        # History (JSON format)
 Ñ•ÑüÑü lastfolder.txt      # Last selected folder
 Ñ§ÑüÑü lastimage.txt       # Last displayed image
 ```
