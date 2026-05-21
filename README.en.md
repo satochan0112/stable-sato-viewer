@@ -78,11 +78,117 @@ dotnet build -c Release
 
 For detailed usage instructions, see:
 
+<<<<<<< HEAD
 - **Opening Images**: Folder tree, drag-and-drop, command-line arguments
 - **Metadata Display**: Prompts, negative prompts, generation parameters
 - **Favorites**: Bookmark images, delete individual favorites, clear all
 - **History**: Manage opened images, reopen from history
 - **Filter**: Search images by prompt content
+=======
+- Click the toggle button next to each section header
+- **Grid Display**: Formatted display by row (default)
+- **Text Display**: Display raw text as-is
+
+#### Copy to Clipboard
+
+- In grid display mode, click on a cell
+- Cell content is copied to clipboard
+- Toast notification shows "Copied to clipboard!"
+
+### Layout Modes
+
+Switch between 3 modes with the `[Display Toggle]` button in the upper right:
+
+| Mode | Description |
+|------|-------------|
+| **0: Normal** | Left: Folder tree, Center: Image, Right: Metadata panel |
+| **1: Float** | Maximize image, floating prompt display |
+| **2: Hidden** | Image only (metadata panel hidden) |
+
+### Filter Function
+
+You can search images by prompt content:
+
+1. Enter keywords in the "Filter" text box in the upper right
+2. Press `Enter` key or click `[Filter]` button
+3. Only images matching the prompt (before Negative Prompt) are displayed
+4. Clear the filter with `[Clear]` button
+
+**Examples**:
+- `masterpiece` ¨ Display only images containing "masterpiece"
+- `1girl` ¨ Display only images containing "1girl"
+
+### Favorites Function
+
+#### Add to Favorites
+
+1. Display an image
+2. Click the `[š]` button in the upper right
+3. Click `[Add Bookmark]` button in the popup
+
+#### Display and Open Favorites
+
+1. Click the `[š]` button
+2. Click an image from the list (single click) to open
+
+#### Favorites Details
+
+- **Added Time**: Each favorite displays the time added in `yyyy/MM/dd HH:mm:ss` format
+- **Display Order**: Most recently added items appear at the top
+- **Delete Button**: Individual items can be deleted with the `[?]` button on the right side of list
+
+#### Manage Favorites
+
+- **Remove All**: `[Remove All Bookmarks]` button in popup
+- **Manual Edit**: `[Edit Bookmarks]` button to open file
+  - Save location: `%AppData%\StableSatoViewer\favorites.json`
+  - File path, file name, and added time are saved in JSON format
+
+### History Function
+
+#### Display and Open History
+
+1. Click the `[Clock Icon]` button
+2. Click an image from the list (single click) to open
+
+#### History Features
+
+- **Duplicate Prevention**: When opening the same file as the most recent history, no new line is added; only the opened time is updated
+- **Opened Time**: Each history item displays the opened time in `yyyy/MM/dd HH:mm:ss` format
+- **Display Order**: Most recently opened items appear at the top
+
+#### Delete History
+
+- Individual items can be deleted with the `[?]` button on the right side of list
+- Delete all history with `[Clear All History]` button
+
+#### History File
+
+- Save location: `%AppData%\StableSatoViewer\history.json`
+- Saved in JSON format
+
+### Other Features
+
+#### Delete Images
+
+- Press `Delete` key
+- Select `Yes` in confirmation dialog
+- Image is moved to recycle bin (not permanently deleted)
+
+#### Open in Explorer
+
+- Click `[Open in Explorer]` button in the upper right
+- Current image is displayed in Explorer with selection
+
+#### Toggle Folder Tree Display
+
+- Toggle folder tree visibility with `[Tree]` button in the upper right
+
+#### Full Screen Display
+
+- Switch to full screen mode with `[Full Screen]` button in the upper right
+- Exit full screen with `Esc` key
+>>>>>>> master
 
 ## Keyboard Shortcuts
 
@@ -98,11 +204,19 @@ Application state is saved in the following directory:
 
 ```
 %AppData%\StableSatoViewer\
+<<<<<<< HEAD
 â”œâ”€ windowstate.json    # Window size, position, layout mode
 â”œâ”€ favorites.json      # Favorites list (JSON format)
 â”œâ”€ history.json        # History (JSON format)
 â”œâ”€ lastfolder.txt      # Last selected folder
 â””â”€ lastimage.txt       # Last displayed image
+=======
+„¥„Ÿ„Ÿ windowstate.json    # Window size, position, layout mode
+„¥„Ÿ„Ÿ favorites.json      # Favorites list (JSON format)
+„¥„Ÿ„Ÿ history.json        # History (JSON format)
+„¥„Ÿ„Ÿ lastfolder.txt      # Last selected folder
+„¤„Ÿ„Ÿ lastimage.txt       # Last displayed image
+>>>>>>> master
 ```
 
 ## Technology Stack
