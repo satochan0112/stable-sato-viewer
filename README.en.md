@@ -78,13 +78,11 @@ dotnet build -c Release
 
 For detailed usage instructions, see:
 
-<<<<<<< HEAD
 - **Opening Images**: Folder tree, drag-and-drop, command-line arguments
 - **Metadata Display**: Prompts, negative prompts, generation parameters
 - **Favorites**: Bookmark images, delete individual favorites, clear all
 - **History**: Manage opened images, reopen from history
 - **Filter**: Search images by prompt content
-=======
 - Click the toggle button next to each section header
 - **Grid Display**: Formatted display by row (default)
 - **Text Display**: Display raw text as-is
@@ -115,20 +113,20 @@ You can search images by prompt content:
 4. Clear the filter with `[Clear]` button
 
 **Examples**:
-- `masterpiece` ¨ Display only images containing "masterpiece"
-- `1girl` ¨ Display only images containing "1girl"
+- `masterpiece` ï¿½ï¿½ Display only images containing "masterpiece"
+- `1girl` ï¿½ï¿½ Display only images containing "1girl"
 
 ### Favorites Function
 
 #### Add to Favorites
 
 1. Display an image
-2. Click the `[š]` button in the upper right
+2. Click the `[ï¿½ï¿½]` button in the upper right
 3. Click `[Add Bookmark]` button in the popup
 
 #### Display and Open Favorites
 
-1. Click the `[š]` button
+1. Click the `[ï¿½ï¿½]` button
 2. Click an image from the list (single click) to open
 
 #### Favorites Details
@@ -188,7 +186,6 @@ You can search images by prompt content:
 
 - Switch to full screen mode with `[Full Screen]` button in the upper right
 - Exit full screen with `Esc` key
->>>>>>> master
 
 ## Keyboard Shortcuts
 
@@ -204,19 +201,11 @@ Application state is saved in the following directory:
 
 ```
 %AppData%\StableSatoViewer\
-<<<<<<< HEAD
 â”œâ”€ windowstate.json    # Window size, position, layout mode
 â”œâ”€ favorites.json      # Favorites list (JSON format)
 â”œâ”€ history.json        # History (JSON format)
 â”œâ”€ lastfolder.txt      # Last selected folder
 â””â”€ lastimage.txt       # Last displayed image
-=======
-„¥„Ÿ„Ÿ windowstate.json    # Window size, position, layout mode
-„¥„Ÿ„Ÿ favorites.json      # Favorites list (JSON format)
-„¥„Ÿ„Ÿ history.json        # History (JSON format)
-„¥„Ÿ„Ÿ lastfolder.txt      # Last selected folder
-„¤„Ÿ„Ÿ lastimage.txt       # Last displayed image
->>>>>>> master
 ```
 
 ## Technology Stack
