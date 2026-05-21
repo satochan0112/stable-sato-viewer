@@ -35,6 +35,14 @@ namespace StableSatoViewer
         private string[]? allPngFilesInFolder;
         private bool isInitializing = false; // 初期化中フラグ（フォルダ選択イベントを抑制）
         private bool isSelectingFromFavorites = false;
+
+        // ズーム関連の変数
+        private double currentZoomRatio = 1.0; // 現在のズーム率（1.0 = 100%）
+        private double minZoomRatio = 1.0; // 最小ズーム率（ウィンドウにフィット）
+        private double maxZoomRatio = 5.0; // 最大ズーム率（500%）
+        private const double ZoomStepRatio = 1.1; // スクロール1段階あたりのズーム変更率
+        private bool isImagePanning = false; // ドラッグ移動中フラグ
+        private System.Windows.Point previousMousePosition = new(); // 前フレームのマウス位置
         private static string WindowStateFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "windowstate.json");
 
         private static string FavoritesFilePath => Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData), "StableSatoViewer", "favorites.txt");
@@ -561,7 +569,7 @@ namespace StableSatoViewer
                 string folderName = System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(path) ?? "");
                 int total = (pngFiles != null) ? pngFiles.Length : 0;
                 int index = (pngFiles != null) ? (Array.IndexOf(pngFiles, path) + 1) : 0;
-                
+
                 if (total > 0 && index > 0)
                 {
                     this.Title = $"{fileName} ({index}/{total}) - [{folderName}]";
@@ -570,6 +578,11 @@ namespace StableSatoViewer
                 {
                     this.Title = $"{fileName} - [{folderName}]";
                 }
+
+                // ズーム率を追加
+                string zoomPercentage = $"{(currentZoomRatio * 100):F0}%";
+                this.Title += $" - Zoom: {zoomPercentage}";
+
                 this.Title += " - StableSatoViewer";
             }
             catch
@@ -1884,6 +1897,109 @@ namespace StableSatoViewer
             catch
             {
                 // 無視
+            }
+        }
+
+        /// <summary>
+        /// ScrollViewer のマウスホイールでズーム処理を行う
+        /// </summary>
+        private void ImageScrollViewer_MouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (imageBox.Source == null) return;
+
+            ScrollViewer scrollViewer = (ScrollViewer)sender;
+            double oldZoomRatio = currentZoomRatio;
+
+            // ズーム率を更新
+            if (e.Delta > 0)
+            {
+                currentZoomRatio *= ZoomStepRatio;
+            }
+            else
+            {
+                currentZoomRatio /= ZoomStepRatio;
+            }
+
+            // ズーム率の制限
+            currentZoomRatio = Math.Max(minZoomRatio, Math.Min(currentZoomRatio, maxZoomRatio));
+
+            // マウス位置を基準にスクロール位置を調整（マウス中心でズーム）
+            System.Windows.Point mousePos = e.GetPosition(scrollViewer);
+            double horizontalOffset = scrollViewer.HorizontalOffset;
+            double verticalOffset = scrollViewer.VerticalOffset;
+
+            // マウスの相対位置を計算（スクロール範囲内での位置）
+            double relativeMouseX = mousePos.X + horizontalOffset;
+            double relativeMouseY = mousePos.Y + verticalOffset;
+
+            // 新しいスクロール位置を計算（マウス位置を中心にズーム）
+            double newHorizontalOffset = (relativeMouseX * currentZoomRatio / oldZoomRatio) - mousePos.X;
+            double newVerticalOffset = (relativeMouseY * currentZoomRatio / oldZoomRatio) - mousePos.Y;
+
+            // ScaleTransform を更新
+            imageScale.ScaleX = currentZoomRatio;
+            imageScale.ScaleY = currentZoomRatio;
+
+            // Canvas サイズを更新
+            if (imageBox.Source != null)
+            {
+                double imageWidth = imageBox.Source.Width;
+                double imageHeight = imageBox.Source.Height;
+                imageCanvas.Width = imageWidth * currentZoomRatio;
+                imageCanvas.Height = imageHeight * currentZoomRatio;
+            }
+
+            // スクロール位置を調整
+            scrollViewer.ScrollToHorizontalOffset(newHorizontalOffset);
+            scrollViewer.ScrollToVerticalOffset(newVerticalOffset);
+
+            // ウィンドウタイトルを更新（ズーム率表示）
+            if (pngFiles != null && currentIndex >= 0 && currentIndex < pngFiles.Length)
+            {
+                UpdateWindowTitle(pngFiles[currentIndex]);
+            }
+
+            e.Handled = true;
+        }
+
+        /// <summary>
+        /// マウス左ボタン押下時：ドラッグ開始
+        /// </summary>
+        private void ImageScrollViewer_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (currentZoomRatio > minZoomRatio)
+            {
+                isImagePanning = true;
+                previousMousePosition = e.GetPosition((ScrollViewer)sender);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// マウス左ボタン解放時：ドラッグ終了
+        /// </summary>
+        private void ImageScrollViewer_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            isImagePanning = false;
+        }
+
+        /// <summary>
+        /// マウス移動時：ドラッグ移動処理
+        /// </summary>
+        private void ImageScrollViewer_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (isImagePanning && currentZoomRatio > minZoomRatio)
+            {
+                ScrollViewer scrollViewer = (ScrollViewer)sender;
+                System.Windows.Point currentMousePosition = e.GetPosition(scrollViewer);
+                double deltaX = previousMousePosition.X - currentMousePosition.X;
+                double deltaY = previousMousePosition.Y - currentMousePosition.Y;
+
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + deltaX);
+                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + deltaY);
+
+                previousMousePosition = currentMousePosition;
+                e.Handled = true;
             }
         }
 

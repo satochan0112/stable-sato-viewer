@@ -152,8 +152,22 @@
                            HorizontalAlignment="Center" VerticalAlignment="Center"
                            IsHitTestVisible="False" Opacity="1"/>
 
-                    <!-- 表示される実際の画像（上に重なる） -->
-                    <Image Name="imageBox" Stretch="Uniform" />
+                    <!-- ScrollViewer でズーム機能をサポート -->
+                    <ScrollViewer x:Name="imageScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                  PreviewMouseWheel="ImageScrollViewer_MouseWheel"
+                                  PreviewMouseLeftButtonDown="ImageScrollViewer_PreviewMouseLeftButtonDown"
+                                  PreviewMouseLeftButtonUp="ImageScrollViewer_PreviewMouseLeftButtonUp"
+                                  PreviewMouseMove="ImageScrollViewer_PreviewMouseMove"
+                                  Cursor="Hand">
+                        <Canvas Background="Transparent" x:Name="imageCanvas">
+                            <!-- 表示される実際の画像（ズーム対応） -->
+                            <Image Name="imageBox" Stretch="Uniform">
+                                <Image.RenderTransform>
+                                    <ScaleTransform x:Name="imageScale" ScaleX="1" ScaleY="1" />
+                                </Image.RenderTransform>
+                            </Image>
+                        </Canvas>
+                    </ScrollViewer>
 
                     <!-- 画像領域内の下中央ナビゲーションボタン（オーバーレイ） -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,16" Panel.ZIndex="2000" IsHitTestVisible="True" Visibility="Visible">
